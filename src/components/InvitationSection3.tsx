@@ -1,0 +1,168 @@
+import { useRef, useState, useEffect } from "react";
+import { motion, useInView, Variants } from "framer-motion";
+import AudioPlayer from "@/components/ui/AudioPlayer";
+
+// Definimos el componente de la sección de invitación
+const InvitationSection3 = () => {
+  const ref = useRef(null);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [layoutReady, setLayoutReady] = useState(false);
+
+  // Preparar el layout antes de mostrar cualquier contenido
+  useEffect(() => {
+    // Dar tiempo al navegador para calcular el layout correctamente
+    const layoutTimer = setTimeout(() => {
+      setLayoutReady(true);
+    }, 100);
+    
+    return () => clearTimeout(layoutTimer);
+  }, []);
+
+  // Precargar las imágenes de manera más robusta
+  useEffect(() => {
+    // Solo intentar cargar imágenes cuando el layout esté listo
+    if (!layoutReady) return;
+    
+    const imagesToLoad = ["/ramo-lateral.png", "/fondo.png"];
+    let loadedCount = 0;
+    
+    const handleImageLoad = () => {
+      loadedCount++;
+      if (loadedCount === imagesToLoad.length) {
+        setImagesLoaded(true);
+      }
+    };
+    
+    imagesToLoad.forEach(src => {
+      const img = new Image();
+      img.src = src;
+      img.onload = handleImageLoad;
+      img.onerror = handleImageLoad; // Continuar incluso si hay un error
+    });
+  }, [layoutReady]);
+
+  const isInView = useInView(ref, {
+    once: true,
+    margin: "-50px",
+    amount: 0.3,
+  });
+
+  const fadeInUp: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
+  };
+
+  return (
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Imagen de fondo */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('/fondo.png')`,
+        }}
+      />
+
+      {/* Contenido principal */}
+      <div className="relative z-10 flex items-center justify-center min-h-screen w-full">
+        <motion.div
+          ref={ref}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          variants={fadeInUp}
+          className="w-full max-w-md mx-auto"
+          style={{ padding: "0 3rem 3rem 3rem" }}
+        >
+          <div className="flex flex-col gap-8 text-center">
+            <div className="flex flex-col gap-6 relative">
+              {/* Placeholders invisibles para reservar el espacio y mantener el layout estable */}
+              <div className="absolute -top-7 -left-30 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none" style={{ transform: "rotate(180deg)" }}></div>
+              <div className="absolute -top-0 left-60 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none" style={{ transform: "rotate(180deg)" }}></div>
+              
+              <p className="text-start text-6xl font-serif text-gray-700 italic font-light tracking-wider">
+                JIMENA
+              </p>
+              {imagesLoaded && (
+                <motion.div 
+                  className="absolute -top-10 -left-40 w-72 h-72 md:w-80 md:h-80 opacity-0"
+                  style={{ transform: "rotate(180deg)" }}
+                  animate={{ opacity: 0.8 }}
+                  transition={{ 
+                    duration: 1.2, 
+                    delay: 0.3,
+                    ease: "easeOut" 
+                  }}
+                  whileInView={{ 
+                    rotate: [180, 175, 180],
+                    transition: {
+                      duration: 5,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }
+                  }}
+                >
+                  <img
+                    src="/ramo-lateral.png"
+                    alt="Flores decorativas"
+                    className="w-full h-full object-contain"
+                  />
+                </motion.div>
+              )}
+              <div className="py-1">
+                <span className="text-4xl text-gray-700 font-serif">&</span>
+              </div>
+              {imagesLoaded && (
+                <motion.div 
+                  className="absolute -top-5 left-50 w-72 h-72 md:w-80 md:h-80 opacity-0"
+                  style={{ transform: "rotate(180deg)" }}
+                  animate={{ opacity: 0.8 }}
+                  transition={{ 
+                    duration: 1.2, 
+                    delay: 0.6,
+                    ease: "easeOut" 
+                  }}
+                  whileInView={{ 
+                    rotate: [180, 185, 180],
+                    transition: {
+                      duration: 5,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }
+                  }}
+                >
+                  <img
+                    src="/ramo-lateral.png"
+                    alt="Flores decorativas"
+                    className="w-full h-full object-contain"
+                  />
+                </motion.div>
+              )}
+
+              <p className="text-end text-6xl font-serif text-gray-700 italic font-light tracking-wider">
+                JHON
+              </p>
+            </div>
+            <AudioPlayer src="/option-1.mp3" songTitle="Nuestra Canción" />
+
+            <div>
+              <p className="font-serif text-gray-700 tracking-wide leading-relaxed text-base">
+                Hay momentos en la vida que son especiales por si solos, pero
+                compartirlos con las personas que queremos los hacen
+                inolvidables.
+                <br />
+                <br />
+                Por eso queremos invitarlos a celebrar nuestra boda y que hagan
+                parte de este dia tan especial para nosotros.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+export default InvitationSection3;
