@@ -1,5 +1,3 @@
-import React from "react";
-
 const InvitationSection2 = () => {
   return (
     <section className="relative w-full flex flex-col items-center justify-center bg-white overflow-hidden p-0 m-0 ">

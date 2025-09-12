@@ -145,7 +145,7 @@ const InvitationSection3 = () => {
                 JHON
               </p>
             </div>
-            <AudioPlayer src="/option-1.mp3" songTitle="Nuestra Canción" />
+            <AudioPlayer src="/option2.mp3" songTitle="Nuestra Canción" />
 
             <div>
               <p className="font-serif text-gray-700 tracking-wide leading-relaxed text-base">
