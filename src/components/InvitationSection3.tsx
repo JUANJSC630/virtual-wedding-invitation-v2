@@ -47,12 +47,22 @@ const InvitationSection3 = () => {
     amount: 0.3,
   });
 
+  // Variantes para animar la aparición secuencial
+  const containerVariants: Variants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.4,
+      },
+    },
+  };
+
   const fadeInUp: Variants = {
     hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
+      transition: { duration: 0.7, ease: "easeOut" },
     },
   };
 
@@ -72,7 +82,7 @@ const InvitationSection3 = () => {
           ref={ref}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
-          variants={fadeInUp}
+          variants={containerVariants}
           className="w-full max-w-md mx-auto"
           style={{ padding: "0 3rem 3rem 3rem" }}
         >
@@ -81,21 +91,24 @@ const InvitationSection3 = () => {
               {/* Placeholders invisibles para reservar el espacio y mantener el layout estable */}
               <div className="absolute -top-7 -left-30 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none" style={{ transform: "rotate(180deg)" }}></div>
               <div className="absolute -top-0 left-60 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none" style={{ transform: "rotate(180deg)" }}></div>
-              
-              <p className="text-start text-6xl font-serif text-gray-700 italic font-light tracking-wider">
+
+              <motion.p
+                className="text-start text-6xl font-serif text-gray-700 italic font-light tracking-wider"
+                variants={fadeInUp}
+              >
                 JIMENA
-              </p>
+              </motion.p>
               {imagesLoaded && (
-                <motion.div 
+                <motion.div
                   className="absolute -top-10 -left-40 w-72 h-72 md:w-80 md:h-80 opacity-0"
                   style={{ transform: "rotate(180deg)" }}
                   animate={{ opacity: 0.8 }}
-                  transition={{ 
-                    duration: 1.2, 
+                  transition={{
+                    duration: 1.2,
                     delay: 0.3,
-                    ease: "easeOut" 
+                    ease: "easeOut"
                   }}
-                  whileInView={{ 
+                  whileInView={{
                     rotate: [180, 175, 180],
                     transition: {
                       duration: 5,
@@ -111,20 +124,20 @@ const InvitationSection3 = () => {
                   />
                 </motion.div>
               )}
-              <div className="py-1">
+              <motion.div className="py-1" variants={fadeInUp}>
                 <span className="text-4xl text-gray-700 font-serif">&</span>
-              </div>
+              </motion.div>
               {imagesLoaded && (
-                <motion.div 
+                <motion.div
                   className="absolute -top-5 left-50 w-72 h-72 md:w-80 md:h-80 opacity-0"
                   style={{ transform: "rotate(180deg)" }}
                   animate={{ opacity: 0.8 }}
-                  transition={{ 
-                    duration: 1.2, 
+                  transition={{
+                    duration: 1.2,
                     delay: 0.6,
-                    ease: "easeOut" 
+                    ease: "easeOut"
                   }}
-                  whileInView={{ 
+                  whileInView={{
                     rotate: [180, 185, 180],
                     transition: {
                       duration: 5,
@@ -141,13 +154,19 @@ const InvitationSection3 = () => {
                 </motion.div>
               )}
 
-              <p className="text-end text-6xl font-serif text-gray-700 italic font-light tracking-wider">
+              <motion.p
+                className="text-end text-6xl font-serif text-gray-700 italic font-light tracking-wider"
+                variants={fadeInUp}
+              >
                 JHON
-              </p>
+              </motion.p>
             </div>
-            <AudioPlayer src="/option2.mp3" songTitle="Nuestra Canción" />
 
-            <div>
+            <motion.div variants={fadeInUp}>
+              <AudioPlayer src="/option2.mp3" songTitle="Nuestra Canción" />
+            </motion.div>
+
+            <motion.div variants={fadeInUp}>
               <p className="font-serif text-gray-700 tracking-wide leading-relaxed text-base">
                 Hay momentos en la vida que son especiales por si solos, pero
                 compartirlos con las personas que queremos los hacen
@@ -157,7 +176,7 @@ const InvitationSection3 = () => {
                 Por eso queremos invitarlos a celebrar nuestra boda y que hagan
                 parte de este dia tan especial para nosotros.
               </p>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       </div>
