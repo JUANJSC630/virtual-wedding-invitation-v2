@@ -4,6 +4,7 @@ import InvitationSection2 from "@/components/InvitationSection2";
 import InvitationSection3 from "@/components/InvitationSection3";
 import InvitationSection4 from "@/components/InvitationSection4";
 import InvitationSection5 from "@/components/InvitationSection5";
+import InvitationSection6 from "@/components/InvitationSection6";
 import {
   Play,
   Pause,
@@ -73,15 +74,7 @@ function App() {
       <InvitationSection4 />
 
       <InvitationSection5 />
-      {/* Imagen 5 - Quinta sección */}
-      <section className="relative min-h-screen">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/5.png')`,
-          }}
-        />
-      </section>
+      <InvitationSection6 />
 
       {/* Imagen 6 - Sexta sección */}
       <section className="relative min-h-screen">

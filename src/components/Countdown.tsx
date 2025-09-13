@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const EVENT_DATE = new Date("2025-11-15T18:00:00-05:00"); // 15 Noviembre 2025, 6:00pm
 
@@ -24,25 +25,96 @@ const Countdown = () => {
   }, []);
 
   return (
-    <section className="flex flex-col items-center justify-center py-8">
-      <div className="text-base md:text-lg font-semibold text-[#3b5a75] tracking-widest uppercase mb-1">Sábado</div>
-      <div className="flex items-end justify-center gap-2 text-[#3b5a75] text-lg md:text-xl font-medium">
+    <motion.section
+      className="flex flex-col items-center justify-center py-8"
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+    >
+      <motion.div
+        className="text-base md:text-lg font-semibold text-[#3b5a75] tracking-widest uppercase mb-1"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+      >
+        Sábado
+      </motion.div>
+      <motion.div
+        className="flex items-end justify-center gap-2 text-[#3b5a75] text-lg md:text-xl font-medium"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.6 }}
+      >
         <span>Noviembre</span>
         <span className="text-5xl md:text-6xl font-serif mx-2 leading-none">15</span>
         <span className="mb-1">del 2025</span>
-      </div>
-      <div className="text-[#bfa15a] text-2xl md:text-3xl font-serif my-1">Faltan</div>
+      </motion.div>
+      <motion.div
+        className="text-[#bfa15a] text-2xl md:text-3xl font-serif my-1"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.6 }}
+      >
+        Faltan
+      </motion.div>
       <div className="flex items-center justify-center gap-2 text-3xl md:text-4xl font-bold text-[#162b4e]">
-        <span>{String(timeLeft.days).padStart(2, "0")}</span>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={timeLeft.days}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {String(timeLeft.days).padStart(2, "0")}
+          </motion.span>
+        </AnimatePresence>
         <span className="text-[#bfa15a] font-normal">:</span>
-        <span>{String(timeLeft.hours).padStart(2, "0")}</span>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={timeLeft.hours}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {String(timeLeft.hours).padStart(2, "0")}
+          </motion.span>
+        </AnimatePresence>
         <span className="text-[#bfa15a] font-normal">:</span>
-        <span>{String(timeLeft.minutes).padStart(2, "0")}</span>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={timeLeft.minutes}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {String(timeLeft.minutes).padStart(2, "0")}
+          </motion.span>
+        </AnimatePresence>
         <span className="text-[#bfa15a] font-normal">:</span>
-        <span className="text-[#bfa15a]">{String(timeLeft.seconds).padStart(2, "0")}</span>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={timeLeft.seconds}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {String(timeLeft.seconds).padStart(2, "0")}
+          </motion.span>
+        </AnimatePresence>
       </div>
-      <div className="text-xs text-gray-500 mt-2 tracking-wide">para nuestra boda</div>
-    </section>
+      <motion.div
+        className="text-xs text-gray-500 mt-2 tracking-wide"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.6 }}
+      >
+        para nuestra boda
+      </motion.div>
+    </motion.section>
   );
 };
 

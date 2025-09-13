@@ -72,8 +72,14 @@ const InvitationSection5 = () => {
           <div className="flex flex-col gap-8 text-center">
             <div className="flex flex-col gap-6 relative">
               {/* Placeholders invisibles para reservar el espacio y mantener el layout estable */}
-              <div className="absolute -top-7 -left-30 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none" style={{ transform: "rotate(180deg)" }}></div>
-              <div className="absolute -top-0 left-60 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none" style={{ transform: "rotate(180deg)" }}></div>
+              <div
+                className="absolute -top-7 -left-30 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none"
+                style={{ transform: "rotate(180deg)" }}
+              ></div>
+              <div
+                className="absolute -top-0 left-60 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none"
+                style={{ transform: "rotate(180deg)" }}
+              ></div>
 
               {/* Contenido personalizado con animación en cascada */}
               <motion.h2
@@ -92,8 +98,10 @@ const InvitationSection5 = () => {
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
               >
-                <span className="font-bold text-lg">Padres de la novia</span><br />
-                <span>Maria Lucelly Zapata Bedoya</span><br />
+                <span className="font-bold text-lg">Padres de la novia</span>
+                <br />
+                <span>Maria Lucelly Zapata Bedoya</span>
+                <br />
                 <span>Alvaro Libreros Caicedo</span>
               </motion.div>
               <motion.div
@@ -103,8 +111,10 @@ const InvitationSection5 = () => {
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
               >
-                <span className="font-bold text-lg">Padres del novio</span><br />
-                <span>Leandra Susana Naranjo Monsalve</span><br />
+                <span className="font-bold text-lg">Padres del novio</span>
+                <br />
+                <span>Leandra Susana Naranjo Monsalve</span>
+                <br />
                 <span>John Jairo Ordoñes Corrales</span>
               </motion.div>
               <motion.h3
@@ -123,8 +133,10 @@ const InvitationSection5 = () => {
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
               >
-                <span className="font-bold text-lg">Padrinos</span><br />
-                <span>Isabel Cristina Castro Pineda</span><br />
+                <span className="font-bold text-lg">Padrinos</span>
+                <br />
+                <span>Isabel Cristina Castro Pineda</span>
+                <br />
                 <span>Marco Tulio Naranjo Monsalve</span>
               </motion.div>
               <motion.div
@@ -160,8 +172,7 @@ const InvitationSection5 = () => {
                 </div>
               </motion.div>
             </div>
-      <Countdown />
-
+            <Countdown />
           </div>
         </motion.div>
       </div>
