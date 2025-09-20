@@ -7,6 +7,7 @@ import InvitationSection5 from "@/components/InvitationSection5";
 import InvitationSection6 from "@/components/InvitationSection6";
 import InvitationSection7 from "@/components/InvitationSection7";
 import InvitationSection8 from "@/components/InvitationSection8";
+import InvitationSection9 from "@/components/InvitationSection9";
 
 function App() {
   const [isMounted, setIsMounted] = useState(false);
@@ -28,17 +29,17 @@ function App() {
           <p className="text-xl font-serif text-gray-800">
             Cargando invitación...
           </p>
-          <div className="flex justify-center space-x-3 mt-2">
+          <div className="flex justify-center gap-2 mt-2">
             <div
-              className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"
+              className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"
               style={{ animationDelay: "0ms" }}
             ></div>
             <div
-              className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"
+              className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"
               style={{ animationDelay: "300ms" }}
             ></div>
             <div
-              className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"
+              className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"
               style={{ animationDelay: "600ms" }}
             ></div>
           </div>
@@ -48,15 +49,18 @@ function App() {
   }
 
   return (
-    <div className="relative bg-gradient-to-b from-slate-50 to-white max-w-2xl mx-auto">
-      <InvitationSection1 />
-      <InvitationSection2 />
-      <InvitationSection3 />
-      <InvitationSection4 />
-      <InvitationSection5 />
-      <InvitationSection6 />
-      <InvitationSection7 />
-      <InvitationSection8 />
+    <div className="w-full flex flex-col justify-center items-center bg-white">
+      <div className="max-w-2xl mx-auto">
+        <InvitationSection1 />
+        <InvitationSection2 />
+        <InvitationSection3 />
+        <InvitationSection4 />
+        <InvitationSection5 />
+        <InvitationSection6 />
+        <InvitationSection9 />
+        <InvitationSection7 />
+        <InvitationSection8 />
+      </div>
     </div>
   );
 }

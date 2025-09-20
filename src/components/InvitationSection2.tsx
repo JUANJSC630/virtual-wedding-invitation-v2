@@ -17,7 +17,7 @@ const InvitationSection2 = () => {
           backgroundSize: "cover",
           backgroundPosition: "center",
           transform: "rotate(180deg)",
-          marginBottom: "-90px",
+          marginBottom: "-20px",
           marginTop: "-50px",
           zIndex: 50,
           position: "relative",
@@ -25,16 +25,16 @@ const InvitationSection2 = () => {
       ></div>
       {/* Foto principal */}
       <div
-        className="w-full max-w-2xl flex justify-center items-center p-0 m-0"
+        className="w-full max-w-2xl flex justify-center items-center p-0 my-0"
         style={{ lineHeight: 0 }}
       >
         <img
-          src="/photos/d9c19fc8b37260cc75cb82e4e706e0b1.jpg"
+          src="/photos/357deab6-6a7e-47cf-be14-49c22392b2f6.png"
           alt="Foto principal"
           className="w-full object-cover block"
           style={{
-            aspectRatio: "670/1000",
-            maxHeight: 670,
+            aspectRatio: "9/16",
+            maxHeight: 1000,
             borderRadius: 0,
             boxShadow: "none",
             margin: 0,
@@ -57,7 +57,7 @@ const InvitationSection2 = () => {
           backgroundImage: `url('/fondo.png')`,
           backgroundSize: "cover",
           backgroundPosition: "center top",
-          marginTop: "-30px",
+          marginTop: "-50px",
           zIndex: 50,
           position: "relative",
         }}

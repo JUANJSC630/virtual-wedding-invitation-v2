@@ -37,7 +37,7 @@ const InvitationSection4 = () => {
         style={{ lineHeight: 0 }}
       >
         <img
-          src="/photos/premium_photo-1675851210855-e7727076e829.jpeg"
+          src="/photos/3c430f49-09f4-4db1-b37d-3fcca9e001bc.png"
           alt="Foto principal"
           className="w-full object-cover block"
           style={{
