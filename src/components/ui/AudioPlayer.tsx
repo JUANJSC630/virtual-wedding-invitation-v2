@@ -1,10 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
-interface AudioPlayerProps {
-  src: string;
-  songTitle?: string;
-}
+import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
+
+import { AudioPlayerProps } from "@/types";
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
   const [isPlaying, setIsPlaying] = useState(false);

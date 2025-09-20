@@ -1,14 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 
-interface UseImagePreloadOptions {
-  delay?: number;
-  onLoadComplete?: () => void;
-}
+import { UseImagePreloadOptions, UseImagePreloadReturn } from "@/types";
 
 export const useImagePreload = (
   imageSources: string[],
   options: UseImagePreloadOptions = {}
-) => {
+): UseImagePreloadReturn => {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [loadedCount, setLoadedCount] = useState(0);
   const { delay = 100, onLoadComplete } = options;
@@ -50,5 +47,5 @@ export const useImagePreload = (
     loadedCount,
     totalImages: imageSources.length,
     loadingProgress: imageSources.length > 0 ? (loadedCount / imageSources.length) * 100 : 100,
-  };
+  } as UseImagePreloadReturn;
 };

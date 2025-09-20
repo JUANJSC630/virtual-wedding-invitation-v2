@@ -1,5 +1,6 @@
-import { useRef, useState, useEffect } from "react";
-import { motion, useInView, Variants } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+
+import { Variants, motion, useInView } from "framer-motion";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection7 = () => {
@@ -23,7 +24,7 @@ const InvitationSection7 = () => {
 
     const imagesToLoad = ["/ramo-lateral.png", "/fondo.png"];
 
-    imagesToLoad.forEach((src) => {
+    imagesToLoad.forEach(src => {
       const img = new Image();
       img.src = src;
     });
@@ -69,9 +70,7 @@ const InvitationSection7 = () => {
           style={{ padding: "0 3rem 3rem 3rem" }}
         >
           <div className="flex flex-col">
-            <p className="text-4xl font-serif text-[#bfa15a] text-center">
-              Itinerario
-            </p>
+            <p className="text-4xl font-serif text-[#bfa15a] text-center">Itinerario</p>
           </div>
           <div className="w-full max-w-3xl mx-auto grid grid-cols-3 gap-0 relative">
             {/* Columna izquierda */}
@@ -84,14 +83,8 @@ const InvitationSection7 = () => {
                 transition={{ duration: 0.7, delay: 0 }}
                 className="flex flex-col items-end"
               >
-                <img
-                  src="/iglesia.png"
-                  alt="Ceremonia religiosa"
-                  className="w-20 h-20 mb-1"
-                />
-                <span className="text-base font-semibold text-[#162b4e]">
-                  6:00 PM
-                </span>
+                <img src="/iglesia.png" alt="Ceremonia religiosa" className="w-20 h-20 mb-1" />
+                <span className="text-base font-semibold text-[#162b4e]">6:00 PM</span>
                 <span className="text-sm md:text-base font-serif text-[#162b4e] text-right">
                   CEREMONIA RELIGIOSA
                 </span>
@@ -104,14 +97,8 @@ const InvitationSection7 = () => {
                 transition={{ duration: 0.7, delay: 0.2 }}
                 className="flex flex-col items-end"
               >
-                <img
-                  src="/copas.png"
-                  alt="Brindis"
-                  className="w-20 h-20 mb-1"
-                />
-                <span className="text-base font-semibold text-[#162b4e]">
-                  9:00 PM
-                </span>
+                <img src="/copas.png" alt="Brindis" className="w-20 h-20 mb-1" />
+                <span className="text-base font-semibold text-[#162b4e]">9:00 PM</span>
                 <span className="text-sm md:text-base font-serif text-[#162b4e] text-right">
                   BRINDIS
                 </span>
@@ -125,9 +112,7 @@ const InvitationSection7 = () => {
                 className="flex flex-col items-end"
               >
                 <img src="/cena.png" alt="Cena" className="w-20 h-20 mb-1" />
-                <span className="text-base font-semibold text-[#162b4e]">
-                  11:00 PM
-                </span>
+                <span className="text-base font-semibold text-[#162b4e]">11:00 PM</span>
                 <span className="text-sm md:text-base font-serif text-[#162b4e] text-right">
                   CENA
                 </span>
@@ -151,14 +136,8 @@ const InvitationSection7 = () => {
                 transition={{ duration: 0.7, delay: 0.1 }}
                 className="flex flex-col items-start"
               >
-                <img
-                  src="/mesa.png"
-                  alt="Recepción"
-                  className="w-20 h-20 mb-1"
-                />
-                <span className="text-base font-semibold text-[#162b4e]">
-                  8:00 PM
-                </span>
+                <img src="/mesa.png" alt="Recepción" className="w-20 h-20 mb-1" />
+                <span className="text-base font-semibold text-[#162b4e]">8:00 PM</span>
                 <span className="text-sm md:text-base font-serif text-[#162b4e] text-left">
                   RECEPCION
                 </span>
@@ -172,9 +151,7 @@ const InvitationSection7 = () => {
                 className="flex flex-col items-start"
               >
                 <img src="/vals.png" alt="Vals" className="w-20 h-20 mb-1" />
-                <span className="text-base font-semibold text-[#162b4e]">
-                  9:30 PM
-                </span>
+                <span className="text-base font-semibold text-[#162b4e]">9:30 PM</span>
                 <span className="text-sm md:text-base font-serif text-[#162b4e] text-left">
                   VALS
                 </span>

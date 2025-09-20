@@ -1,24 +1,19 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-interface UseLazyImageOptions {
-  threshold?: number;
-  rootMargin?: string;
-}
+import { UseLazyImageOptions } from "@/types";
 
-export const useLazyImage = (
-  src: string,
-  options: UseLazyImageOptions = {}
-) => {
+export const useLazyImage = (src: string, options: UseLazyImageOptions = {}) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const { threshold = 0.1, rootMargin = '50px' } = options;
+  const { threshold = 0.1, rootMargin = "50px" } = options;
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
+      entries => {
+        const entry = entries[0];
+        if (entry?.isIntersecting) {
           setIsInView(true);
           observer.disconnect();
         }

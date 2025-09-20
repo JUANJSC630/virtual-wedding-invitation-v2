@@ -1,13 +1,8 @@
-import React from 'react';
-import { useLazyImage } from '@/hooks/useLazyImage';
+import React from "react";
 
-interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  src: string;
-  alt: string;
-  placeholder?: string;
-  threshold?: number;
-  rootMargin?: string;
-}
+import { LazyImageProps } from "@/types";
+
+import { useLazyImage } from "@/hooks/useLazyImage";
 
 const LazyImage: React.FC<LazyImageProps> = ({
   src,
@@ -19,7 +14,10 @@ const LazyImage: React.FC<LazyImageProps> = ({
   style,
   ...props
 }) => {
-  const { imgRef, isLoaded } = useLazyImage(src, { threshold, rootMargin });
+  const { imgRef, isLoaded } = useLazyImage(src, {
+    ...(threshold !== undefined && { threshold }),
+    ...(rootMargin !== undefined && { rootMargin }),
+  });
 
   return (
     <img
@@ -30,7 +28,7 @@ const LazyImage: React.FC<LazyImageProps> = ({
       style={{
         ...style,
         opacity: isLoaded ? 1 : 0.3,
-        transition: 'opacity 0.3s ease',
+        transition: "opacity 0.3s ease",
       }}
       {...props}
     />

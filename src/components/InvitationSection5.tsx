@@ -1,5 +1,7 @@
-import { useRef, useState, useEffect } from "react";
-import { motion, useInView, Variants } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+
+import { Variants, motion, useInView } from "framer-motion";
+
 import Countdown from "@/components/Countdown";
 
 // Definimos el componente de la sección de invitación
@@ -24,7 +26,7 @@ const InvitationSection5 = () => {
 
     const imagesToLoad = ["/ramo-lateral.png", "/fondo.png"];
 
-    imagesToLoad.forEach((src) => {
+    imagesToLoad.forEach(src => {
       const img = new Image();
       img.src = src;
     });

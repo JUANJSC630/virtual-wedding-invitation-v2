@@ -1,8 +1,9 @@
-import { useRef, useState, useEffect } from "react";
-import { motion, useInView, Variants } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 
-import Button from "@/components/ui/button";
+import { Variants, motion, useInView } from "framer-motion";
+
 import DressCodeIcons from "@/components/ui/DressCodeIcons";
+import Button from "@/components/ui/button";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection6 = () => {
@@ -26,7 +27,7 @@ const InvitationSection6 = () => {
 
     const imagesToLoad = ["/ramo-lateral.png", "/fondo.png"];
 
-    imagesToLoad.forEach((src) => {
+    imagesToLoad.forEach(src => {
       const img = new Image();
       img.src = src;
     });
@@ -97,18 +98,12 @@ const InvitationSection6 = () => {
                     className="mx-auto"
                   />
                 </motion.div>
-                <div className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]">
-                  6:00 PM
-                </div>
-                <div className="font-bold text-2xl md:text-3xl tracking-wide">
-                  CEREMONIA
-                </div>
+                <div className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]">6:00 PM</div>
+                <div className="font-bold text-2xl md:text-3xl tracking-wide">CEREMONIA</div>
                 <div className="text-lg md:text-xl font-serif text-[#162b4e]">
                   IGLESIA LA MEDALLA MILAGROSA
                 </div>
-                <div className="text-base md:text-lg text-gray-700">
-                  Zarzal, Valle Del Cauca
-                </div>
+                <div className="text-base md:text-lg text-gray-700">Zarzal, Valle Del Cauca</div>
                 <Button
                   className="mt-4"
                   onClick={() =>
@@ -145,9 +140,7 @@ const InvitationSection6 = () => {
                     className="mx-auto"
                   />
                 </motion.div>
-                <div className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]">
-                  8:00 PM
-                </div>
+                <div className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]">8:00 PM</div>
                 <div className="font-bold text-2xl md:text-3xl tracking-wide font-serif">
                   RECEPCION
                 </div>
@@ -172,9 +165,7 @@ const InvitationSection6 = () => {
               </motion.div>
             </div>
             {/* Bloque código de vestimenta */}
-            <motion.div
-              className="flex flex-col items-center justify-center w-full gap-6"
-            >
+            <motion.div className="flex flex-col items-center justify-center w-full gap-6">
               {/* Título animado hacia abajo */}
               <motion.div
                 initial={{ opacity: 0, y: -40 }}
@@ -206,7 +197,10 @@ const InvitationSection6 = () => {
                 className="text-[#162b4e] font-serif"
               >
                 <span className="block text-sm">
-                  ELLAS: <span className="font-semibold font-serif">EVITAR COLORES BLANCOS Y AZUL MARINO.</span>
+                  ELLAS:{" "}
+                  <span className="font-semibold font-serif">
+                    EVITAR COLORES BLANCOS Y AZUL MARINO.
+                  </span>
                 </span>
                 <span className="block text-sm font-serif">
                   ELLOS: <span className="font-semibold">EVITAR COLORES BEIGE Y AZUL MARINO.</span>

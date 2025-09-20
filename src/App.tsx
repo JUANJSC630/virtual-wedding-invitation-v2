@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
 import InvitationSection1 from "@/components/InvitationSection1";
 import InvitationSection2 from "@/components/InvitationSection2";
 import InvitationSection3 from "@/components/InvitationSection3";
@@ -9,7 +10,7 @@ import InvitationSection7 from "@/components/InvitationSection7";
 import InvitationSection8 from "@/components/InvitationSection8";
 import InvitationSection9 from "@/components/InvitationSection9";
 
-function App(): JSX.Element {
+function App(): React.JSX.Element {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -26,9 +27,7 @@ function App(): JSX.Element {
           }}
         />
         <div className="relative z-10 text-center p-4">
-          <p className="text-xl font-serif text-gray-800">
-            Cargando invitación...
-          </p>
+          <p className="text-xl font-serif text-gray-800">Cargando invitación...</p>
           <div className="flex justify-center gap-2 mt-2">
             <div
               className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"

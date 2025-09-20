@@ -58,6 +58,7 @@ src/
 ## 🛠️ Technologies Used
 
 ### Core Technologies
+
 - **React 19.1.1**: Modern React with latest features
 - **TypeScript**: Type-safe development with strict mode
 - **Vite 7.1.6**: Ultra-fast development environment with optimized builds
@@ -65,12 +66,14 @@ src/
 - **pnpm**: Fast, disk space efficient package manager
 
 ### Animation & UI
+
 - **Framer Motion 12.23.16**: Smooth animations and transitions
 - **Lucide React**: Modern minimalist icons
 - **Class Variance Authority**: Type-safe component variants
 - **Tailwind Merge**: Efficient class merging utility
 
 ### Development Tools
+
 - **ESLint**: Code linting with React hooks and refresh plugins
 - **PostCSS**: CSS processing with autoprefixer
 - **@types/react**: TypeScript definitions for React
@@ -78,6 +81,7 @@ src/
 ## ⚡ Performance Optimizations
 
 ### Bundle Analysis
+
 - **Total Size**: ~120 kB gzipped
 - **Code Splitting**: Optimized chunks for better caching
   - `vendor.js`: 11.72 kB (React/React-DOM)
@@ -86,6 +90,7 @@ src/
   - `main.js`: 234.42 kB (Application logic)
 
 ### Optimization Features
+
 - **Lazy Loading**: Images load as they enter viewport
 - **Image Preloading**: Custom hooks for optimized loading
 - **Manual Chunks**: Strategic code splitting for optimal caching
@@ -95,23 +100,27 @@ src/
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 20.19+ or 22.12+
 - pnpm (recommended) or npm
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd virtual-wedding-invitation-v2
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 3. **Start development server**
+
    ```bash
    pnpm dev
    ```
@@ -133,6 +142,7 @@ src/
 This project is easily customizable to fit your needs:
 
 ### Content Customization
+
 - **Images**: Replace files in `/public` directory
 - **Wedding Information**: Update details in respective components
 - **Colors**: Modify TailwindCSS theme in `tailwind.config.ts`
@@ -140,16 +150,18 @@ This project is easily customizable to fit your needs:
 - **WhatsApp Numbers**: Update phone numbers in `InvitationSection8.tsx`
 
 ### Styling
+
 - **Color Scheme**: Modify CSS custom properties in `src/index.css`
 - **Fonts**: Update font imports and TailwindCSS font configuration
 - **Animations**: Customize Framer Motion variants in components
 
 ### Example Color Customization
+
 ```css
 :root {
-  --primary: 221 83% 20%;        /* Navy blue */
-  --secondary: 43 74% 66%;       /* Gold */
-  --background: 0 0% 100%;       /* White */
+  --primary: 221 83% 20%; /* Navy blue */
+  --secondary: 43 74% 66%; /* Gold */
+  --background: 0 0% 100%; /* White */
 }
 ```
 

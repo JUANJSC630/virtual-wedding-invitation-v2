@@ -2,7 +2,10 @@ import { motion } from "framer-motion";
 
 const InvitationSection1 = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden" aria-label="Wedding invitation header with biblical quote">
+    <section
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      aria-label="Wedding invitation header with biblical quote"
+    >
       {/* Imagen de fondo */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -89,9 +92,7 @@ const InvitationSection1 = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.0 }}
           >
-            <p className="text-3xl font-medium text-gray-800 tracking-wider">
-              ¡NOS CASAMOS!
-            </p>
+            <p className="text-3xl font-medium text-gray-800 tracking-wider">¡NOS CASAMOS!</p>
           </motion.div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+
+import { AnimatePresence, motion } from "framer-motion";
 
 const EVENT_DATE = new Date("2025-11-15T18:00:00-05:00"); // 15 Noviembre 2025, 6:00pm
 

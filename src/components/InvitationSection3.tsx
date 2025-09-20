@@ -1,7 +1,10 @@
-import { useRef, useState, useEffect } from "react";
-import { motion, useInView, Variants } from "framer-motion";
-import AudioPlayer from "@/components/ui/AudioPlayer";
+import { useEffect, useRef, useState } from "react";
+
+import { Variants, motion, useInView } from "framer-motion";
+
 import { useImagePreload } from "@/hooks/useImagePreload";
+
+import AudioPlayer from "@/components/ui/AudioPlayer";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection3 = () => {
@@ -18,10 +21,9 @@ const InvitationSection3 = () => {
   }, []);
 
   // Usar el hook unificado para precargar imágenes
-  const { imagesLoaded } = useImagePreload(
-    layoutReady ? ["/ramo-lateral.png", "/fondo.png"] : [],
-    { delay: 0 }
-  );
+  const { imagesLoaded } = useImagePreload(layoutReady ? ["/ramo-lateral.png", "/fondo.png"] : [], {
+    delay: 0,
+  });
 
   const isInView = useInView(ref, {
     once: true,
@@ -71,8 +73,14 @@ const InvitationSection3 = () => {
           <div className="flex flex-col gap-8 text-center">
             <div className="flex flex-col gap-6 relative">
               {/* Placeholders invisibles para reservar el espacio y mantener el layout estable */}
-              <div className="absolute -top-7 -left-30 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none" style={{ transform: "rotate(180deg)" }}></div>
-              <div className="absolute -top-0 left-60 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none" style={{ transform: "rotate(180deg)" }}></div>
+              <div
+                className="absolute -top-7 -left-30 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none"
+                style={{ transform: "rotate(180deg)" }}
+              ></div>
+              <div
+                className="absolute -top-0 left-60 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none"
+                style={{ transform: "rotate(180deg)" }}
+              ></div>
 
               <motion.p
                 className="text-start text-6xl font-serif text-gray-700 italic font-light tracking-wider"
@@ -88,15 +96,15 @@ const InvitationSection3 = () => {
                   transition={{
                     duration: 1.2,
                     delay: 0.3,
-                    ease: "easeOut"
+                    ease: "easeOut",
                   }}
                   whileInView={{
                     rotate: [180, 175, 180],
                     transition: {
                       duration: 5,
                       repeat: Infinity,
-                      repeatType: "reverse"
-                    }
+                      repeatType: "reverse",
+                    },
                   }}
                 >
                   <img
@@ -117,15 +125,15 @@ const InvitationSection3 = () => {
                   transition={{
                     duration: 1.2,
                     delay: 0.6,
-                    ease: "easeOut"
+                    ease: "easeOut",
                   }}
                   whileInView={{
                     rotate: [180, 185, 180],
                     transition: {
                       duration: 5,
                       repeat: Infinity,
-                      repeatType: "reverse"
-                    }
+                      repeatType: "reverse",
+                    },
                   }}
                 >
                   <img
@@ -150,13 +158,12 @@ const InvitationSection3 = () => {
 
             <motion.div variants={fadeInUp}>
               <p className="font-serif text-gray-700 tracking-wide leading-relaxed text-base">
-                Hay momentos en la vida que son especiales por si solos, pero
-                compartirlos con las personas que queremos los hacen
-                inolvidables.
+                Hay momentos en la vida que son especiales por si solos, pero compartirlos con las
+                personas que queremos los hacen inolvidables.
                 <br />
                 <br />
-                Por eso queremos invitarlos a celebrar nuestra boda y que hagan
-                parte de este dia tan especial para nosotros.
+                Por eso queremos invitarlos a celebrar nuestra boda y que hagan parte de este dia
+                tan especial para nosotros.
               </p>
             </motion.div>
           </div>

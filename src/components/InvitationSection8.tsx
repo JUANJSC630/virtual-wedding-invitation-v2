@@ -1,7 +1,10 @@
-import Button from "@/components/ui/button";
-import { useRef, useState, useEffect } from "react";
-import { motion, useInView, Variants } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+
+import { Variants, motion, useInView } from "framer-motion";
+
 import { useImagePreload } from "@/hooks/useImagePreload";
+
+import Button from "@/components/ui/button";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection8 = () => {
@@ -18,8 +21,8 @@ const InvitationSection8 = () => {
       });
       const now = new Date(nowColombia);
 
-      // Fecha límite: 15 de octubre 2025, 12:00 PM hora Colombia
-      const testDeadline = new Date("2025-10-15T12:00:00");
+      // Fecha límite desde variables de entorno
+      const testDeadline = new Date(import.meta.env.VITE_RSVP_DEADLINE || "2025-10-15T12:00:00");
       // Convertir a zona horaria de Colombia
       const deadlineColombia = new Date(
         testDeadline.toLocaleString("en-US", { timeZone: "America/Bogota" })
@@ -47,10 +50,7 @@ const InvitationSection8 = () => {
   }, []);
 
   // Usar el hook unificado para precargar imágenes
-  useImagePreload(
-    layoutReady ? ["/ramo-lateral.png", "/fondo.png"] : [],
-    { delay: 0 }
-  );
+  useImagePreload(layoutReady ? ["/ramo-lateral.png", "/fondo.png"] : [], { delay: 0 });
 
   const isInView = useInView(ref, {
     once: true,
@@ -91,18 +91,28 @@ const InvitationSection8 = () => {
           <div className="flex flex-col gap-12 text-center items-center">
             {/* Sugerencia de regalos */}
             <div className="flex flex-col items-center gap-2">
-              <img src="/regalo.png" alt="Gift box icon for wedding present suggestions" loading="lazy" className="w-20 h-20 mb-3" />
+              <img
+                src="/regalo.png"
+                alt="Gift box icon for wedding present suggestions"
+                loading="lazy"
+                className="w-20 h-20 mb-3"
+              />
               <p className="text-2xl md:text-3xl font-serif font-semibold text-[#162b4e] text-center mb-2 tracking-wide">
                 SUGERENCIA DE REGALOS
               </p>
               <p className="text-center text-base md:text-lg text-[#162b4e] mb-2 max-w-xl">
-                El mejor regalo es tu presencia, pero si deseas tener un detalle
-                con nosotros, les dejamos estas opciones:
+                El mejor regalo es tu presencia, pero si deseas tener un detalle con nosotros, les
+                dejamos estas opciones:
               </p>
               <div className="text-xl md:text-2xl font-serif font-semibold text-[#162b4e] text-center mt-4 mb-2 tracking-wide">
                 LLUVIA DE SOBRES
               </div>
-              <img src="/sobre.png" alt="Envelope icon for monetary gift suggestion" loading="lazy" className="w-16 h-16 mt-1" />
+              <img
+                src="/sobre.png"
+                alt="Envelope icon for monetary gift suggestion"
+                loading="lazy"
+                className="w-16 h-16 mt-1"
+              />
             </div>
 
             {/* Confirmar asistencia */}
@@ -119,8 +129,10 @@ const InvitationSection8 = () => {
                   }`}
                   onClick={() => {
                     if (!isAfterDeadline) {
+                      const groomPhone = import.meta.env.VITE_GROOM_PHONE;
+                      const groomMessage = import.meta.env.VITE_GROOM_WHATSAPP_MESSAGE;
                       window.open(
-                        "https://wa.me/573126067185?text=Hola%20Novio,%20confirmo%20mi%20asistencia%20a%20la%20boda!",
+                        `https://wa.me/${groomPhone}?text=${groomMessage}`,
                         "_blank",
                         "noopener,noreferrer"
                       );
@@ -146,8 +158,10 @@ const InvitationSection8 = () => {
                   }`}
                   onClick={() => {
                     if (!isAfterDeadline) {
+                      const bridePhone = import.meta.env.VITE_BRIDE_PHONE;
+                      const brideMessage = import.meta.env.VITE_BRIDE_WHATSAPP_MESSAGE;
                       window.open(
-                        "https://wa.me/573185643630?text=Hola%20Novia,%20confirmo%20mi%20asistencia%20a%20la%20boda!",
+                        `https://wa.me/${bridePhone}?text=${brideMessage}`,
                         "_blank",
                         "noopener,noreferrer"
                       );
