@@ -13,4 +13,29 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          animations: ['framer-motion'],
+          ui: ['lucide-react', '@radix-ui/react-slot'],
+        }
+      }
+    },
+    // Optimizar assets
+    assetsInlineLimit: 4096,
+    cssCodeSplit: true,
+    sourcemap: false,
+    minify: 'esbuild',
+  },
+  // Optimizar desarrollo
+  server: {
+    host: true,
+    port: 3000,
+  },
+  // Pre-bundling para mejor performance
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'framer-motion'],
+  },
 })

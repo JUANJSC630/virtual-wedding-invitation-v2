@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import type { HTMLMotionProps } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -9,22 +10,19 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button: React.FC<ButtonProps> = ({
   children,
-  className = "",
+  className,
   variant = "default",
   ...rest
 }) => {
-  // Estilos base que NO interfieren con colores personalizados
-  const baseStyles = "!text-xl !font-serif !font-semibold !shadow-xl !border-2 !whitespace-nowrap !transition-all !duration-200 !ease-in-out !tracking-wide";
+  const baseStyles = "!font-serif !font-semibold !shadow-xl !border-2 !whitespace-nowrap !transition-all !duration-200 !ease-in-out !tracking-wide";
 
-  let finalClassName = baseStyles;
+  const defaultStyles = "!px-6 !py-4 !rounded-full !text-white !bg-[#466691] !border-[#ca8a04]";
 
-  if (variant === "custom") {
-    // Para variant="custom", usar estilos base + className del padre (sin estilos de color/tamaño por defecto)
-    finalClassName = baseStyles + (className ? " " + className : "");
-  } else {
-    // Para variant="default", usar estilos base + estilos por defecto + className del padre
-    finalClassName = baseStyles + " !px-10 !py-4 !rounded-full !text-white !bg-[#466691] !border-[#ca8a04]" + (className ? " " + className : "");
-  }
+  const finalClassName = cn(
+    baseStyles,
+    variant === "default" && defaultStyles,
+    className
+  );
 
   return (
     <motion.button

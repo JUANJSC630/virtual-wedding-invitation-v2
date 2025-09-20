@@ -1,45 +1,27 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useInView, Variants } from "framer-motion";
 import AudioPlayer from "@/components/ui/AudioPlayer";
+import { useImagePreload } from "@/hooks/useImagePreload";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection3 = () => {
   const ref = useRef(null);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
   const [layoutReady, setLayoutReady] = useState(false);
 
   // Preparar el layout antes de mostrar cualquier contenido
   useEffect(() => {
-    // Dar tiempo al navegador para calcular el layout correctamente
     const layoutTimer = setTimeout(() => {
       setLayoutReady(true);
     }, 100);
-    
+
     return () => clearTimeout(layoutTimer);
   }, []);
 
-  // Precargar las imágenes de manera más robusta
-  useEffect(() => {
-    // Solo intentar cargar imágenes cuando el layout esté listo
-    if (!layoutReady) return;
-    
-    const imagesToLoad = ["/ramo-lateral.png", "/fondo.png"];
-    let loadedCount = 0;
-    
-    const handleImageLoad = () => {
-      loadedCount++;
-      if (loadedCount === imagesToLoad.length) {
-        setImagesLoaded(true);
-      }
-    };
-    
-    imagesToLoad.forEach(src => {
-      const img = new Image();
-      img.src = src;
-      img.onload = handleImageLoad;
-      img.onerror = handleImageLoad; // Continuar incluso si hay un error
-    });
-  }, [layoutReady]);
+  // Usar el hook unificado para precargar imágenes
+  const { imagesLoaded } = useImagePreload(
+    layoutReady ? ["/ramo-lateral.png", "/fondo.png"] : [],
+    { delay: 0 }
+  );
 
   const isInView = useInView(ref, {
     once: true,

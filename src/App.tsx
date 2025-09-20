@@ -9,7 +9,7 @@ import InvitationSection7 from "@/components/InvitationSection7";
 import InvitationSection8 from "@/components/InvitationSection8";
 import InvitationSection9 from "@/components/InvitationSection9";
 
-function App() {
+function App(): JSX.Element {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ function App() {
   }
 
   return (
-    <div className="w-full flex flex-col justify-center items-center bg-white">
+    <main className="w-full flex flex-col justify-center items-center bg-white" role="main">
       <div className="max-w-2xl mx-auto">
         <InvitationSection1 />
         <InvitationSection2 />
@@ -61,7 +61,7 @@ function App() {
         <InvitationSection7 />
         <InvitationSection8 />
       </div>
-    </div>
+    </main>
   );
 }
 

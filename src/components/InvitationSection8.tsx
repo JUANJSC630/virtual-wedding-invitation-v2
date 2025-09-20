@@ -1,6 +1,7 @@
 import Button from "@/components/ui/button";
 import { useRef, useState, useEffect } from "react";
 import { motion, useInView, Variants } from "framer-motion";
+import { useImagePreload } from "@/hooks/useImagePreload";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection8 = () => {
@@ -45,18 +46,11 @@ const InvitationSection8 = () => {
     return () => clearTimeout(layoutTimer);
   }, []);
 
-  // Precargar las imágenes de manera más robusta
-  useEffect(() => {
-    // Solo intentar cargar imágenes cuando el layout esté listo
-    if (!layoutReady) return;
-
-    const imagesToLoad = ["/ramo-lateral.png", "/fondo.png"];
-
-    imagesToLoad.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, [layoutReady]);
+  // Usar el hook unificado para precargar imágenes
+  useImagePreload(
+    layoutReady ? ["/ramo-lateral.png", "/fondo.png"] : [],
+    { delay: 0 }
+  );
 
   const isInView = useInView(ref, {
     once: true,
@@ -97,7 +91,7 @@ const InvitationSection8 = () => {
           <div className="flex flex-col gap-12 text-center items-center">
             {/* Sugerencia de regalos */}
             <div className="flex flex-col items-center gap-2">
-              <img src="/regalo.png" alt="Regalo" className="w-20 h-20 mb-3" />
+              <img src="/regalo.png" alt="Gift box icon for wedding present suggestions" loading="lazy" className="w-20 h-20 mb-3" />
               <p className="text-2xl md:text-3xl font-serif font-semibold text-[#162b4e] text-center mb-2 tracking-wide">
                 SUGERENCIA DE REGALOS
               </p>
@@ -108,7 +102,7 @@ const InvitationSection8 = () => {
               <div className="text-xl md:text-2xl font-serif font-semibold text-[#162b4e] text-center mt-4 mb-2 tracking-wide">
                 LLUVIA DE SOBRES
               </div>
-              <img src="/sobre.png" alt="Sobre" className="w-16 h-16 mt-1" />
+              <img src="/sobre.png" alt="Envelope icon for monetary gift suggestion" loading="lazy" className="w-16 h-16 mt-1" />
             </div>
 
             {/* Confirmar asistencia */}
@@ -137,7 +131,8 @@ const InvitationSection8 = () => {
                 >
                   <img
                     src="/whatsapp.svg"
-                    alt=""
+                    alt="WhatsApp icon"
+                    loading="lazy"
                     className="w-8 h-8"
                     style={{ filter: "invert(1) brightness(2)" }}
                   />
@@ -163,7 +158,8 @@ const InvitationSection8 = () => {
                 >
                   <img
                     src="/whatsapp.svg"
-                    alt=""
+                    alt="WhatsApp icon"
+                    loading="lazy"
                     className="w-8 h-8"
                     style={{ filter: "invert(1) brightness(2)" }}
                   />
@@ -199,7 +195,8 @@ const InvitationSection8 = () => {
             <div className="absolute -bottom-55 w-[500px] h-[500px]">
               <img
                 src="/ramo-lateral.png"
-                alt="Ramo de flores"
+                alt="Decorative flower bouquet at the bottom of the invitation"
+                loading="lazy"
                 className="w-full h-full object-contain"
               />
             </div>

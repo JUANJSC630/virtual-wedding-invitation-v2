@@ -4,7 +4,8 @@ const InvitationSection4 = () => {
       <div className="absolute -top-10 -left-25 w-60 h-60 md:w-80 md:h-80 transform rotate-90" style={{ zIndex: 60 }}>
         <img
           src="/flores.png"
-          alt="Flores decorativas"
+          alt="Decorative flowers arrangement"
+          loading="lazy"
           className="w-full h-full object-contain"
         />
       </div>
@@ -38,7 +39,8 @@ const InvitationSection4 = () => {
       >
         <img
           src="/photos/3c430f49-09f4-4db1-b37d-3fcca9e001bc.png"
-          alt="Foto principal"
+          alt="Main wedding photograph of the couple"
+          loading="lazy"
           className="w-full object-cover block"
           style={{
             aspectRatio: "670/1000",
@@ -73,7 +75,8 @@ const InvitationSection4 = () => {
       <div className="absolute -bottom-10 -right-20 w-60 h-60 md:w-80 md:h-80 transform rotate-360" style={{ zIndex: 60 }}>
         <img
           src="/flores.png"
-          alt="Flores decorativas"
+          alt="Decorative flowers arrangement"
+          loading="lazy"
           className="w-full h-full object-contain"
         />
       </div>

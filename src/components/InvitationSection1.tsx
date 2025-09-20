@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 const InvitationSection1 = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden" aria-label="Wedding invitation header with biblical quote">
       {/* Imagen de fondo */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -14,7 +14,8 @@ const InvitationSection1 = () => {
       <div className="absolute -top-5 -left-10 w-72 h-72 md:w-80 md:h-80 opacity-80 transform rotate-180">
         <img
           src="/flor-esquina.png"
-          alt="Flores decorativas"
+          alt="Decorative floral border in upper left corner"
+          loading="lazy"
           className="w-full h-full object-contain"
         />
       </div>
@@ -23,7 +24,8 @@ const InvitationSection1 = () => {
       <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] opacity-60">
         <img
           src="/ramo.png"
-          alt="Ramo de flores"
+          alt="Wedding flower bouquet decoration on the right side"
+          loading="lazy"
           className="w-full h-full object-contain"
         />
       </div>

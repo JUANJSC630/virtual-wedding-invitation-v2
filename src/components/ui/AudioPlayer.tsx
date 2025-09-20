@@ -82,7 +82,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
         <div className="w-full flex justify-center">
           <img
             src="/onda-audio.png"
-            alt="Visualización de audio"
+            alt="Audio wave visualization for song player"
+            loading="lazy"
             className="h-8 object-contain mx-auto"
           />
         </div>
@@ -110,23 +111,30 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
         {/* Controles y título */}
         <div className="flex items-center justify-center gap-4 w-full">
           {/* Botones de navegación */}
-          <button className="rounded-full flex items-center justify-center w-10 h-10 border border-[#162b4e] bg-[#162b4e]/10 hover:bg-[#162b4e]/20 transition-colors">
+          <button
+            className="!rounded-full !flex !items-center !justify-center !w-10 !h-10 !border !border-[#162b4e] !bg-[#162b4e]/10 !hover:bg-[#162b4e]/20 !transition-colors"
+            aria-label="Previous track"
+          >
             <SkipBack size={20} className="text-[#162b4e]" />
           </button>
 
           {/* Botón de reproducción */}
-          <span
+          <button
             onClick={togglePlay}
-            className="rounded-full flex items-center justify-center w-10 h-10 border border-[#162b4e] bg-[#162b4e] hover:bg-[#162b4e]/80 transition-colors"
+            className="!rounded-full !flex !items-center !justify-center !w-10 !h-10 !border !border-[#162b4e] !bg-[#162b4e] !hover:bg-[#162b4e]/80 !transition-colors"
+            aria-label={isPlaying ? "Pause song" : "Play song"}
           >
             {isPlaying ? (
               <Pause size={20} className="text-white" />
             ) : (
               <Play size={20} className="text-white ml-0.5" />
             )}
-          </span>
+          </button>
 
-          <button className="rounded-full flex items-center justify-center w-10 h-10 border border-[#162b4e] bg-[#162b4e]/10 hover:bg-[#162b4e]/20 transition-colors">
+          <button
+            className="!rounded-full !flex !items-center !justify-center !w-10 !h-10 !border !border-[#162b4e] !bg-[#162b4e]/10 !hover:bg-[#162b4e]/20 !transition-colors"
+            aria-label="Next track"
+          >
             <SkipForward size={20} className="text-[#162b4e]" />
           </button>
         </div>
