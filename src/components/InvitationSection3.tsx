@@ -163,7 +163,7 @@ const InvitationSection3 = () => {
             </div>
 
             <motion.div variants={fadeInUp}>
-              <AudioPlayer src="/option-1.mp3" songTitle="Nuestra Canción" />
+              <AudioPlayer src="/cancion.mp3" songTitle="Nuestra Canción" />
             </motion.div>
 
             <motion.div variants={fadeInUp}>
