@@ -17,7 +17,7 @@ const Button: React.FC<ButtonProps> = ({ onClick, children, className = "" }) =>
       style={{ 
         padding: '1rem 2.5rem',
         borderRadius: '9999px', 
-        backgroundColor: '#1e3a5f', 
+        backgroundColor: '#466691', 
         color: 'white',
         fontSize: '1.25rem',
         fontFamily: 'serif',
