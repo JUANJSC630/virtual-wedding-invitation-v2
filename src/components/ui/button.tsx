@@ -1,34 +1,38 @@
 import React from "react";
 import { motion } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 
-interface ButtonProps {
-  onClick?: () => void;
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  className?: string;
+  variant?: "default" | "custom";
 }
 
-const Button: React.FC<ButtonProps> = ({ onClick, children, className = "" }) => {
+const Button: React.FC<ButtonProps> = ({
+  children,
+  className = "",
+  variant = "default",
+  ...rest
+}) => {
+  // Estilos base que NO interfieren con colores personalizados
+  const baseStyles = "!text-xl !font-serif !font-semibold !shadow-xl !border-2 !whitespace-nowrap !transition-all !duration-200 !ease-in-out !tracking-wide";
+
+  let finalClassName = baseStyles;
+
+  if (variant === "custom") {
+    // Para variant="custom", usar estilos base + className del padre (sin estilos de color/tamaño por defecto)
+    finalClassName = baseStyles + (className ? " " + className : "");
+  } else {
+    // Para variant="default", usar estilos base + estilos por defecto + className del padre
+    finalClassName = baseStyles + " !px-10 !py-4 !rounded-full !text-white !bg-[#466691] !border-[#ca8a04]" + (className ? " " + className : "");
+  }
+
   return (
     <motion.button
       whileTap={{ scale: 0.97 }}
       whileHover={{ scale: 1.04 }}
-      onClick={onClick}
-      className={`${className}`}
-      style={{ 
-        padding: '1rem 2.5rem',
-        borderRadius: '9999px', 
-        backgroundColor: '#466691', 
-        color: 'white',
-        fontSize: '1.25rem',
-        fontFamily: 'serif',
-        fontWeight: '600',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
-        border: '2px solid #ca8a04',
-        letterSpacing: '0.04em',
-        whiteSpace: 'nowrap',
-        transition: 'all 200ms ease'
-      }}
+      className={finalClassName}
       type="button"
+      {...(rest as HTMLMotionProps<"button">)}
     >
       {children}
     </motion.button>

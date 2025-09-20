@@ -6,10 +6,34 @@ import { motion, useInView, Variants } from "framer-motion";
 const InvitationSection8 = () => {
   const ref = useRef(null);
   const [layoutReady, setLayoutReady] = useState(false);
+  const [isAfterDeadline, setIsAfterDeadline] = useState(false);
+
+  // Verificar fecha límite automáticamente
+  useEffect(() => {
+    const checkAndUpdate = () => {
+      // Hora actual en Colombia (UTC-5)
+      const nowColombia = new Date().toLocaleString("en-US", {timeZone: "America/Bogota"});
+      const now = new Date(nowColombia);
+
+      // Fecha límite: 15 de octubre 2025, 12:00 PM hora Colombia
+      const testDeadline = new Date("2025-10-15T12:00:00");
+      // Convertir a zona horaria de Colombia
+      const deadlineColombia = new Date(testDeadline.toLocaleString("en-US", {timeZone: "America/Bogota"}));
+
+      setIsAfterDeadline(now > deadlineColombia);
+    };
+
+    // Verificar inmediatamente
+    checkAndUpdate();
+
+    // Verificar cada 3 segundos
+    const interval = setInterval(checkAndUpdate, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Preparar el layout antes de mostrar cualquier contenido
   useEffect(() => {
-    // Dar tiempo al navegador para calcular el layout correctamente
     const layoutTimer = setTimeout(() => {
       setLayoutReady(true);
     }, 100);
@@ -91,15 +115,21 @@ const InvitationSection8 = () => {
               <div className="flex flex-row gap-4">
                 {/* Botón WhatsApp Novio */}
                 <Button
-                  className="bg-[#bfa15a] hover:bg-[#a88a3c] text-white flex items-center gap-2 px-4 py-2 rounded-full shadow-md"
-                  onClick={() =>
-                    window.open(
-                      "https://wa.me/573126067185?text=Hola%20Novio,%20confirmo%20mi%20asistencia%20a%20la%20boda!",
-                      "_blank",
-                      "noopener,noreferrer"
-                    )
-                  }
+                  variant="custom"
+                  className={`!bg-[#bfa15a] !hover:bg-[#a88a3c] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
+                    isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
+                  }`}
+                  onClick={() => {
+                    if (!isAfterDeadline) {
+                      window.open(
+                        "https://wa.me/573126067185?text=Hola%20Novio,%20confirmo%20mi%20asistencia%20a%20la%20boda!",
+                        "_blank",
+                        "noopener,noreferrer"
+                      );
+                    }
+                  }}
                   aria-label="WhatsApp Novio"
+                  disabled={isAfterDeadline}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -114,15 +144,21 @@ const InvitationSection8 = () => {
                 </Button>
                 {/* Botón WhatsApp Novia */}
                 <Button
-                  className="bg-[#bfa15a] hover:bg-[#a88a3c] text-white flex items-center gap-2 px-4 py-2 rounded-full shadow-md"
-                  onClick={() =>
-                    window.open(
-                      "https://wa.me/573185643630?text=Hola%20Novia,%20confirmo%20mi%20asistencia%20a%20la%20boda!",
-                      "_blank",
-                      "noopener,noreferrer"
-                    )
-                  }
+                  variant="custom"
+                  className={`!bg-[#bfa15a] !hover:bg-[#a88a3c] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
+                    isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
+                  }`}
+                  onClick={() => {
+                    if (!isAfterDeadline) {
+                      window.open(
+                        "https://wa.me/573185643630?text=Hola%20Novia,%20confirmo%20mi%20asistencia%20a%20la%20boda!",
+                        "_blank",
+                        "noopener,noreferrer"
+                      );
+                    }
+                  }}
                   aria-label="WhatsApp Novia"
+                  disabled={isAfterDeadline}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -135,6 +171,18 @@ const InvitationSection8 = () => {
                   </svg>
                   Novia
                 </Button>
+              </div>
+
+              <div className="flex flex-row gap-4 mt-4">
+                <p className="text-sm text-[#bfa15a] font-serif text-center w-full opacity-80">
+                  * Fecha límite para confirmar:{" "}
+                  <span className="font-semibold">15 de octubre</span>
+                </p>
+              </div>
+              <div className="flex flex-row gap-4 mt-4">
+                <p className="text-sm text-[#bfa15a] font-serif text-center w-full opacity-80">
+                  {isAfterDeadline ? " (Cerrado)" : ""}
+                </p>
               </div>
             </div>
           </div>
