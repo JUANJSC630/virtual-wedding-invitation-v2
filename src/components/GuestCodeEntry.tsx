@@ -59,6 +59,17 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ onValidGuest }) => {
         // Guardar código en localStorage para futuros usos
         localStorage.setItem("guestCode", code.trim().toUpperCase());
 
+        // Registrar acceso del guest
+        try {
+          await fetch('/api/guests/access', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guestCode: code.trim().toUpperCase() }),
+          });
+        } catch (accessError) {
+          console.warn('No se pudo registrar el acceso:', accessError);
+        }
+
         // Proceder con el código válido y datos del guest
         onValidGuest(code.trim().toUpperCase(), result.guest);
       } else {

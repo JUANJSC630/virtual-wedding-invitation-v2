@@ -4,7 +4,9 @@ import {
   Calendar,
   CheckCircle,
   Edit,
+  Loader2,
   Plus,
+  RefreshCw,
   Shuffle,
   Trash2,
   UserCheck,
@@ -71,8 +73,8 @@ const GuestManager: React.FC = () => {
     maxGuests: 1,
   });
 
-  const { data: guests = [], isLoading } = useAllGuests();
-  const { data: stats } = useGuestStats();
+  const { data: guests = [], isLoading, isFetching } = useAllGuests();
+  const { data: stats, isFetching: isFetchingStats } = useGuestStats();
   const createMutation = useCreateGuest();
   const updateMutation = useUpdateGuest();
   const deleteMutation = useDeleteGuest();
@@ -279,7 +281,10 @@ const GuestManager: React.FC = () => {
             {/* Total Invitados */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Invitados</CardTitle>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  Total Invitados
+                  {isFetchingStats && <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />}
+                </CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -335,9 +340,13 @@ const GuestManager: React.FC = () => {
       {/* Lista de invitados */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Invitados</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Lista de Invitados
+            {isFetching && <RefreshCw className="h-4 w-4 animate-spin text-blue-500" />}
+          </CardTitle>
           <CardDescription>
             Administra y edita la información de todos los invitados
+            {isFetching && <span className="text-blue-500 ml-2">• Actualizando...</span>}
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -161,3 +161,12 @@ export const getGuestStats = async () => {
   }
   return await response.json();
 };
+
+// Obtener analytics de accesos
+export const getAnalytics = async () => {
+  const response = await fetch(`${API_BASE}/admin/analytics`);
+  if (!response.ok) {
+    throw new Error("Error al obtener analytics");
+  }
+  return await response.json();
+};

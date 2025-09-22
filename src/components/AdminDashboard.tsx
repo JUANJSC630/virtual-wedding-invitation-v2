@@ -2,9 +2,11 @@ import React from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Heart, Users2 } from "lucide-react";
+import { BarChart3, Heart, Users2 } from "lucide-react";
 
+import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import GuestManager from "@/components/admin/GuestManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Query client para el dashboard
 const adminQueryClient = new QueryClient({
@@ -18,6 +20,10 @@ const adminQueryClient = new QueryClient({
 });
 
 const AdminDashboard: React.FC = () => {
+  // Verificar si es super admin basado en los parámetros de la URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const isSuperAdmin = urlParams.get('super_admin') === 'true';
+
   return (
     <QueryClientProvider client={adminQueryClient}>
       <div className="min-h-screen bg-background">
@@ -44,7 +50,28 @@ const AdminDashboard: React.FC = () => {
 
         {/* Contenido principal */}
         <main className="container py-6">
-          <GuestManager />
+          {isSuperAdmin ? (
+            <Tabs defaultValue="guests" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="guests" className="flex items-center gap-2">
+                  <Users2 className="h-4 w-4" />
+                  Gestión de Invitados
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Analytics de Accesos
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="guests" className="mt-6">
+                <GuestManager />
+              </TabsContent>
+              <TabsContent value="analytics" className="mt-6">
+                <AnalyticsDashboard />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <GuestManager />
+          )}
         </main>
       </div>
       <ReactQueryDevtools initialIsOpen={false} />

@@ -98,13 +98,13 @@ guestRoutes.get("/code/:code", async (req, res) => {
 // Registrar acceso de invitado
 guestRoutes.post("/access", async (req, res) => {
   try {
-    const { code } = req.body;
+    const { guestCode } = req.body;
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.get("User-Agent");
 
     await prisma.guestAccess.create({
       data: {
-        guestCode: code.toUpperCase(),
+        guestCode: guestCode.toUpperCase(),
         ipAddress: ipAddress ?? null,
         userAgent: userAgent ?? null,
       },

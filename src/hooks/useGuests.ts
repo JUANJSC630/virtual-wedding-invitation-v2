@@ -9,6 +9,7 @@ import {
   deleteCompanion,
   deleteGuest,
   getAllGuests,
+  getAnalytics,
   getGuestStats,
   updateCompanion,
   updateGuest,
@@ -51,6 +52,7 @@ export const useAllGuests = () => {
     queryKey: ["guests", "all"],
     queryFn: getAllGuests,
     refetchOnWindowFocus: true,
+    refetchInterval: 10000, // Actualizar cada 10 segundos
     staleTime: 0, // Considerar datos como obsoletos inmediatamente
   });
 };
@@ -164,6 +166,18 @@ export const useGuestStats = () => {
     queryKey: ["admin", "stats"],
     queryFn: getGuestStats,
     refetchOnWindowFocus: true,
+    refetchInterval: 15000, // Actualizar cada 15 segundos
+    staleTime: 0, // Considerar datos como obsoletos inmediatamente
+  });
+};
+
+// Hook para obtener analytics de accesos
+export const useAnalytics = () => {
+  return useQuery({
+    queryKey: ["admin", "analytics"],
+    queryFn: getAnalytics,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Actualizar cada 30 segundos
     staleTime: 0, // Considerar datos como obsoletos inmediatamente
   });
 };
