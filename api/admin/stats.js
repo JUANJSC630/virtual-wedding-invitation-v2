@@ -1,4 +1,4 @@
-import prisma from "../../src/lib/prisma.js";
+import prisma from "../../lib/prisma.js";
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -13,13 +13,21 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
+      // Test simple first
+      if (!prisma) {
+        return res.status(500).json({ error: "Prisma not initialized" });
+      }
+
       // Obtener estadísticas
+      console.log("Starting stats query...");
       const [totalGuests, confirmedGuests, totalCompanions, confirmedCompanions] = await Promise.all([
         prisma.guest.count(),
         prisma.guest.count({ where: { confirmed: true } }),
         prisma.companion.count(),
         prisma.companion.count({ where: { confirmed: true } }),
       ]);
+
+      console.log("Got basic counts:", { totalGuests, confirmedGuests, totalCompanions, confirmedCompanions });
 
       // Calcular cupos totales
       const guestsWithSlots = await prisma.guest.findMany({
@@ -37,12 +45,18 @@ export default async function handler(req, res) {
         confirmedSlots: confirmedGuests + confirmedCompanions,
       };
 
+      console.log("Returning stats:", stats);
       res.json(stats);
     } else {
       res.status(405).json({ error: "Method not allowed" });
     }
   } catch (error) {
     console.error("Error in API:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    console.error("Error stack:", error.stack);
+    res.status(500).json({
+      error: "Error interno del servidor",
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 }
