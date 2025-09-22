@@ -2,17 +2,17 @@ import prisma from "../../lib/prisma.js";
 
 export default async function handler(req, res) {
   // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
   }
 
   try {
-    if (req.method === 'GET') {
+    if (req.method === "GET") {
       // Obtener todos los invitados
       const guests = await prisma.guest.findMany({
         include: { companions: true },
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       });
 
       res.json(guests);
-    } else if (req.method === 'POST') {
+    } else if (req.method === "POST") {
       // Crear nuevo invitado
       const { code, name, email, phone, maxGuests = 1 } = req.body;
 

@@ -2,11 +2,11 @@ import prisma from "../../../lib/prisma.js";
 
 export default async function handler(req, res) {
   // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
   }
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   try {
-    if (req.method === 'PATCH') {
+    if (req.method === "PATCH") {
       // Actualizar invitado
       const { name, email, phone, maxGuests, confirmed } = req.body;
 
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       });
 
       res.json(guest);
-    } else if (req.method === 'DELETE') {
+    } else if (req.method === "DELETE") {
       // Eliminar invitado
       await prisma.guest.delete({
         where: { id },

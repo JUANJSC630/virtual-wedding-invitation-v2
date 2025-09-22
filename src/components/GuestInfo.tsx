@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Heart, Users } from "lucide-react";
+import { CheckCircle, Heart, Users } from "lucide-react";
 
 import { Guest } from "@/types";
 
@@ -34,15 +34,28 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ guest, onContinue }) => {
         <div className="bg-[#f8eed2]/30 backdrop-blur-sm rounded-2xl shadow-2xl p-8 text-center">
           {/* Saludo personalizado */}
           <div className="mb-6">
-            <h1 className="text-2xl font-serif font-semibold mb-2">
-              {guest.name.split(",").map((name, index) => (
-                <div key={index} className="mb-1">
-                  {name.trim().toUpperCase()}
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-2xl font-serif font-semibold">
+                {guest.name.split(",").map((name, index) => (
+                  <div key={index} className="mb-1">
+                    {name.trim().toUpperCase()}
+                  </div>
+                ))}
+              </span>
+
+              {/* Badge de confirmación */}
+              {guest.confirmed && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium border border-green-200">
+                  <CheckCircle className="w-4 h-4" />
+                  Asistencia Confirmada
                 </div>
-              ))}
-            </h1>
-            <p className="text-gray-900 mb-4">
-              ¡Esperamos que puedan compartir esta fiesta junto a nosotros!
+              )}
+            </div>
+
+            <p className="text-gray-900 my-4">
+              {guest.confirmed
+                ? "¡Gracias por confirmar tu asistencia! Te esperamos en nuestra boda."
+                : "¡Esperamos que puedan compartir esta fiesta junto a nosotros!"}
             </p>
           </div>
 
@@ -55,10 +68,61 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ guest, onContinue }) => {
             <div className="text-3xl font-bold text-[#466691]">{totalGuests}</div>
           </div>
 
+          {/* Info expandible de confirmaciones */}
+          {guest.confirmed && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+              <div className="text-sm text-blue-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="font-medium">Estado de Confirmaciones</span>
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span>Invitado principal:</span>
+                    <span className="font-medium text-green-600">✓ Confirmado</span>
+                  </div>
+
+                  {guest.companions.length > 0 && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Acompañantes confirmados:</span>
+                        <span className="font-medium">
+                          {guest.companions.filter(c => c.confirmed).length}/
+                          {guest.companions.length}
+                        </span>
+                      </div>
+
+                      {guest.companions.map((companion, index) => (
+                        <div key={companion.id} className="flex justify-between pl-2 opacity-75">
+                          <span>• {companion.name}:</span>
+                          <span
+                            className={`font-medium ${
+                              companion.confirmed ? "text-green-600" : "text-amber-600"
+                            }`}
+                          >
+                            {companion.confirmed ? "✓ Confirmado" : "⏳ Pendiente"}
+                          </span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  <div className="flex justify-between pt-1 border-t border-blue-200">
+                    <span className="font-medium">Total confirmados:</span>
+                    <span className="font-bold text-blue-600">
+                      {totalConfirmed}/{totalGuests}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Botón para continuar */}
           <Button
             onClick={onContinue}
-            className="w-full !py-4 !bg-[#466691] hover:!bg-[#3b5170]  !text-white !rounded-full"
+            className="w-full !py-4 !bg-[#466691] hover:!bg-[#3b5170] !text-white !rounded-full"
           >
             Ver Invitación Completa
           </Button>

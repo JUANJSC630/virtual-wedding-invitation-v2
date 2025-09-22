@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 
 import { AlertCircle, Heart, User } from "lucide-react";
 
-import { useValidateGuestCode } from "@/hooks/useGuests";
 import { Guest } from "@/types";
+
+import { useValidateGuestCode } from "@/hooks/useGuests";
 
 import { Button } from "@/components/ui/button";
 
