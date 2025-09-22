@@ -1,4 +1,4 @@
-import prisma from "../../lib/prisma.js";
+import prisma from "../_utils/prisma.js";
 
 export default async function handler(req, res) {
   // Enable CORS
