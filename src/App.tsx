@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 
-import { useGuestByCode } from "@/hooks/useGuests";
+import { Guest } from "@/types";
 
 import AdminDashboard from "@/components/AdminDashboard";
 import GuestCodeEntry from "@/components/GuestCodeEntry";
@@ -34,14 +34,12 @@ const queryClient = new QueryClient({
 // Componente principal de la invitación
 const WeddingInvitation: React.FC = () => {
   const [validatedCode, setValidatedCode] = useState<string | null>(null);
+  const [guest, setGuest] = useState<Guest | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [showInvitation, setShowInvitation] = useState(false);
 
   // Comprobar si es la ruta de admin
   const isAdminRoute = window.location.pathname === "/admin";
-
-  // Obtener información del invitado si hay un código válido
-  const { data: guest, isLoading: isLoadingGuest } = useGuestByCode(validatedCode);
 
   useEffect(() => {
     setIsMounted(true);
@@ -83,31 +81,15 @@ const WeddingInvitation: React.FC = () => {
     return <AdminDashboard />;
   }
 
+  // Función para manejar código válido y guest
+  const handleValidGuest = (code: string, guestData: Guest) => {
+    setValidatedCode(code);
+    setGuest(guestData);
+  };
+
   // Si no hay código validado, mostrar pantalla de entrada
-  if (!validatedCode) {
-    return <GuestCodeEntry onValidCode={setValidatedCode} />;
-  }
-
-  // Si está cargando la información del invitado
-  if (isLoadingGuest) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white h-screen w-full">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/fondo.png')`,
-          }}
-        />
-        <div className="relative z-10 text-center p-4">
-          <p className="text-xl font-serif text-gray-800">Cargando tu invitación...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si no se encuentra el invitado
-  if (!guest) {
-    return <GuestCodeEntry onValidCode={setValidatedCode} />;
+  if (!validatedCode || !guest) {
+    return <GuestCodeEntry onValidGuest={handleValidGuest} />;
   }
 
   // Mostrar GuestInfo primero, luego la invitación completa

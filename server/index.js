@@ -25,7 +25,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 // Manejo de errores
-app.use((err, _req, res) => {
+app.use((err, _req, res, _next) => {
   console.error("Error:", err);
   res.status(500).json({
     error: "Error interno del servidor",

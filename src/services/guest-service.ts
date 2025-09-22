@@ -12,7 +12,13 @@ const API_BASE = "/api";
 // Validar código de invitado
 export const validateGuestCode = async (code: string): Promise<GuestValidationResult> => {
   try {
-    const response = await fetch(`${API_BASE}/guests/validate/${encodeURIComponent(code)}`);
+    const response = await fetch(`${API_BASE}/guests/validate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ code }),
+    });
     if (!response.ok) {
       throw new Error("Error al validar el código");
     }
@@ -25,29 +31,8 @@ export const validateGuestCode = async (code: string): Promise<GuestValidationRe
   }
 };
 
-// Obtener información del invitado por código
-export const getGuestByCode = async (code: string): Promise<Guest> => {
-  const response = await fetch(`${API_BASE}/guests/code/${encodeURIComponent(code)}`);
-  if (!response.ok) {
-    throw new Error("Invitado no encontrado");
-  }
-  return await response.json();
-};
-
-// Registrar acceso del invitado
-export const registerGuestAccess = async (code: string): Promise<void> => {
-  try {
-    await fetch(`${API_BASE}/guests/access`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ code }),
-    });
-  } catch (error) {
-    console.warn("Error registering guest access:", error);
-  }
-};
+// Nota: getGuestByCode y registerGuestAccess fueron eliminadas
+// validateGuestCode ya retorna toda la información del guest necesaria
 
 // Confirmar asistencia (RSVP)
 export const confirmRSVP = async (rsvpData: RSVPData): Promise<Guest> => {

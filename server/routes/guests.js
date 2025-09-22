@@ -4,7 +4,44 @@ import prisma from "../../src/lib/prisma.js";
 
 export const guestRoutes = express.Router();
 
-// Validar código de invitado
+// Validar código de invitado (POST - compatible con Vercel)
+guestRoutes.post("/validate", async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({
+        valid: false,
+        error: "Código de invitación requerido",
+      });
+    }
+
+    const guest = await prisma.guest.findUnique({
+      where: { code: code.toUpperCase() },
+      include: { companions: true },
+    });
+
+    if (!guest) {
+      return res.json({
+        valid: false,
+        error: "Código de invitación no válido",
+      });
+    }
+
+    return res.json({
+      valid: true,
+      guest,
+    });
+  } catch (error) {
+    console.error("Error validating guest code:", error);
+    return res.status(500).json({
+      valid: false,
+      error: "Error interno del servidor",
+    });
+  }
+});
+
+// Validar código de invitado (GET - legacy)
 guestRoutes.get("/validate/:code", async (req, res) => {
   try {
     const { code } = req.params;
@@ -84,11 +121,11 @@ guestRoutes.post("/access", async (req, res) => {
 // Confirmar RSVP
 guestRoutes.post("/rsvp", async (req, res) => {
   try {
-    const { guestId, confirmed, companions } = req.body;
+    const { guestCode, confirmed, companions } = req.body;
 
     // Actualizar el invitado principal
-    await prisma.guest.update({
-      where: { id: guestId },
+    const guest = await prisma.guest.update({
+      where: { code: guestCode.toUpperCase() },
       data: {
         confirmed,
         confirmedAt: confirmed ? new Date() : null,
@@ -96,32 +133,24 @@ guestRoutes.post("/rsvp", async (req, res) => {
       include: { companions: true },
     });
 
-    // Actualizar o crear acompañantes
-    for (const companion of companions) {
-      if (companion.id) {
-        // Actualizar acompañante existente
-        await prisma.companion.update({
-          where: { id: companion.id },
-          data: {
-            name: companion.name,
-            confirmed: companion.confirmed,
-          },
-        });
-      } else if (companion.name.trim()) {
-        // Crear nuevo acompañante
-        await prisma.companion.create({
-          data: {
-            guestId,
-            name: companion.name.trim(),
-            confirmed: companion.confirmed,
-          },
-        });
+    // Actualizar acompañantes si se proporcionaron
+    if (companions && Array.isArray(companions)) {
+      for (const companion of companions) {
+        if (companion.id) {
+          await prisma.companion.update({
+            where: { id: companion.id },
+            data: {
+              confirmed: companion.confirmed,
+              confirmedAt: companion.confirmed ? new Date() : null,
+            },
+          });
+        }
       }
     }
 
     // Obtener el invitado actualizado con acompañantes
     const finalGuest = await prisma.guest.findUnique({
-      where: { id: guestId },
+      where: { code: guestCode.toUpperCase() },
       include: { companions: true },
     });
 

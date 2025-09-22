@@ -9,9 +9,7 @@ import {
   deleteCompanion,
   deleteGuest,
   getAllGuests,
-  getGuestByCode,
   getGuestStats,
-  registerGuestAccess,
   updateCompanion,
   updateGuest,
   validateGuestCode,
@@ -24,21 +22,8 @@ export const useValidateGuestCode = () => {
   });
 };
 
-// Hook para obtener invitado por código
-export const useGuestByCode = (code: string | null) => {
-  return useQuery({
-    queryKey: ["guest", "code", code],
-    queryFn: () => getGuestByCode(code!),
-    enabled: !!code,
-  });
-};
-
-// Hook para registrar acceso del invitado
-export const useRegisterGuestAccess = () => {
-  return useMutation({
-    mutationFn: registerGuestAccess,
-  });
-};
+// Hook eliminado: useGuestByCode - ya no es necesario
+// Hook eliminado: useRegisterGuestAccess - endpoint no existe
 
 // Hook para confirmar RSVP
 export const useConfirmRSVP = () => {

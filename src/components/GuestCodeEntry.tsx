@@ -2,21 +2,21 @@ import React, { useEffect, useState } from "react";
 
 import { AlertCircle, Heart, User } from "lucide-react";
 
-import { useRegisterGuestAccess, useValidateGuestCode } from "@/hooks/useGuests";
+import { useValidateGuestCode } from "@/hooks/useGuests";
+import { Guest } from "@/types";
 
 import { Button } from "@/components/ui/button";
 
 interface GuestCodeEntryProps {
-  onValidCode: (code: string) => void;
+  onValidGuest: (code: string, guest: Guest) => void;
 }
 
-const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ onValidCode }) => {
+const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ onValidGuest }) => {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [showSavedMsg, setShowSavedMsg] = useState(false);
 
   const validateMutation = useValidateGuestCode();
-  const registerAccessMutation = useRegisterGuestAccess();
 
   // Cargar código desde localStorage al montar el componente
   useEffect(() => {
@@ -58,10 +58,8 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ onValidCode }) => {
         // Guardar código en localStorage para futuros usos
         localStorage.setItem("guestCode", code.trim().toUpperCase());
 
-        // Registrar el acceso
-        registerAccessMutation.mutate(code.trim().toUpperCase());
-        // Proceder con el código válido
-        onValidCode(code.trim().toUpperCase());
+        // Proceder con el código válido y datos del guest
+        onValidGuest(code.trim().toUpperCase(), result.guest);
       } else {
         setError(result.error || "Código de invitación no válido");
       }
