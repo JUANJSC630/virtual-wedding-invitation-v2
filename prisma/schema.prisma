@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo principal de invitados
+model Guest {
+  id          String   @id @default(cuid())
+  code        String   @unique // Código único para acceder (ej: "Ayp001")
+  name        String   // Nombre del invitado principal
+  email       String?  // Email opcional
+  phone       String?  // Teléfono opcional
+  maxGuests   Int      @default(1) // Máximo número de invitados permitidos
+  confirmed   Boolean  @default(false) // Si ya confirmó asistencia
+  confirmedAt DateTime? // Cuándo confirmó
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relación con invitados acompañantes
+  companions  Companion[]
+
+  @@map("guests")
+}
+
+// Modelo para acompañantes/invitados de los invitados
+model Companion {
+  id          String   @id @default(cuid())
+  guestId     String   // Referencia al invitado principal
+  name        String   // Nombre del acompañante
+  confirmed   Boolean  @default(false) // Si confirmó asistencia
+  confirmedAt DateTime? // Cuándo confirmó
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relación con el invitado principal
+  guest       Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@map("companions")
+}
+
+// Modelo para administración (opcional para el futuro)
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hash de la contraseña
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// Modelo para tracking de accesos (opcional)
+model GuestAccess {
+  id        String   @id @default(cuid())
+  guestCode String   // Código del invitado que accedió
+  ipAddress String?  // IP desde donde accedió
+  userAgent String?  // User agent del navegador
+  accessedAt DateTime @default(now())
+
+  @@map("guest_accesses")
+}

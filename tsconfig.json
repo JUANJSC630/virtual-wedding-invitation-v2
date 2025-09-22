@@ -5,10 +5,10 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "jsx": "react-jsx",
+    "rootDir": "/",
 
     // Module resolution
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -26,7 +26,6 @@
     "noImplicitOverride": true,
 
     // Emit
-    "noEmit": true,
     "useDefineForClassFields": true,
     "isolatedModules": true,
     "skipLibCheck": true,

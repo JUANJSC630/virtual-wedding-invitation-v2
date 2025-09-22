@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Variants, motion, useInView } from "framer-motion";
 
 import DressCodeIcons from "@/components/ui/DressCodeIcons";
-import Button from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection6 = () => {
@@ -105,7 +105,7 @@ const InvitationSection6 = () => {
                 </div>
                 <div className="text-base md:text-lg text-gray-700">Zarzal, Valle Del Cauca</div>
                 <Button
-                  className="mt-4"
+                  className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
                   onClick={() =>
                     window.open(
                       "https://maps.app.goo.gl/uEAii5TKKsR2SKAcA",
@@ -151,7 +151,7 @@ const InvitationSection6 = () => {
                   Corregimiento Limones, Zarzal
                 </div>
                 <Button
-                  className="mt-4 font-serif"
+                  className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
                   onClick={() =>
                     window.open(
                       "https://maps.app.goo.gl/Seqbt4m5C6LuMTPB9",

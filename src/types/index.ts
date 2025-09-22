@@ -82,3 +82,82 @@ export interface ContactInfo {
   whatsappMessage: string;
   label: string;
 }
+
+// Guest Management Types
+export interface Guest {
+  id: string;
+  code: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  maxGuests: number;
+  confirmed: boolean;
+  confirmedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  companions: Companion[];
+}
+
+export interface Companion {
+  id: string;
+  guestId: string;
+  name: string;
+  confirmed: boolean;
+  confirmedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateGuestInput {
+  code: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  maxGuests?: number;
+}
+
+export interface UpdateGuestInput {
+  name?: string;
+  email?: string;
+  phone?: string;
+  maxGuests?: number;
+  confirmed?: boolean;
+}
+
+export interface CreateCompanionInput {
+  guestId: string;
+  name: string;
+}
+
+export interface GuestValidationResult {
+  valid: boolean;
+  guest?: Guest;
+  error?: string;
+}
+
+export interface RSVPData {
+  guestId: string;
+  confirmed: boolean;
+  companions: Array<{
+    id?: string;
+    name: string;
+    confirmed: boolean;
+  }>;
+}
+
+// Admin Types
+export interface Admin {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface GuestAccess {
+  id: string;
+  guestCode: string;
+  ipAddress?: string;
+  userAgent?: string;
+  accessedAt: Date;
+}

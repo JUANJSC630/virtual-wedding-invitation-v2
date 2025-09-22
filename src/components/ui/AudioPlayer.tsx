@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
+import { motion } from "framer-motion";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 
 import { AudioPlayerProps } from "@/types";
@@ -76,14 +77,66 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
     <div>
       {/* Contenedor principal con flexibilidad para reorganizar */}
       <div className="flex flex-col items-center gap-4">
-        {/* Imagen de onda de audio */}
-        <div className="w-full flex justify-center">
-          <img
-            src="/onda-audio.png"
-            alt="Audio wave visualization for song player"
-            loading="lazy"
-            className="h-8 object-contain mx-auto"
-          />
+        {/* Imagen de onda de audio con animación */}
+        <div className="w-full flex justify-center relative">
+          <motion.div
+            animate={
+              isPlaying
+                ? {
+                    scale: [1, 1.02, 1],
+                    opacity: [0.7, 1, 0.7],
+                  }
+                : {
+                    scale: 1,
+                    opacity: 0.7,
+                  }
+            }
+            transition={{
+              duration: 2,
+              repeat: isPlaying ? Infinity : 0,
+              ease: "easeInOut",
+            }}
+            className="relative"
+          >
+            <img
+              src="/onda-audio.png"
+              alt="Audio wave visualization for song player"
+              loading="lazy"
+              className="object-contain mx-auto"
+            />
+
+            {/* Efecto de ondas adicionales cuando está reproduciéndose */}
+            {isPlaying && (
+              <>
+                <motion.div
+                  className="absolute inset-0 bg-[#466691]/10 rounded-full"
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    opacity: [0.3, 0.1, 0.3],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.2,
+                  }}
+                />
+                <motion.div
+                  className="absolute inset-0 bg-[#466691]/5 rounded-full"
+                  animate={{
+                    scale: [1, 1.15, 1],
+                    opacity: [0.2, 0.05, 0.2],
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.5,
+                  }}
+                />
+              </>
+            )}
+          </motion.div>
         </div>
 
         {/* Barra de progreso */}
@@ -117,8 +170,22 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
           </button>
 
           {/* Botón de reproducción */}
-          <button
+          <motion.button
             onClick={togglePlay}
+            animate={
+              isPlaying
+                ? {
+                    scale: [1, 1.05, 1],
+                  }
+                : {
+                    scale: 1,
+                  }
+            }
+            transition={{
+              duration: 1.8,
+              repeat: isPlaying ? Infinity : 0,
+              ease: "easeInOut",
+            }}
             className="!rounded-full !flex !items-center !justify-center !w-10 !h-10 !border !border-[#162b4e] !bg-[#162b4e] !hover:bg-[#162b4e]/80 !transition-colors"
             aria-label={isPlaying ? "Pause song" : "Play song"}
           >
@@ -127,7 +194,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
             ) : (
               <Play size={20} className="text-white ml-0.5" />
             )}
-          </button>
+          </motion.button>
 
           <button
             className="!rounded-full !flex !items-center !justify-center !w-10 !h-10 !border !border-[#162b4e] !bg-[#162b4e]/10 !hover:bg-[#162b4e]/20 !transition-colors"

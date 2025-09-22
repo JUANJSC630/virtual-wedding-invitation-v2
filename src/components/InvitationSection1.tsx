@@ -14,7 +14,10 @@ const InvitationSection1 = () => {
         }}
       />
       {/* Flor en la esquina superior izquierda */}
-      <div className="absolute -top-5 -left-10 w-72 h-72 md:w-80 md:h-80 opacity-80 transform rotate-180">
+      <div
+        className="absolute w-72 h-72 md:w-80 md:h-80 opacity-80 transform rotate-180"
+        style={{ top: "-20px", left: "-40px" }}
+      >
         <img
           src="/flor-esquina.png"
           alt="Decorative floral border in upper left corner"

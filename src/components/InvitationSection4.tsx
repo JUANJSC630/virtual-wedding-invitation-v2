@@ -2,8 +2,8 @@ const InvitationSection4 = () => {
   return (
     <section className="relative w-full flex flex-col items-center justify-center bg-white overflow-hidden p-0 m-0 ">
       <div
-        className="absolute -top-10 -left-25 w-60 h-60 md:w-80 md:h-80 transform rotate-90"
-        style={{ zIndex: 60 }}
+        className="absolute w-60 h-60 md:w-80 md:h-80 transform rotate-90"
+        style={{ zIndex: 60, top: "-40px", left: "-70px" }}
       >
         <img
           src="/flores.png"
@@ -76,8 +76,8 @@ const InvitationSection4 = () => {
         }}
       ></div>
       <div
-        className="absolute -bottom-10 -right-20 w-60 h-60 md:w-80 md:h-80 transform rotate-360"
-        style={{ zIndex: 60 }}
+        className="absolute w-60 h-60 md:w-80 md:h-80 transform rotate-360"
+        style={{ zIndex: 60, bottom: "-10px", right: "-60px" }}
       >
         <img
           src="/flores.png"

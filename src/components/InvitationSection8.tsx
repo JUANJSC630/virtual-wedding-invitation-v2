@@ -4,7 +4,7 @@ import { Variants, motion, useInView } from "framer-motion";
 
 import { useImagePreload } from "@/hooks/useImagePreload";
 
-import Button from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection8 = () => {
@@ -123,7 +123,6 @@ const InvitationSection8 = () => {
               <div className="flex flex-row gap-4">
                 {/* Botón WhatsApp Novio */}
                 <Button
-                  variant="custom"
                   className={`!bg-[#466691] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
                     isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
                   }`}
@@ -152,7 +151,6 @@ const InvitationSection8 = () => {
                 </Button>
                 {/* Botón WhatsApp Novia */}
                 <Button
-                  variant="custom"
                   className={`!bg-[#466691] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
                     isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
                   }`}
@@ -206,7 +204,7 @@ const InvitationSection8 = () => {
               Muchas Gracias!
             </p>
 
-            <div className="absolute -bottom-55 w-[500px] h-[500px]">
+            <div className="absolute w-[500px] h-[500px]" style={{ bottom: "-220px" }}>
               <img
                 src="/ramo-lateral.png"
                 alt="Decorative flower bouquet at the bottom of the invitation"

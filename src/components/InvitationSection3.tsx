@@ -74,12 +74,12 @@ const InvitationSection3 = () => {
             <div className="flex flex-col gap-6 relative">
               {/* Placeholders invisibles para reservar el espacio y mantener el layout estable */}
               <div
-                className="absolute -top-7 -left-30 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none"
-                style={{ transform: "rotate(180deg)" }}
+                className="absolute w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none"
+                style={{ transform: "rotate(180deg)", top: "-20px", left: "-240px" }}
               ></div>
               <div
-                className="absolute -top-0 left-60 w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none"
-                style={{ transform: "rotate(180deg)" }}
+                className="absolute w-72 h-72 md:w-80 md:h-80 opacity-0 pointer-events-none"
+                style={{ transform: "rotate(180deg)", top: "-20px", left: "280px" }}
               ></div>
 
               <motion.p
@@ -90,16 +90,16 @@ const InvitationSection3 = () => {
               </motion.p>
               {imagesLoaded && (
                 <motion.div
-                  className="absolute -top-10 -left-40 w-72 h-72 md:w-80 md:h-80 opacity-0"
-                  style={{ transform: "rotate(180deg)" }}
+                  className="absolute w-80 h-80 opacity-0"
+                  style={{ transform: "rotate(180deg)", top: "-60px", left: "-180px" }}
                   animate={{ opacity: 0.8 }}
                   transition={{
-                    duration: 1.2,
+                    duration: 2,
                     delay: 0.3,
                     ease: "easeOut",
                   }}
                   whileInView={{
-                    rotate: [180, 175, 180],
+                    rotate: [180, 175, 190],
                     transition: {
                       duration: 5,
                       repeat: Infinity,
@@ -115,12 +115,12 @@ const InvitationSection3 = () => {
                 </motion.div>
               )}
               <motion.div className="py-1" variants={fadeInUp}>
-                <span className="text-4xl text-gray-700 font-serif">&</span>
+                <span className="text-4xl text-gray-700">&</span>
               </motion.div>
               {imagesLoaded && (
                 <motion.div
-                  className="absolute -top-5 left-50 w-72 h-72 md:w-80 md:h-80 opacity-0"
-                  style={{ transform: "rotate(180deg)" }}
+                  className="absolute w-80 h-80 opacity-0"
+                  style={{ transform: "rotate(180deg)", top: "-30px", left: "180px" }}
                   animate={{ opacity: 0.8 }}
                   transition={{
                     duration: 1.2,
@@ -128,7 +128,7 @@ const InvitationSection3 = () => {
                     ease: "easeOut",
                   }}
                   whileInView={{
-                    rotate: [180, 185, 180],
+                    rotate: [170, 185, 190],
                     transition: {
                       duration: 5,
                       repeat: Infinity,
