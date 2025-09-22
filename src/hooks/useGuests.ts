@@ -34,9 +34,11 @@ export const useConfirmRSVP = () => {
     onSuccess: updatedGuest => {
       // Actualizar cache del invitado
       queryClient.setQueryData(["guest", "code", updatedGuest.code], updatedGuest);
+      queryClient.setQueryData(["guest", "byCode", updatedGuest.code], updatedGuest);
       // Invalidar lista de invitados (si existe en cache)
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["guest", "byCode", updatedGuest.code] });
     },
   });
 };
@@ -108,9 +110,11 @@ export const useCreateCompanion = () => {
       // Invalidar y refetch inmediatamente
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["guest", "byCode"] });
       // Forzar refetch inmediato
       queryClient.refetchQueries({ queryKey: ["guests", "all"] });
       queryClient.refetchQueries({ queryKey: ["admin", "stats"] });
+      queryClient.refetchQueries({ queryKey: ["guest", "byCode"] });
     },
   });
 };
@@ -126,9 +130,11 @@ export const useUpdateCompanion = () => {
       // Invalidar y refetch inmediatamente
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["guest", "byCode"] });
       // Forzar refetch inmediato
       queryClient.refetchQueries({ queryKey: ["guests", "all"] });
       queryClient.refetchQueries({ queryKey: ["admin", "stats"] });
+      queryClient.refetchQueries({ queryKey: ["guest", "byCode"] });
     },
   });
 };
@@ -143,9 +149,11 @@ export const useDeleteCompanion = () => {
       // Invalidar y refetch inmediatamente
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
+      queryClient.invalidateQueries({ queryKey: ["guest", "byCode"] });
       // Forzar refetch inmediato
       queryClient.refetchQueries({ queryKey: ["guests", "all"] });
       queryClient.refetchQueries({ queryKey: ["admin", "stats"] });
+      queryClient.refetchQueries({ queryKey: ["guest", "byCode"] });
     },
   });
 };

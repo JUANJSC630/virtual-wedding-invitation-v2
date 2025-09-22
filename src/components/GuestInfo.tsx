@@ -1,8 +1,9 @@
 import React from "react";
 
-import { CheckCircle, Heart, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { CheckCircle, Users } from "lucide-react";
 
-import { Guest } from "@/types";
+import { Guest, Companion } from "@/types";
 
 import { Button } from "@/components/ui/button";
 
@@ -11,7 +12,31 @@ interface GuestInfoProps {
   onContinue: () => void;
 }
 
-const GuestInfo: React.FC<GuestInfoProps> = ({ guest, onContinue }) => {
+// Hook para obtener guest actualizado por código
+const useGuestByCode = (code: string) => {
+  return useQuery<Guest | null>({
+    queryKey: ["guest", "byCode", code],
+    queryFn: async () => {
+      const response = await fetch(`/api/guests/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await response.json();
+      return data.valid ? data.guest : null;
+    },
+    refetchInterval: 5000, // Actualizar cada 5 segundos
+    refetchOnWindowFocus: true,
+    staleTime: 1000, // Considerar datos obsoletos después de 1 segundo
+  });
+};
+
+const GuestInfo: React.FC<GuestInfoProps> = ({ guest: initialGuest, onContinue }) => {
+  // Obtener datos actualizados del guest
+  const { data: updatedGuest } = useGuestByCode(initialGuest.code);
+
+  // Usar datos actualizados o los iniciales como fallback
+  const guest = updatedGuest || initialGuest;
   const totalConfirmed =
     guest.companions.filter(c => c.confirmed).length + (guest.confirmed ? 1 : 0);
   const totalGuests = guest.maxGuests;
