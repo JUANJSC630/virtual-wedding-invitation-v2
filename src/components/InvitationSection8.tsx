@@ -124,7 +124,7 @@ const InvitationSection8 = () => {
                 transition={{ duration: 0.6, delay: 0.8 }}
               >
                 El mejor regalo es tu presencia, pero si deseas tener un detalle con nosotros, les
-                dejamos estas opciones:
+                dejamos esta opción:
               </motion.p>
               <motion.div
                 className="text-xl md:text-2xl font-serif font-semibold text-[#162b4e] text-center mt-4 mb-2 tracking-wide"
