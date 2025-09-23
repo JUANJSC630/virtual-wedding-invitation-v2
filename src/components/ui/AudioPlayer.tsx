@@ -162,12 +162,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
         {/* Controles y título */}
         <div className="flex items-center justify-center gap-4 w-full">
           {/* Botones de navegación */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             className="!rounded-full !flex !items-center !justify-center !w-10 !h-10 !border !border-[#162b4e] !bg-[#162b4e]/10 !hover:bg-[#162b4e]/20 !transition-colors"
             aria-label="Previous track"
           >
             <SkipBack size={20} className="text-[#162b4e]" />
-          </button>
+          </motion.button>
 
           {/* Botón de reproducción */}
           <motion.button
@@ -196,12 +198,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
             )}
           </motion.button>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             className="!rounded-full !flex !items-center !justify-center !w-10 !h-10 !border !border-[#162b4e] !bg-[#162b4e]/10 !hover:bg-[#162b4e]/20 !transition-colors"
             aria-label="Next track"
           >
             <SkipForward size={20} className="text-[#162b4e]" />
-          </button>
+          </motion.button>
         </div>
       </div>
 

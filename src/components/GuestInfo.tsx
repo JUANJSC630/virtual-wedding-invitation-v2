@@ -78,9 +78,15 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ guest: initialGuest, onContinue }
             </div>
 
             <p className="text-gray-900 my-4">
-              {guest.confirmed
-                ? "¡Gracias por confirmar tu asistencia! Te esperamos en nuestra boda."
-                : "¡Esperamos que puedan compartir esta fiesta junto a nosotros!"}
+              {guest.confirmed ? (
+                <>
+                  ¡Gracias por confirmar tu asistencia!
+                  <br />
+                  Te esperamos en nuestra boda.
+                </>
+              ) : (
+                "¡Esperamos que puedan compartir esta fiesta junto a nosotros!"
+              )}
             </p>
           </div>
 
@@ -149,7 +155,7 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ guest: initialGuest, onContinue }
             onClick={onContinue}
             className="w-full !py-4 !bg-[#466691] hover:!bg-[#3b5170] !text-white !rounded-full"
           >
-            Ver Invitación Completa
+            {guest.confirmed ? "Volver a ver invitación" : "Ver Invitación Completa"}
           </Button>
         </div>
       </div>

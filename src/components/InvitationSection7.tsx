@@ -69,9 +69,15 @@ const InvitationSection7 = () => {
           className="w-full max-w-lg mx-auto flex flex-col gap-7"
           style={{ padding: "0 3rem 3rem 3rem" }}
         >
-          <div className="flex flex-col">
+          <motion.div
+            className="flex flex-col"
+            initial={{ opacity: 0, y: -30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
             <p className="text-4xl font-serif text-[#bfa15a] text-center">Itinerario</p>
-          </div>
+          </motion.div>
           <div className="w-full max-w-3xl mx-auto grid grid-cols-3 gap-0 relative">
             {/* Columna izquierda */}
             <div className="flex flex-col items-end justify-center gap-12 ">
@@ -120,10 +126,14 @@ const InvitationSection7 = () => {
             </div>
             {/* Columna central: línea decorativa */}
             <div className="flex flex-col items-center justify-center relative">
-              <img
+              <motion.img
                 src="/linea.png"
                 alt="Línea decorativa"
                 className="h-[90%] w-8 object-contain mx-auto"
+                initial={{ opacity: 0, scaleY: 0 }}
+                whileInView={{ opacity: 1, scaleY: 1 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
               />
             </div>
             {/* Columna derecha */}
@@ -139,7 +149,7 @@ const InvitationSection7 = () => {
                 <img src="/mesa.png" alt="Recepción" className="w-20 h-20 mb-1" />
                 <span className="text-base font-semibold text-[#162b4e]">8:00 PM</span>
                 <span className="text-sm md:text-base font-serif text-[#162b4e] text-left">
-                  RECEPCION
+                  RECEPCIÓN
                 </span>
               </motion.div>
               {/* Evento 5 */}

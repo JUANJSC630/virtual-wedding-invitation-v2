@@ -101,7 +101,7 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ onValidGuest }) => {
             ¡NOS ENCANTARÍA QUE SEAS PARTE DE ESTE DÍA TAN ESPECIAL!
           </h1>
 
-          <p className="mb-6">Ingresá tu código para continuar:</p>
+          <p className="mb-6">Ingresa tu código para continuar:</p>
 
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-4">

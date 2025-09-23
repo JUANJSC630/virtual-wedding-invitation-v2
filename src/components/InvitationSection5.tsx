@@ -174,7 +174,15 @@ const InvitationSection5 = () => {
                 </div>
               </motion.div>
             </div>
-            <Countdown />
+            {/* Countdown solo se muestra cuando la sección está en vista */}
+            <motion.div
+              initial={{ opacity: 0, x: 60, scale: 0.8 }}
+              whileInView={{ opacity: 1, x: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ delay: 1.05, duration: 0.9, ease: "easeOut" }}
+            >
+              {isInView && <Countdown />}
+            </motion.div>
           </div>
         </motion.div>
       </div>

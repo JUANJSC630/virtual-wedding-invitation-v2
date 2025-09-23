@@ -44,21 +44,46 @@ const Countdown = () => {
         className="flex items-end justify-center gap-2 text-[#3b5a75] text-lg md:text-xl font-medium"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.6 }}
+        transition={{ delay: 0.5, duration: 0.6 }}
       >
-        <span>Noviembre</span>
-        <span className="text-5xl md:text-6xl font-serif mx-2 leading-none">15</span>
-        <span className="mb-1">del 2025</span>
+        <motion.span
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+        >
+          Noviembre
+        </motion.span>
+        <motion.span
+          className="text-5xl md:text-6xl font-serif mx-2 leading-none"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.4 }}
+        >
+          15
+        </motion.span>
+        <motion.span
+          className="mb-1"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.4 }}
+        >
+          del 2025
+        </motion.span>
       </motion.div>
       <motion.div
         className="text-[#bfa15a] text-2xl md:text-3xl font-serif my-1"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.6 }}
+        transition={{ delay: 0.8, duration: 0.6 }}
       >
         Faltan
       </motion.div>
-      <div className="flex items-center justify-center gap-2 text-3xl md:text-4xl font-bold text-[#162b4e]">
+      <motion.div
+        className="flex items-center justify-center gap-2 text-3xl md:text-4xl font-bold text-[#162b4e]"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.1, duration: 0.6 }}
+      >
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={timeLeft.days}
@@ -106,12 +131,12 @@ const Countdown = () => {
             {String(timeLeft.seconds).padStart(2, "0")}
           </motion.span>
         </AnimatePresence>
-      </div>
+      </motion.div>
       <motion.div
         className="text-xs text-gray-500 mt-2 tracking-wide"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 0.6 }}
+        transition={{ delay: 1.4, duration: 0.6 }}
       >
         para nuestra boda
       </motion.div>

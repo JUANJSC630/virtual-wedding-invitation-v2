@@ -94,16 +94,17 @@ const InvitationSection3 = () => {
                   style={{ transform: "rotate(180deg)", top: "-60px", left: "-180px" }}
                   animate={{ opacity: 0.8 }}
                   transition={{
-                    duration: 2,
-                    delay: 0.3,
+                    duration: 1.5,
+                    delay: 0.8,
                     ease: "easeOut",
                   }}
                   whileInView={{
                     rotate: [180, 175, 190],
                     transition: {
-                      duration: 5,
+                      duration: 6,
                       repeat: Infinity,
                       repeatType: "reverse",
+                      ease: "easeInOut",
                     },
                   }}
                 >
@@ -123,16 +124,17 @@ const InvitationSection3 = () => {
                   style={{ transform: "rotate(180deg)", top: "-30px", left: "180px" }}
                   animate={{ opacity: 0.8 }}
                   transition={{
-                    duration: 1.2,
-                    delay: 0.6,
+                    duration: 1.5,
+                    delay: 1.2,
                     ease: "easeOut",
                   }}
                   whileInView={{
                     rotate: [170, 185, 190],
                     transition: {
-                      duration: 5,
+                      duration: 6,
                       repeat: Infinity,
                       repeatType: "reverse",
+                      ease: "easeInOut",
                     },
                   }}
                 >
@@ -162,7 +164,7 @@ const InvitationSection3 = () => {
                 personas que queremos los hacen inolvidables.
                 <br />
                 <br />
-                Por eso queremos invitarlos a celebrar nuestra boda y que hagan parte de este dia
+                Por eso queremos invitarlos a celebrar nuestra boda y que hagan parte de este día
                 tan especial para nosotros.
               </p>
             </motion.div>

@@ -14,9 +14,12 @@ const InvitationSection1 = () => {
         }}
       />
       {/* Flor en la esquina superior izquierda */}
-      <div
+      <motion.div
         className="absolute w-72 h-72 md:w-80 md:h-80 opacity-80 transform rotate-180"
         style={{ top: "-20px", left: "-40px" }}
+        initial={{ opacity: 0, scale: 0.8, rotate: 160 }}
+        animate={{ opacity: 0.8, scale: 1, rotate: 180 }}
+        transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
       >
         <img
           src="/flor-esquina.png"
@@ -24,7 +27,7 @@ const InvitationSection1 = () => {
           loading="lazy"
           className="w-full h-full object-contain"
         />
-      </div>
+      </motion.div>
 
       {/* Ramo en el centro derecho */}
       <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] opacity-60">

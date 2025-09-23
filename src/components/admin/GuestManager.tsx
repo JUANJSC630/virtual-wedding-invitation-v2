@@ -4,7 +4,6 @@ import {
   Calendar,
   CheckCircle,
   Copy,
-  Download,
   Edit,
   Loader2,
   MessageSquare,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Variants, motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 
 import DressCodeIcons from "@/components/ui/DressCodeIcons";
 import { Button } from "@/components/ui/button";
@@ -33,25 +33,6 @@ const InvitationSection6 = () => {
     });
   }, [layoutReady]);
 
-  const isInView = useInView(ref, {
-    once: true,
-    margin: "-50px",
-    amount: 0.3,
-  });
-
-  const fadeInUp: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: (i = 1) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-        delay: i * 0.25,
-      },
-    }),
-  };
-
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Imagen de fondo */}
@@ -64,23 +45,12 @@ const InvitationSection6 = () => {
 
       {/* Contenido principal */}
       <div className="relative z-10 flex items-center justify-center min-h-screen w-full">
-        <motion.div
-          ref={ref}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          variants={fadeInUp}
-          className="w-full max-w-lg mx-auto"
-          style={{ padding: "0 3rem 3rem 3rem" }}
-        >
+        <div ref={ref} className="w-full max-w-lg mx-auto" style={{ padding: "0 3rem 3rem 3rem" }}>
           <div className="flex flex-col gap-16 text-center justify-between items-center min-h-[80vh] w-full">
             {/* Bloque eventos */}
             <div className="flex flex-col gap-12 w-full">
               {/* Evento 1: Ceremonia */}
-              <motion.div
-                custom={1}
-                variants={fadeInUp}
-                className="flex flex-col items-center gap-2"
-              >
+              <div className="flex flex-col items-center gap-2">
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -98,31 +68,64 @@ const InvitationSection6 = () => {
                     className="mx-auto"
                   />
                 </motion.div>
-                <div className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]">6:00 PM</div>
-                <div className="font-bold text-2xl md:text-3xl tracking-wide">CEREMONIA</div>
-                <div className="text-lg md:text-xl font-serif text-[#162b4e]">
-                  IGLESIA LA MEDALLA MILAGROSA
-                </div>
-                <div className="text-base md:text-lg text-gray-700">Zarzal, Valle Del Cauca</div>
-                <Button
-                  className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
-                  onClick={() =>
-                    window.open(
-                      "https://maps.app.goo.gl/uEAii5TKKsR2SKAcA",
-                      "_blank",
-                      "noopener,noreferrer"
-                    )
-                  }
+                <motion.div
+                  initial={{ opacity: 0, x: -60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 0.25, duration: 0.9, ease: "easeOut" }}
+                  className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]"
                 >
-                  Ver ubicación
-                </Button>
-              </motion.div>
+                  6:00 PM
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 0.45, duration: 0.9, ease: "easeOut" }}
+                  className="font-bold text-2xl md:text-3xl tracking-wide"
+                >
+                  CEREMONIA
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 0.65, duration: 0.9, ease: "easeOut" }}
+                  className="text-lg md:text-xl font-serif text-[#162b4e]"
+                >
+                  IGLESIA LA MEDALLA MILAGROSA
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 0.85, duration: 0.9, ease: "easeOut" }}
+                  className="text-base md:text-lg text-gray-700"
+                >
+                  Zarzal, Valle Del Cauca
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -60, scale: 0.8 }}
+                  whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 1.05, duration: 0.9, ease: "easeOut" }}
+                >
+                  <Button
+                    className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
+                    onClick={() =>
+                      window.open(
+                        "https://maps.app.goo.gl/uEAii5TKKsR2SKAcA",
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    Ver ubicación
+                  </Button>
+                </motion.div>
+              </div>
               {/* Evento 2: Recepción */}
-              <motion.div
-                custom={2}
-                variants={fadeInUp}
-                className="flex flex-col items-center gap-2"
-              >
+              <div className="flex flex-col items-center gap-2">
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -140,29 +143,62 @@ const InvitationSection6 = () => {
                     className="mx-auto"
                   />
                 </motion.div>
-                <div className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]">8:00 PM</div>
-                <div className="font-bold text-2xl md:text-3xl tracking-wide font-serif">
-                  RECEPCION
-                </div>
-                <div className="text-lg md:text-xl font-serif text-[#162b4e]">
-                  FINCA VILLA MILENA
-                </div>
-                <div className="text-base md:text-lg text-gray-700 font-serif">
-                  Corregimiento Limones, Zarzal
-                </div>
-                <Button
-                  className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
-                  onClick={() =>
-                    window.open(
-                      "https://maps.app.goo.gl/Seqbt4m5C6LuMTPB9",
-                      "_blank",
-                      "noopener,noreferrer"
-                    )
-                  }
+                <motion.div
+                  initial={{ opacity: 0, x: 60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 0.25, duration: 0.9, ease: "easeOut" }}
+                  className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]"
                 >
-                  Ver ubicación
-                </Button>
-              </motion.div>
+                  8:00 PM
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 0.45, duration: 0.9, ease: "easeOut" }}
+                  className="font-bold text-2xl md:text-3xl tracking-wide font-serif"
+                >
+                  RECEPCIÓN
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 0.65, duration: 0.9, ease: "easeOut" }}
+                  className="text-lg md:text-xl font-serif text-[#162b4e]"
+                >
+                  FINCA VILLA MILENA
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 60 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 0.85, duration: 0.9, ease: "easeOut" }}
+                  className="text-base md:text-lg text-gray-700 font-serif"
+                >
+                  Corregimiento Limones, Zarzal
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 60, scale: 0.8 }}
+                  whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ delay: 1.05, duration: 0.9, ease: "easeOut" }}
+                >
+                  <Button
+                    className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
+                    onClick={() =>
+                      window.open(
+                        "https://maps.app.goo.gl/Seqbt4m5C6LuMTPB9",
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    Ver ubicación
+                  </Button>
+                </motion.div>
+              </div>
             </div>
             {/* Bloque código de vestimenta */}
             <motion.div className="flex flex-col items-center justify-center w-full gap-6">
@@ -174,7 +210,7 @@ const InvitationSection6 = () => {
                 transition={{ duration: 0.7, delay: 0.1, type: "spring", stiffness: 80 }}
                 className="text-xl font-serif text-[#162b4e] font-semibold mb-2"
               >
-                codigo de vestimenta:
+                Código de vestimenta:
                 <span className="block text-2xl md:text-3xl font-bold font-serif mt-1">
                   “Elegante”
                 </span>
@@ -208,7 +244,7 @@ const InvitationSection6 = () => {
               </motion.div>
             </motion.div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
