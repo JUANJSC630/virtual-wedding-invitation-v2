@@ -61,13 +61,13 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ onValidGuest }) => {
 
         // Registrar acceso del guest
         try {
-          await fetch('/api/guests/access', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          await fetch("/api/guests/access", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ guestCode: code.trim().toUpperCase() }),
           });
         } catch (accessError) {
-          console.warn('No se pudo registrar el acceso:', accessError);
+          console.warn("No se pudo registrar el acceso:", accessError);
         }
 
         // Proceder con el código válido y datos del guest

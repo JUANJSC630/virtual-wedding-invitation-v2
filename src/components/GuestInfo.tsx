@@ -3,7 +3,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle, Users } from "lucide-react";
 
-import { Guest, Companion } from "@/types";
+import { Companion, Guest } from "@/types";
 
 import { Button } from "@/components/ui/button";
 

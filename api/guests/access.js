@@ -22,8 +22,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: "guestCode is required" });
     }
 
-    const ipAddress = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection?.remoteAddress || null;
-    const userAgent = req.headers['user-agent'] || null;
+    const ipAddress =
+      req.headers["x-forwarded-for"] ||
+      req.headers["x-real-ip"] ||
+      req.connection?.remoteAddress ||
+      null;
+    const userAgent = req.headers["user-agent"] || null;
 
     await prisma.guestAccess.create({
       data: {

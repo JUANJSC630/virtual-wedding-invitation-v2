@@ -2,8 +2,9 @@ import React from "react";
 
 import { BarChart3, Calendar, Clock, Eye, RefreshCw, Users } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAnalytics } from "@/hooks/useGuests";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AnalyticsData {
   recentAccesses: Array<{

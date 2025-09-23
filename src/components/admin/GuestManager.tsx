@@ -3,8 +3,11 @@ import React, { useState } from "react";
 import {
   Calendar,
   CheckCircle,
+  Copy,
+  Download,
   Edit,
   Loader2,
+  MessageSquare,
   Plus,
   RefreshCw,
   Shuffle,
@@ -250,6 +253,58 @@ const GuestManager: React.FC = () => {
     setFormData({ ...formData, code: result });
   };
 
+  const handleSendWhatsApp = (guest: Guest) => {
+    if (!guest.phone) {
+      toast.error("Este invitado no tiene número de teléfono registrado");
+      return;
+    }
+
+    // Formatear el número de teléfono para Colombia (+57)
+    let phoneNumber = guest.phone.replace(/\D/g, ""); // Remover caracteres no numéricos
+    if (!phoneNumber.startsWith("57")) {
+      phoneNumber = "57" + phoneNumber;
+    }
+
+    // Mensaje personalizado
+    const message = `¡Hola ${guest.name}!
+
+Te invitamos cordialmente a nuestra boda.
+
+Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
+
+¡Esperamos celebrar contigo este día tan especial!`;
+
+    // URL de WhatsApp con el mensaje
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+    // Abrir WhatsApp en nueva ventana
+    window.open(whatsappUrl, "_blank");
+
+    toast.success(`Enviando invitación por WhatsApp a ${guest.name}`);
+  };
+
+  // const handleDownloadPDF = (guest: Guest) => {
+  //   const pdfUrl = `${window.location.origin}/Invitación.pdf`;
+  //   const link = document.createElement("a");
+  //   link.href = pdfUrl;
+  //   link.download = `Invitacion_${guest.name.replace(/\s+/g, "_")}.pdf`;
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  //   toast.success(`PDF descargado para ${guest.name}`);
+  // };
+
+  const handleCopyCode = (guest: Guest) => {
+    navigator.clipboard
+      .writeText(guest.code)
+      .then(() => {
+        toast.success(`Código ${guest.code} copiado al portapapeles`);
+      })
+      .catch(() => {
+        toast.error("Error al copiar el código");
+      });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -384,9 +439,20 @@ const GuestManager: React.FC = () => {
                       return (
                         <TableRow key={guest.id}>
                           <TableCell>
-                            <Badge variant="outline" className="font-mono">
-                              {guest.code}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="font-mono">
+                                {guest.code}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => handleCopyCode(guest)}
+                                title="Copiar código"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </TableCell>
                           <TableCell
                             className={`font-medium ${!guest.confirmed ? "text-yellow-400" : ""}`}
@@ -467,6 +533,17 @@ const GuestManager: React.FC = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-2 justify-end">
+                              {guest.phone && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleSendWhatsApp(guest)}
+                                  className="text-green-600 hover:text-green-700"
+                                  title="Enviar invitación por WhatsApp"
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                </Button>
+                              )}
                               <Button variant="ghost" size="sm" onClick={() => handleEdit(guest)}>
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -510,9 +587,20 @@ const GuestManager: React.FC = () => {
                         <div className="flex items-start justify-between mb-4">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="font-mono">
-                                {guest.code}
-                              </Badge>
+                              <div className="flex items-center gap-1">
+                                <Badge variant="outline" className="font-mono">
+                                  {guest.code}
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => handleCopyCode(guest)}
+                                  title="Copiar código"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </Button>
+                              </div>
                               {guest.confirmed ? (
                                 <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
                                   <CheckCircle className="mr-1 h-3 w-3" />
@@ -587,6 +675,17 @@ const GuestManager: React.FC = () => {
 
                           {/* Acciones adicionales */}
                           <div className="flex gap-2 pt-2 border-t">
+                            {guest.phone && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSendWhatsApp(guest)}
+                                className="flex-1 text-green-600 hover:text-green-700"
+                                title="Enviar invitación por WhatsApp"
+                              >
+                                <MessageSquare className="mr-1 h-3 w-3" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"

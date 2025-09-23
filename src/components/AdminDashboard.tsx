@@ -4,9 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BarChart3, Heart, Users2 } from "lucide-react";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import GuestManager from "@/components/admin/GuestManager";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Query client para el dashboard
 const adminQueryClient = new QueryClient({
@@ -22,7 +23,7 @@ const adminQueryClient = new QueryClient({
 const AdminDashboard: React.FC = () => {
   // Verificar si es super admin basado en los parámetros de la URL
   const urlParams = new URLSearchParams(window.location.search);
-  const isSuperAdmin = urlParams.get('super_admin') === 'true';
+  const isSuperAdmin = urlParams.get("super_admin") === "true";
 
   return (
     <QueryClientProvider client={adminQueryClient}>
