@@ -282,16 +282,16 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
     toast.success(`Enviando invitación por WhatsApp a ${guest.name}`);
   };
 
-  // const handleDownloadPDF = (guest: Guest) => {
-  //   const pdfUrl = `${window.location.origin}/Invitación.pdf`;
-  //   const link = document.createElement("a");
-  //   link.href = pdfUrl;
-  //   link.download = `Invitacion_${guest.name.replace(/\s+/g, "_")}.pdf`;
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  //   toast.success(`PDF descargado para ${guest.name}`);
-  // };
+  const handleDownloadPDF = () => {
+    const pdfUrl = `${window.location.origin}/invitacion.pdf`;
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = `invitacion.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`PDF descargado`);
+  };
 
   const handleCopyCode = (guest: Guest) => {
     navigator.clipboard
@@ -316,17 +316,22 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
     <div className="space-y-6">
       {/* Header con estadísticas */}
       <div className="space-y-6">
-        <div className="flex flex-col items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Gestión de Invitados</h1>
             <p className="text-muted-foreground">
               Administra y da seguimiento a todos los invitados de tu boda
             </p>
           </div>
-          <Button onClick={() => setShowGuestModal(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Invitado
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleDownloadPDF} variant="outline">
+              Descargar PDF
+            </Button>
+            <Button onClick={() => setShowGuestModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Invitado
+            </Button>
+          </div>
         </div>
 
         {/* Tarjetas de estadísticas */}
