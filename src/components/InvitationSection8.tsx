@@ -22,7 +22,7 @@ const InvitationSection8 = () => {
       const now = new Date(nowColombia);
 
       // Fecha límite desde variables de entorno
-      const testDeadline = new Date(import.meta.env.VITE_RSVP_DEADLINE || "2025-10-15T12:00:00");
+      const testDeadline = new Date(import.meta.env.VITE_RSVP_DEADLINE || "2025-10-20T12:00:00");
       // Convertir a zona horaria de Colombia
       const deadlineColombia = new Date(
         testDeadline.toLocaleString("en-US", { timeZone: "America/Bogota" })
@@ -252,7 +252,7 @@ const InvitationSection8 = () => {
               >
                 <p className="text-[#bfa15a] font-serif text-center w-full opacity-80">
                   * Fecha límite para confirmar:{" "}
-                  <span className="font-semibold">15 de octubre</span>
+                  <span className="font-semibold">20 de octubre</span>
                 </p>
               </motion.div>
               <motion.div
