@@ -1,4 +1,4 @@
 {
-  "buildCommand": "pnpm approve-builds && pnpm install && pnpm prisma generate && pnpm run build",
-  "installCommand": "pnpm install"
+  "buildCommand": "pnpm install && pnpm prisma generate && pnpm run build",
+  "installCommand": "pnpm install --ignore-scripts=false"
 }
