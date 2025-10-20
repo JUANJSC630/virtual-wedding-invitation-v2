@@ -47,8 +47,10 @@ export default async function handler(req, res) {
         pendingGuests: totalGuests - confirmedGuests,
         totalCompanions,
         confirmedCompanions,
+        pendingCompanions: totalCompanions - confirmedCompanions,
         totalSlots,
-        confirmedSlots: confirmedGuests + confirmedCompanions,
+        totalConfirmedAttendees: confirmedGuests + confirmedCompanions,
+        availableSlots: totalSlots - (confirmedGuests + confirmedCompanions),
       };
 
       console.log("Returning stats:", stats);

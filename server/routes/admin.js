@@ -172,8 +172,10 @@ adminRoutes.get("/stats", async (_req, res) => {
       pendingGuests: totalGuests - confirmedGuests,
       totalCompanions,
       confirmedCompanions,
+      pendingCompanions: totalCompanions - confirmedCompanions,
       totalSlots,
-      confirmedSlots: confirmedGuests + confirmedCompanions,
+      totalConfirmedAttendees: confirmedGuests + confirmedCompanions,
+      availableSlots: totalSlots - (confirmedGuests + confirmedCompanions),
     };
 
     res.json(stats);

@@ -336,7 +336,7 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
 
         {/* Tarjetas de estadísticas */}
         {stats && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {/* Total Invitados */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -352,22 +352,22 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
               </CardContent>
             </Card>
 
-            {/* Total Confirmados */}
+            {/* Invitados Confirmados */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Confirmados</CardTitle>
+                <CardTitle className="text-sm font-medium">Invitados Confirmados</CardTitle>
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">{stats.confirmedGuests}</div>
-                <p className="text-xs text-muted-foreground">Han confirmado asistencia</p>
+                <p className="text-xs text-muted-foreground">Invitados principales confirmados</p>
               </CardContent>
             </Card>
 
             {/* Total Pendientes */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Pendientes</CardTitle>
+                <CardTitle className="text-sm font-medium">Invitados Pendientes</CardTitle>
                 <XCircle className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
@@ -376,19 +376,33 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
               </CardContent>
             </Card>
 
-            {/* Total Cupos y Acompañantes */}
+            {/* Total Asistentes Confirmados */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Cupos y Acompañantes</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Total Asistentes Confirmados</CardTitle>
+                <UserCheck className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalSlots}</div>
-                <p className="text-xs text-muted-foreground">Capacidad total del evento</p>
-                <div className="mt-2">
-                  <span className="font-medium">Acompañantes:</span> {stats.totalCompanions}
-                  <span className="ml-2 font-medium">Pendientes:</span>{" "}
-                  {stats.totalCompanions - stats.confirmedCompanions}
+                <div className="text-2xl font-bold text-blue-600">{stats.totalConfirmedAttendees}</div>
+                <p className="text-xs text-muted-foreground">Invitados + acompañantes confirmados</p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  <div>Capacidad total: {stats.totalSlots}</div>
+                  <div>Disponible: {stats.availableSlots} cupos</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Acompañantes */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Acompañantes</CardTitle>
+                <Users className="h-4 w-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600">{stats.confirmedCompanions}</div>
+                <p className="text-xs text-muted-foreground">De {stats.totalCompanions} registrados</p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  <div>Pendientes: {stats.pendingCompanions}</div>
                 </div>
               </CardContent>
             </Card>
