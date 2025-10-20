@@ -9,10 +9,12 @@ import {
   MessageSquare,
   Plus,
   RefreshCw,
+  Search,
   Shuffle,
   Trash2,
   UserCheck,
   Users,
+  X,
   XCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -67,6 +69,8 @@ const GuestManager: React.FC = () => {
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [showAddCompanion, setShowAddCompanion] = useState(false);
   const [newCompanionName, setNewCompanionName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "confirmed" | "pending" | "companions-pending">("all");
   const [formData, setFormData] = useState<GuestFormData>({
     code: "",
     name: "",
@@ -77,6 +81,45 @@ const GuestManager: React.FC = () => {
 
   const { data: guests = [], isLoading, isFetching } = useAllGuests();
   const { data: stats, isFetching: isFetchingStats } = useGuestStats();
+
+  // Lógica de filtrado
+  const filteredGuests = React.useMemo(() => {
+    return guests.filter(guest => {
+      // Filtro de búsqueda por texto
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+          guest.name.toLowerCase().includes(searchLower) ||
+          guest.code.toLowerCase().includes(searchLower) ||
+          guest.email?.toLowerCase().includes(searchLower) ||
+          guest.phone?.includes(searchTerm);
+
+        if (!matchesSearch) return false;
+      }
+
+      // Filtro por estado
+      switch (statusFilter) {
+        case "confirmed":
+          return guest.confirmed;
+        case "pending":
+          return !guest.confirmed;
+        case "companions-pending":
+          return guest.confirmed && guest.companions.some(c => !c.confirmed);
+        default:
+          return true;
+      }
+    });
+  }, [guests, searchTerm, statusFilter]);
+
+  // Función para limpiar filtros
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+  };
+
+  // Contar filtros activos
+  const activeFiltersCount = (searchTerm ? 1 : 0) + (statusFilter !== "all" ? 1 : 0);
+
   const createMutation = useCreateGuest();
   const updateMutation = useUpdateGuest();
   const deleteMutation = useDeleteGuest();
@@ -410,6 +453,72 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
         )}
       </div>
 
+      {/* Filtros de búsqueda */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            {/* Barra de búsqueda */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nombre, código, email o teléfono..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              {activeFiltersCount > 0 && (
+                <Button variant="outline" onClick={clearFilters} className="flex items-center gap-2">
+                  <X className="h-4 w-4" />
+                  Limpiar ({activeFiltersCount})
+                </Button>
+              )}
+            </div>
+
+            {/* Filtros rápidos */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={statusFilter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("all")}
+              >
+                Todos ({guests.length})
+              </Button>
+              <Button
+                variant={statusFilter === "confirmed" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("confirmed")}
+                className="text-green-700"
+              >
+                Confirmados ({guests.filter(g => g.confirmed).length})
+              </Button>
+              <Button
+                variant={statusFilter === "pending" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("pending")}
+                className="text-orange-700"
+              >
+                Pendientes ({guests.filter(g => !g.confirmed).length})
+              </Button>
+              <Button
+                variant={statusFilter === "companions-pending" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("companions-pending")}
+                className="text-yellow-700"
+              >
+                Con acompañantes pendientes ({guests.filter(g => g.confirmed && g.companions.some(c => !c.confirmed)).length})
+              </Button>
+            </div>
+
+            {/* Indicador de resultados */}
+            <div className="text-sm text-muted-foreground">
+              Mostrando {filteredGuests.length} de {guests.length} invitados
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Lista de invitados */}
       <Card>
         <CardHeader>
@@ -423,12 +532,17 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {guests.length === 0 ? (
+          {filteredGuests.length === 0 ? (
             <div className="text-center py-12">
               <Users className="mx-auto h-12 w-12 text-muted-foreground/40" />
-              <h3 className="mt-4 text-lg font-semibold">No hay invitados registrados</h3>
+              <h3 className="mt-4 text-lg font-semibold">
+                {guests.length === 0 ? "No hay invitados registrados" : "No se encontraron invitados"}
+              </h3>
               <p className="text-muted-foreground">
-                ¡Crea el primer invitado usando el botón de arriba!
+                {guests.length === 0
+                  ? "¡Crea el primer invitado usando el botón de arriba!"
+                  : "Intenta cambiar los filtros de búsqueda"
+                }
               </p>
             </div>
           ) : (
@@ -449,7 +563,7 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {guests.map(guest => {
+                    {filteredGuests.map(guest => {
                       const confirmed =
                         guest.companions.filter(c => c.confirmed).length +
                         (guest.confirmed ? 1 : 0);
@@ -595,7 +709,7 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
 
               {/* Vista de cards para móvil y tablet */}
               <div className="lg:hidden space-y-4">
-                {guests.map(guest => {
+                {filteredGuests.map(guest => {
                   const confirmed =
                     guest.companions.filter(c => c.confirmed).length + (guest.confirmed ? 1 : 0);
 
