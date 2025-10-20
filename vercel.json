@@ -1,9 +1,4 @@
 {
-  "buildCommand": "pnpm install && pnpm prisma generate && pnpm run build",
-  "installCommand": "pnpm install",
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 10
-    }
-  }
+  "buildCommand": "pnpm approve-builds && pnpm install && pnpm prisma generate && pnpm run build",
+  "installCommand": "pnpm install"
 }
