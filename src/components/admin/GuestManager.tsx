@@ -745,7 +745,9 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
                                 </Badge>
                               )}
                             </div>
-                            <h3 className="font-semibold text-lg">{guest.name}</h3>
+                            <h3 className={`font-semibold text-lg ${!guest.confirmed ? "text-yellow-400" : ""}`}>
+                              {guest.name}
+                            </h3>
                           </div>
                         </div>
 
