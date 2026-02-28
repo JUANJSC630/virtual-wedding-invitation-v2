@@ -7,6 +7,7 @@ import { rateLimit } from "express-rate-limit";
 
 import { authRoutes } from "./routes/auth.js";
 import { adminRoutes } from "./routes/admin.js";
+import { eventRoutes } from "./routes/events.js";
 import { guestRoutes } from "./routes/guests.js";
 
 dotenv.config();
@@ -50,6 +51,7 @@ app.use(express.json());
 
 // ─── Rutas ───────────────────────────────────────────────────────────────────
 app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/events", eventRoutes);
 app.use("/api/guests", guestRoutes);
 app.use("/api/admin", adminRoutes);
 

@@ -4,7 +4,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 
-import { AdminUser, Guest } from "@/types";
+import { AdminUser, Event, Guest } from "@/types";
+
+import { EventContext } from "@/context/EventContext";
 
 import AdminDashboard from "@/components/AdminDashboard";
 import AdminLogin from "@/components/AdminLogin";
@@ -65,14 +67,23 @@ const AdminPanel: React.FC = () => {
 
 // ─── Invitación pública ───────────────────────────────────────────────────────
 
+const EVENT_SLUG = import.meta.env.VITE_EVENT_SLUG || "jimena-juan";
+
 const WeddingInvitation: React.FC = () => {
   const [validatedCode, setValidatedCode] = useState<string | null>(null);
   const [guest, setGuest] = useState<Guest | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [showInvitation, setShowInvitation] = useState(false);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [eventLoading, setEventLoading] = useState(true);
 
   useEffect(() => {
     setIsMounted(true);
+    fetch(`/api/events/${EVENT_SLUG}`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => { if (data) setEvent(data); })
+      .catch(() => {})
+      .finally(() => setEventLoading(false));
   }, []);
 
   if (!isMounted) {
@@ -112,19 +123,21 @@ const WeddingInvitation: React.FC = () => {
   }
 
   return (
-    <main className="w-full flex flex-col justify-center items-center bg-white" role="main">
-      <div className="max-w-2xl mx-auto">
-        <InvitationSection1 />
-        <InvitationSection2 />
-        <InvitationSection3 />
-        <InvitationSection4 />
-        <InvitationSection5 />
-        <InvitationSection6 />
-        <InvitationSection9 />
-        <InvitationSection7 />
-        <InvitationSection8 />
-      </div>
-    </main>
+    <EventContext.Provider value={{ event, loading: eventLoading }}>
+      <main className="w-full flex flex-col justify-center items-center bg-white" role="main">
+        <div className="max-w-2xl mx-auto">
+          <InvitationSection1 />
+          <InvitationSection2 />
+          <InvitationSection3 />
+          <InvitationSection4 />
+          <InvitationSection5 />
+          <InvitationSection6 />
+          <InvitationSection9 />
+          <InvitationSection7 />
+          <InvitationSection8 />
+        </div>
+      </main>
+    </EventContext.Provider>
   );
 };
 

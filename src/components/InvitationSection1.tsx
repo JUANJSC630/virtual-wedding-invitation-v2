@@ -1,6 +1,17 @@
 import { motion } from "framer-motion";
 
+import { useEventContext } from "@/context/EventContext";
+
 const InvitationSection1 = () => {
+  const { event } = useEventContext();
+
+  const verse = event?.config?.verse;
+  const verseText = verse?.text ?? "El que encontró una esposa encontró la felicidad; Yavé es quien le otorgó ese favor.";
+  const verseRef = verse?.reference ?? "Proverbios 18:22";
+
+  const brideInitial = (event?.brideName?.[0] ?? "J").toUpperCase();
+  const groomInitial = (event?.groomName?.[0] ?? "J").toUpperCase();
+
   return (
     <section
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
@@ -49,13 +60,9 @@ const InvitationSection1 = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <p className="text-xl font-serif text-gray-800 leading-relaxed italic mb-4">
-              "El que encontró una esposa
-              <br />
-              encontró la felicidad; Yavé es
-              <br />
-              quien le otorgó ese favor."
+              "{verseText}"
             </p>
-            <p className="text-sm text-gray-600 font-light">Proverbios 18:22</p>
+            <p className="text-sm text-gray-600 font-light">{verseRef}</p>
           </motion.div>
 
           {/* Iniciales elegantes */}
@@ -72,7 +79,7 @@ const InvitationSection1 = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
-                J
+                {brideInitial}
               </motion.span>
               <motion.div
                 className="w-px h-16 bg-gray-400"
@@ -86,7 +93,7 @@ const InvitationSection1 = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
-                J
+                {groomInitial}
               </motion.span>
             </div>
           </motion.div>

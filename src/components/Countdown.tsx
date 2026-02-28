@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 
 import { AnimatePresence, motion } from "framer-motion";
 
-const EVENT_DATE = new Date("2025-11-15T18:00:00-05:00"); // 15 Noviembre 2025, 6:00pm
+import { useEventContext } from "@/context/EventContext";
 
-function getTimeLeft() {
+const FALLBACK_DATE = "2025-11-22T18:00:00-05:00";
+
+function getTimeLeft(eventDate: Date) {
   const now = new Date();
-  const diff = EVENT_DATE.getTime() - now.getTime();
+  const diff = eventDate.getTime() - now.getTime();
   if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
@@ -16,14 +18,27 @@ function getTimeLeft() {
 }
 
 const Countdown = () => {
-  const [timeLeft, setTimeLeft] = useState(getTimeLeft());
+  const { event } = useEventContext();
+  const eventDate = new Date(event?.eventDate ?? FALLBACK_DATE);
+
+  const [timeLeft, setTimeLeft] = useState(getTimeLeft(eventDate));
 
   useEffect(() => {
+    setTimeLeft(getTimeLeft(eventDate));
     const timer = setInterval(() => {
-      setTimeLeft(getTimeLeft());
+      setTimeLeft(getTimeLeft(eventDate));
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [eventDate.getTime()]);
+
+  const locale = "es-CO";
+  const tz = "America/Bogota";
+  const dayOfWeek = eventDate.toLocaleDateString(locale, { weekday: "long", timeZone: tz });
+  const dayCapitalized = dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+  const month = eventDate.toLocaleDateString(locale, { month: "long", timeZone: tz });
+  const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
+  const dayNumber = eventDate.toLocaleDateString(locale, { day: "numeric", timeZone: tz });
+  const year = eventDate.getFullYear();
 
   return (
     <motion.section
@@ -38,7 +53,7 @@ const Countdown = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
       >
-        Sábado
+        {dayCapitalized}
       </motion.div>
       <motion.div
         className="flex items-end justify-center gap-2 text-[#3b5a75] text-lg md:text-xl font-medium"
@@ -51,7 +66,7 @@ const Countdown = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.4 }}
         >
-          Noviembre
+          {monthCapitalized}
         </motion.span>
         <motion.span
           className="text-5xl md:text-6xl font-serif mx-2 leading-none"
@@ -59,7 +74,7 @@ const Countdown = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.4 }}
         >
-          15
+          {dayNumber}
         </motion.span>
         <motion.span
           className="mb-1"
@@ -67,7 +82,7 @@ const Countdown = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9, duration: 0.4 }}
         >
-          del 2025
+          del {year}
         </motion.span>
       </motion.div>
       <motion.div

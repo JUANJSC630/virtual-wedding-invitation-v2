@@ -2,11 +2,31 @@ import { useEffect, useRef, useState } from "react";
 
 import { motion } from "framer-motion";
 
+import { useEventContext } from "@/context/EventContext";
 import DressCodeIcons from "@/components/ui/DressCodeIcons";
 import { Button } from "@/components/ui/button";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection6 = () => {
+  const { event } = useEventContext();
+
+  const ceremonyTime = event?.ceremonyTime ?? "6:00 PM";
+  const ceremony = event?.config?.ceremony ?? {
+    name: "IGLESIA LA MEDALLA MILAGROSA",
+    address: "Zarzal, Valle Del Cauca",
+    mapsUrl: "https://maps.app.goo.gl/uEAii5TKKsR2SKAcA",
+  };
+  const receptionTime = event?.receptionTime ?? "8:00 PM";
+  const reception = event?.config?.reception ?? {
+    name: "FINCA VILLA MILENA",
+    address: "Corregimiento Limones, Zarzal",
+    mapsUrl: "https://maps.app.goo.gl/Seqbt4m5C6LuMTPB9",
+  };
+  const dressCodeConfig = event?.config?.dressCode ?? {
+    label: "Elegante",
+    ladies: "EVITAR COLORES BLANCOS Y AZUL MARINO.",
+    gentlemen: "EVITAR COLORES BEIGE Y AZUL MARINO.",
+  };
   const ref = useRef(null);
   const [layoutReady, setLayoutReady] = useState(false);
 
@@ -75,7 +95,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 0.25, duration: 0.9, ease: "easeOut" }}
                   className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]"
                 >
-                  6:00 PM
+                  {ceremonyTime}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: -60 }}
@@ -93,7 +113,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 0.65, duration: 0.9, ease: "easeOut" }}
                   className="text-lg md:text-xl font-serif text-[#162b4e]"
                 >
-                  IGLESIA LA MEDALLA MILAGROSA
+                  {ceremony.name}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: -60 }}
@@ -102,7 +122,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 0.85, duration: 0.9, ease: "easeOut" }}
                   className="text-base md:text-lg text-gray-700"
                 >
-                  Zarzal, Valle Del Cauca
+                  {ceremony.address}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: -60, scale: 0.8 }}
@@ -114,7 +134,7 @@ const InvitationSection6 = () => {
                     className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
                     onClick={() =>
                       window.open(
-                        "https://maps.app.goo.gl/uEAii5TKKsR2SKAcA",
+                        ceremony.mapsUrl,
                         "_blank",
                         "noopener,noreferrer"
                       )
@@ -150,7 +170,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 0.25, duration: 0.9, ease: "easeOut" }}
                   className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]"
                 >
-                  8:00 PM
+                  {receptionTime}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: 60 }}
@@ -168,7 +188,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 0.65, duration: 0.9, ease: "easeOut" }}
                   className="text-lg md:text-xl font-serif text-[#162b4e]"
                 >
-                  FINCA VILLA MILENA
+                  {reception.name}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: 60 }}
@@ -177,7 +197,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 0.85, duration: 0.9, ease: "easeOut" }}
                   className="text-base md:text-lg text-gray-700 font-serif"
                 >
-                  Corregimiento Limones, Zarzal
+                  {reception.address}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: 60, scale: 0.8 }}
@@ -189,7 +209,7 @@ const InvitationSection6 = () => {
                     className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
                     onClick={() =>
                       window.open(
-                        "https://maps.app.goo.gl/Seqbt4m5C6LuMTPB9",
+                        reception.mapsUrl,
                         "_blank",
                         "noopener,noreferrer"
                       )
@@ -212,7 +232,7 @@ const InvitationSection6 = () => {
               >
                 Código de vestimenta:
                 <span className="block text-2xl md:text-3xl font-bold font-serif mt-1">
-                  “Elegante”
+                  {`"${dressCodeConfig.label}"`}
                 </span>
               </motion.div>
               {/* Íconos con fadeIn y escala */}
@@ -235,11 +255,11 @@ const InvitationSection6 = () => {
                 <span className="block text-sm">
                   ELLAS:{" "}
                   <span className="font-semibold font-serif">
-                    EVITAR COLORES BLANCOS Y AZUL MARINO.
+                    {dressCodeConfig.ladies}
                   </span>
                 </span>
                 <span className="block text-sm font-serif">
-                  ELLOS: <span className="font-semibold">EVITAR COLORES BEIGE Y AZUL MARINO.</span>
+                  ELLOS: <span className="font-semibold">{dressCodeConfig.gentlemen}</span>
                 </span>
               </motion.div>
             </motion.div>

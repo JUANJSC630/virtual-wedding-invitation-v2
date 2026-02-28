@@ -2,10 +2,12 @@ import { useState } from "react";
 
 import { Heart, Loader2 } from "lucide-react";
 
+import { AdminUser } from "@/types";
+
 import { Button } from "@/components/ui/button";
 
 interface AdminLoginProps {
-  onLogin: (user: { id: string; email: string; name: string }) => void;
+  onLogin: (user: AdminUser) => void;
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {

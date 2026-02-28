@@ -83,6 +83,20 @@ export interface ContactInfo {
   label: string;
 }
 
+// Event Config
+export interface EventConfig {
+  verse?: { text: string; reference: string };
+  ceremony?: { name: string; address: string; mapsUrl: string };
+  reception?: { name: string; address: string; mapsUrl: string };
+  parents?: { bride: string[]; groom: string[] };
+  godparents?: string[];
+  bridesmaids?: string[];
+  groomsmen?: string[];
+  heroMessage?: string;
+  giftMessage?: string;
+  dressCode?: { label: string; ladies: string; gentlemen: string };
+}
+
 // Event Types
 export interface Event {
   id: string;
@@ -96,7 +110,7 @@ export interface Event {
   ceremonyTime?: string;
   receptionTime?: string;
   dressCode?: string;
-  config: Record<string, unknown>;
+  config: EventConfig;
   isActive: boolean;
   heroPhotoUrl?: string;
   photo2Url?: string;

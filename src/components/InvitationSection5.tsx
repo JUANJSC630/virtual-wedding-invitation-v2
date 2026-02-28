@@ -2,10 +2,20 @@ import { useEffect, useRef, useState } from "react";
 
 import { Variants, motion, useInView } from "framer-motion";
 
+import { useEventContext } from "@/context/EventContext";
+
 import Countdown from "@/components/Countdown";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection5 = () => {
+  const { event } = useEventContext();
+
+  const parents = event?.config?.parents;
+  const brideMothers = parents?.bride ?? ["Maria Lucelly Zapata Bedoya", "Alvaro Libreros Caicedo"];
+  const groomParents = parents?.groom ?? ["Leandra Susana Naranjo Monsalve", "John Jairo Ordoñes Corrales"];
+  const godparents = event?.config?.godparents ?? ["Isabel Cristina Castro Pineda", "Marco Tulio Naranjo Monsalve"];
+  const bridesmaids = event?.config?.bridesmaids ?? ["Claudia Reyes", "Yensi Mora", "Sofia Naranjo", "Manuela Naranjo", "Ana Garcia", "Laura Bedoya", "Alejandra Rivera"];
+  const groomsmen = event?.config?.groomsmen ?? ["Stiwar Ordoñes", "Danny Ospina", "Cristian Naranjo", "Santiago Ordoñes", "Brayan Ordoñes", "Harold Naranjo", "Marlon Estupiñan"];
   const ref = useRef(null);
   const [layoutReady, setLayoutReady] = useState(false);
 
@@ -101,10 +111,9 @@ const InvitationSection5 = () => {
                 animate={isInView ? "visible" : "hidden"}
               >
                 <span className="font-bold text-lg">Padres de la novia</span>
-                <br />
-                <span>Maria Lucelly Zapata Bedoya</span>
-                <br />
-                <span>Alvaro Libreros Caicedo</span>
+                {brideMothers.map(name => (
+                  <><br key={name} /><span>{name}</span></>
+                ))}
               </motion.div>
               <motion.div
                 className="text-center mb-2"
@@ -114,10 +123,9 @@ const InvitationSection5 = () => {
                 animate={isInView ? "visible" : "hidden"}
               >
                 <span className="font-bold text-lg">Padres del novio</span>
-                <br />
-                <span>Leandra Susana Naranjo Monsalve</span>
-                <br />
-                <span>John Jairo Ordoñes Corrales</span>
+                {groomParents.map(name => (
+                  <><br key={name} /><span>{name}</span></>
+                ))}
               </motion.div>
               <motion.h3
                 className="text-xl md:text-2xl text-[#bfa15a] font-serif text-center my-2"
@@ -136,10 +144,9 @@ const InvitationSection5 = () => {
                 animate={isInView ? "visible" : "hidden"}
               >
                 <span className="font-bold text-lg">Padrinos</span>
-                <br />
-                <span>Isabel Cristina Castro Pineda</span>
-                <br />
-                <span>Marco Tulio Naranjo Monsalve</span>
+                {godparents.map(name => (
+                  <><br key={name} /><span>{name}</span></>
+                ))}
               </motion.div>
               <motion.div
                 className="flex flex-col md:flex-row justify-center gap-8 mt-4 w-full max-w-2xl mx-auto"
@@ -151,25 +158,13 @@ const InvitationSection5 = () => {
                 <div className="flex-1 text-center">
                   <span className="font-bold text-lg">Damas de honor</span>
                   <ul className="mt-1">
-                    <li>Claudia Reyes</li>
-                    <li>Yensi Mora</li>
-                    <li>Sofia Naranjo</li>
-                    <li>Manuela Naranjo</li>
-                    <li>Ana Garcia</li>
-                    <li>Laura Bedoya</li>
-                    <li>Alejandra Rivera</li>
+                    {bridesmaids.map(name => <li key={name}>{name}</li>)}
                   </ul>
                 </div>
                 <div className="flex-1 text-center">
                   <span className="font-bold text-lg">Caballeros de honor</span>
                   <ul className="mt-1">
-                    <li>Stiwar Ordoñes</li>
-                    <li>Danny Ospina</li>
-                    <li>Cristian Naranjo</li>
-                    <li>Santiago Ordoñes</li>
-                    <li>Brayan Ordoñes</li>
-                    <li>Harold Naranjo</li>
-                    <li>Marlon Estupiñan</li>
+                    {groomsmen.map(name => <li key={name}>{name}</li>)}
                   </ul>
                 </div>
               </motion.div>

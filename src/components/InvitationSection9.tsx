@@ -1,4 +1,9 @@
+import { useEventContext } from "@/context/EventContext";
+
 const InvitationSection9 = () => {
+  const { event } = useEventContext();
+  const heroPhotoUrl = event?.heroPhotoUrl ?? "/photos/IMG_2041.jpeg";
+
   return (
     <section className="relative w-full flex flex-col items-center justify-center bg-white overflow-hidden p-0 m-0 ">
       {/* Hoja rasgada arriba */}
@@ -29,7 +34,7 @@ const InvitationSection9 = () => {
         style={{ lineHeight: 0 }}
       >
         <img
-          src="/photos/IMG_2041.jpeg"
+          src={heroPhotoUrl}
           alt="Foto principal"
           className="w-full object-cover block"
           style={{

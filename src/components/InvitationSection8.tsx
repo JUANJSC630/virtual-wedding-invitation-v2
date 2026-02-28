@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Variants, motion, useInView } from "framer-motion";
 
+import { useEventContext } from "@/context/EventContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
 
 import { Button } from "@/components/ui/button";
@@ -11,34 +12,37 @@ const InvitationSection8 = () => {
   const ref = useRef(null);
   const [layoutReady, setLayoutReady] = useState(false);
   const [isAfterDeadline, setIsAfterDeadline] = useState(false);
+  const { event } = useEventContext();
+
+  const groomPhone = event?.groomPhone ?? import.meta.env.VITE_GROOM_PHONE;
+  const groomWAMessage = event?.groomWAMessage ?? import.meta.env.VITE_GROOM_WHATSAPP_MESSAGE;
+  const bridePhone = event?.bridePhone ?? import.meta.env.VITE_BRIDE_PHONE;
+  const brideWAMessage = event?.brideWAMessage ?? import.meta.env.VITE_BRIDE_WHATSAPP_MESSAGE;
+  const giftMessage = event?.config?.giftMessage ??
+    "El mejor regalo es tu presencia, pero si deseas tener un detalle con nosotros, les dejamos esta opción:";
+
+  const rsvpDeadlineDate = event?.rsvpDeadline ? new Date(event.rsvpDeadline) : null;
+  const deadlineText = rsvpDeadlineDate
+    ? rsvpDeadlineDate.toLocaleDateString("es-CO", { day: "numeric", month: "long", timeZone: "America/Bogota" })
+    : "20 de octubre";
 
   // Verificar fecha límite automáticamente
   useEffect(() => {
     const checkAndUpdate = () => {
-      // Hora actual en Colombia (UTC-5)
-      const nowColombia = new Date().toLocaleString("en-US", {
-        timeZone: "America/Bogota",
-      });
+      const nowColombia = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" });
       const now = new Date(nowColombia);
-
-      // Fecha límite desde variables de entorno
-      const testDeadline = new Date(import.meta.env.VITE_RSVP_DEADLINE || "2025-10-20T12:00:00");
-      // Convertir a zona horaria de Colombia
+      const deadlineSource = event?.rsvpDeadline || import.meta.env.VITE_RSVP_DEADLINE || "2025-10-20T12:00:00";
+      const testDeadline = new Date(deadlineSource);
       const deadlineColombia = new Date(
         testDeadline.toLocaleString("en-US", { timeZone: "America/Bogota" })
       );
-
       setIsAfterDeadline(now > deadlineColombia);
     };
 
-    // Verificar inmediatamente
     checkAndUpdate();
-
-    // Verificar cada 3 segundos
     const interval = setInterval(checkAndUpdate, 3000);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [event?.rsvpDeadline]);
 
   // Preparar el layout antes de mostrar cualquier contenido
   useEffect(() => {
@@ -123,8 +127,7 @@ const InvitationSection8 = () => {
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
               >
-                El mejor regalo es tu presencia, pero si deseas tener un detalle con nosotros, les
-                dejamos esta opción:
+                {giftMessage}
               </motion.p>
               <motion.div
                 className="text-xl md:text-2xl font-serif font-semibold text-[#162b4e] text-center mt-4 mb-2 tracking-wide"
@@ -184,10 +187,8 @@ const InvitationSection8 = () => {
                     }`}
                     onClick={() => {
                       if (!isAfterDeadline) {
-                        const groomPhone = import.meta.env.VITE_GROOM_PHONE;
-                        const groomMessage = import.meta.env.VITE_GROOM_WHATSAPP_MESSAGE;
                         window.open(
-                          `https://wa.me/${groomPhone}?text=${groomMessage}`,
+                          `https://wa.me/${groomPhone}?text=${groomWAMessage}`,
                           "_blank",
                           "noopener,noreferrer"
                         );
@@ -219,10 +220,8 @@ const InvitationSection8 = () => {
                     }`}
                     onClick={() => {
                       if (!isAfterDeadline) {
-                        const bridePhone = import.meta.env.VITE_BRIDE_PHONE;
-                        const brideMessage = import.meta.env.VITE_BRIDE_WHATSAPP_MESSAGE;
                         window.open(
-                          `https://wa.me/${bridePhone}?text=${brideMessage}`,
+                          `https://wa.me/${bridePhone}?text=${brideWAMessage}`,
                           "_blank",
                           "noopener,noreferrer"
                         );
@@ -252,7 +251,7 @@ const InvitationSection8 = () => {
               >
                 <p className="text-[#bfa15a] font-serif text-center w-full opacity-80">
                   * Fecha límite para confirmar:{" "}
-                  <span className="font-semibold">20 de octubre</span>
+                  <span className="font-semibold">{deadlineText}</span>
                 </p>
               </motion.div>
               <motion.div
