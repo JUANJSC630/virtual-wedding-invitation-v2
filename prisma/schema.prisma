@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,46 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Modelo principal de invitados
-model Guest {
-  id          String   @id @default(cuid())
-  code        String   @unique // Código único para acceder (ej: "Ayp001")
-  name        String   // Nombre del invitado principal
-  email       String?  // Email opcional
-  phone       String?  // Teléfono opcional
-  maxGuests   Int      @default(1) // Máximo número de invitados permitidos
-  confirmed   Boolean  @default(false) // Si ya confirmó asistencia
-  confirmedAt DateTime? // Cuándo confirmó
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relación con invitados acompañantes
-  companions  Companion[]
-
-  @@map("guests")
-}
-
-// Modelo para acompañantes/invitados de los invitados
-model Companion {
-  id          String   @id @default(cuid())
-  guestId     String   // Referencia al invitado principal
-  name        String   // Nombre del acompañante
-  confirmed   Boolean  @default(false) // Si confirmó asistencia
-  confirmedAt DateTime? // Cuándo confirmó
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relación con el invitado principal
-  guest       Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
-
-  @@map("companions")
-}
-
-// Modelo para administración (opcional para el futuro)
+// ─── MASTER ADMIN (el desarrollador/dueño de la plataforma) ──────────────────
 model Admin {
   id        String   @id @default(cuid())
   email     String   @unique
-  password  String   // Hash de la contraseña
+  password  String
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -60,12 +19,94 @@ model Admin {
   @@map("admins")
 }
 
-// Modelo para tracking de accesos (opcional)
-model GuestAccess {
+// ─── EVENTOS (cada invitación es un evento independiente) ────────────────────
+model Event {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  groomName      String
+  brideName      String
+  eventDate      DateTime
+  rsvpDeadline   DateTime?
+  venueName      String?
+  venueAddress   String?
+  ceremonyTime   String?
+  receptionTime  String?
+  dressCode      String?
+  config         Json     @default("{}")
+  isActive       Boolean  @default(true)
+  heroPhotoUrl   String?
+  photo2Url      String?
+  audioUrl       String?
+  groomPhone     String?
+  bridePhone     String?
+  groomWAMessage String?
+  brideWAMessage String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  clientAdmins  ClientAdmin[]
+  guests        Guest[]
+  guestAccesses GuestAccess[]
+
+  @@map("events")
+}
+
+// ─── ADMIN DEL CLIENTE ────────────────────────────────────────────────────────
+model ClientAdmin {
   id        String   @id @default(cuid())
-  guestCode String   // Código del invitado que accedió
-  ipAddress String?  // IP desde donde accedió
-  userAgent String?  // User agent del navegador
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("client_admins")
+}
+
+// ─── INVITADOS ────────────────────────────────────────────────────────────────
+model Guest {
+  id          String    @id @default(cuid())
+  eventId     String                         // requerido — todos tienen evento asignado
+  event       Event     @relation(fields: [eventId], references: [id])
+  code        String                         // único por evento (no globalmente)
+  name        String
+  email       String?
+  phone       String?
+  maxGuests   Int       @default(1)
+  confirmed   Boolean   @default(false)
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  companions  Companion[]
+
+  @@unique([eventId, code])                  // código único dentro del evento
+  @@map("guests")
+}
+
+model Companion {
+  id          String    @id @default(cuid())
+  guestId     String
+  guest       Guest     @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  name        String
+  confirmed   Boolean   @default(false)
+  confirmedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("companions")
+}
+
+// ─── TRACKING DE ACCESOS ──────────────────────────────────────────────────────
+model GuestAccess {
+  id         String   @id @default(cuid())
+  eventId    String                          // requerido
+  event      Event    @relation(fields: [eventId], references: [id])
+  guestCode  String
+  ipAddress  String?
+  userAgent  String?
   accessedAt DateTime @default(now())
 
   @@map("guest_accesses")

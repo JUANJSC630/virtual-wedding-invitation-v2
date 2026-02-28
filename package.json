@@ -24,7 +24,8 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:seed": "node --loader ts-node/esm prisma/seed.ts",
-    "setup-admin": "node --loader ts-node/esm scripts/setup-admin.ts"
+    "setup-admin": "node --loader ts-node/esm scripts/setup-admin.ts",
+    "migrate-to-multitenant": "node --loader ts-node/esm scripts/migrate-to-multitenant.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",

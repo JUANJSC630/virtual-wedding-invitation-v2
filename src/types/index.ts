@@ -83,9 +83,54 @@ export interface ContactInfo {
   label: string;
 }
 
+// Event Types
+export interface Event {
+  id: string;
+  slug: string;
+  groomName: string;
+  brideName: string;
+  eventDate: string;
+  rsvpDeadline?: string;
+  venueName?: string;
+  venueAddress?: string;
+  ceremonyTime?: string;
+  receptionTime?: string;
+  dressCode?: string;
+  config: Record<string, unknown>;
+  isActive: boolean;
+  heroPhotoUrl?: string;
+  photo2Url?: string;
+  audioUrl?: string;
+  groomPhone?: string;
+  bridePhone?: string;
+  groomWAMessage?: string;
+  brideWAMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Admin Types
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: "master" | "client";
+  eventId?: string | null;
+}
+
+export interface ClientAdmin {
+  id: string;
+  eventId: string;
+  email: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Guest Management Types
 export interface Guest {
   id: string;
+  eventId: string;
   code: string;
   name: string;
   email?: string;
@@ -145,14 +190,6 @@ export interface RSVPData {
   }>;
 }
 
-// Admin Types
-export interface Admin {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export interface GuestAccess {
   id: string;

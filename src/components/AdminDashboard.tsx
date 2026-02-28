@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BarChart3, Heart, LogOut, Users2 } from "lucide-react";
 
+import { AdminUser } from "@/types";
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -21,7 +23,7 @@ const adminQueryClient = new QueryClient({
 });
 
 interface AdminDashboardProps {
-  user: { id: string; email: string; name: string };
+  user: AdminUser;
   onLogout: () => void;
 }
 

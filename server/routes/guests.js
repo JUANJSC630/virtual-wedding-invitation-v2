@@ -4,106 +4,109 @@ import prisma from "../../src/lib/prisma.js";
 
 export const guestRoutes = express.Router();
 
-// Validar código de invitado (POST - compatible con Vercel)
+const DEFAULT_SLUG = process.env.DEFAULT_EVENT_SLUG || "jimena-juan";
+
+/**
+ * Resuelve el evento a partir del slug.
+ * Usa el slug del body/params, con fallback al DEFAULT_EVENT_SLUG.
+ */
+async function resolveEvent(slug) {
+  const event = await prisma.event.findUnique({ where: { slug: slug || DEFAULT_SLUG } });
+  return event;
+}
+
+// POST /api/guests/validate
 guestRoutes.post("/validate", async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, eventSlug } = req.body;
 
     if (!code) {
-      return res.status(400).json({
-        valid: false,
-        error: "Código de invitación requerido",
-      });
+      return res.status(400).json({ valid: false, error: "Código de invitación requerido" });
+    }
+
+    const event = await resolveEvent(eventSlug);
+    if (!event) {
+      return res.json({ valid: false, error: "Evento no encontrado" });
     }
 
     const guest = await prisma.guest.findUnique({
-      where: { code: code.toUpperCase() },
+      where: { eventId_code: { eventId: event.id, code: code.toUpperCase() } },
       include: { companions: true },
     });
 
     if (!guest) {
-      return res.json({
-        valid: false,
-        error: "Código de invitación no válido",
-      });
+      return res.json({ valid: false, error: "Código de invitación no válido" });
     }
 
-    return res.json({
-      valid: true,
-      guest,
-    });
+    return res.json({ valid: true, guest });
   } catch (error) {
     console.error("Error validating guest code:", error);
-    return res.status(500).json({
-      valid: false,
-      error: "Error interno del servidor",
-    });
+    return res.status(500).json({ valid: false, error: "Error interno del servidor" });
   }
 });
 
-// Validar código de invitado (GET - legacy)
+// GET /api/guests/validate/:code (legacy)
 guestRoutes.get("/validate/:code", async (req, res) => {
   try {
     const { code } = req.params;
+    const eventSlug = req.query.eventSlug;
+
+    const event = await resolveEvent(eventSlug);
+    if (!event) {
+      return res.json({ valid: false, error: "Evento no encontrado" });
+    }
 
     const guest = await prisma.guest.findUnique({
-      where: { code: code.toUpperCase() },
+      where: { eventId_code: { eventId: event.id, code: code.toUpperCase() } },
       include: { companions: true },
     });
 
     if (!guest) {
-      return res.json({
-        valid: false,
-        error: "Código de invitación no válido",
-      });
+      return res.json({ valid: false, error: "Código de invitación no válido" });
     }
 
-    return res.json({
-      valid: true,
-      guest,
-    });
+    return res.json({ valid: true, guest });
   } catch (error) {
     console.error("Error validating guest code:", error);
-    return res.status(500).json({
-      valid: false,
-      error: "Error interno del servidor",
-    });
+    return res.status(500).json({ valid: false, error: "Error interno del servidor" });
   }
 });
 
-// Obtener invitado por código
+// GET /api/guests/code/:code
 guestRoutes.get("/code/:code", async (req, res) => {
   try {
     const { code } = req.params;
+    const eventSlug = req.query.eventSlug;
+
+    const event = await resolveEvent(eventSlug);
+    if (!event) return res.status(404).json({ error: "Evento no encontrado" });
 
     const guest = await prisma.guest.findUnique({
-      where: { code: code.toUpperCase() },
+      where: { eventId_code: { eventId: event.id, code: code.toUpperCase() } },
       include: { companions: true },
     });
 
-    if (!guest) {
-      return res.status(404).json({ error: "Invitado no encontrado" });
-    }
+    if (!guest) return res.status(404).json({ error: "Invitado no encontrado" });
 
     return res.json(guest);
   } catch (error) {
     console.error("Error getting guest by code:", error);
-    return res.status(500).json({
-      valid: false,
-      error: "Error interno del servidor",
-    });
+    return res.status(500).json({ error: "Error interno del servidor" });
   }
 });
 
-// Registrar acceso de invitado
+// POST /api/guests/access
 guestRoutes.post("/access", async (req, res) => {
   try {
-    const { guestCode } = req.body;
-    const ipAddress = req.ip || req.connection.remoteAddress;
+    const { guestCode, eventSlug } = req.body;
+    const ipAddress = req.ip || req.connection?.remoteAddress;
     const userAgent = req.get("User-Agent");
+
+    const event = await resolveEvent(eventSlug);
 
     await prisma.guestAccess.create({
       data: {
+        eventId: event?.id || (await getDefaultEventId()),
         guestCode: guestCode.toUpperCase(),
         ipAddress: ipAddress ?? null,
         userAgent: userAgent ?? null,
@@ -113,27 +116,24 @@ guestRoutes.post("/access", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error registering guest access:", error);
-    // No enviamos error al cliente para que no afecte la experiencia
     res.json({ success: false });
   }
 });
 
-// Confirmar RSVP
+// POST /api/guests/rsvp
 guestRoutes.post("/rsvp", async (req, res) => {
   try {
-    const { guestCode, confirmed, companions } = req.body;
+    const { guestCode, confirmed, companions, eventSlug } = req.body;
 
-    // Actualizar el invitado principal
+    const event = await resolveEvent(eventSlug);
+    if (!event) return res.status(404).json({ error: "Evento no encontrado" });
+
     const guest = await prisma.guest.update({
-      where: { code: guestCode.toUpperCase() },
-      data: {
-        confirmed,
-        confirmedAt: confirmed ? new Date() : null,
-      },
+      where: { eventId_code: { eventId: event.id, code: guestCode.toUpperCase() } },
+      data: { confirmed, confirmedAt: confirmed ? new Date() : null },
       include: { companions: true },
     });
 
-    // Actualizar acompañantes si se proporcionaron
     if (companions && Array.isArray(companions)) {
       for (const companion of companions) {
         if (companion.id) {
@@ -148,9 +148,8 @@ guestRoutes.post("/rsvp", async (req, res) => {
       }
     }
 
-    // Obtener el invitado actualizado con acompañantes
     const finalGuest = await prisma.guest.findUnique({
-      where: { code: guestCode.toUpperCase() },
+      where: { eventId_code: { eventId: event.id, code: guestCode.toUpperCase() } },
       include: { companions: true },
     });
 
@@ -160,3 +159,9 @@ guestRoutes.post("/rsvp", async (req, res) => {
     res.status(500).json({ error: "Error al confirmar asistencia" });
   }
 });
+
+// Helper para /access cuando no viene el slug
+async function getDefaultEventId() {
+  const event = await prisma.event.findUnique({ where: { slug: DEFAULT_SLUG } });
+  return event?.id;
+}

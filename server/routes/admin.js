@@ -6,20 +6,29 @@ import { requireAuth } from "../middleware/auth.js";
 
 export const adminRoutes = express.Router();
 
-// Aplicar autenticación a todas las rutas de este router
+// Todas las rutas requieren autenticación
 adminRoutes.use(requireAuth);
 
+/**
+ * Devuelve el filtro de eventId según el rol:
+ * - master: sin filtro (ve todos los eventos)
+ * - client: filtrado por su eventId
+ */
+function eventFilter(user) {
+  return user.role === "master" ? {} : { eventId: user.eventId };
+}
+
 // Obtener todos los invitados
-adminRoutes.get("/guests", async (_req, res) => {
+adminRoutes.get("/guests", async (req, res) => {
   try {
     const guests = await prisma.guest.findMany({
+      where: eventFilter(req.user),
       include: { companions: true },
       orderBy: { createdAt: "desc" },
     });
-
     res.json(guests);
   } catch (error) {
-    console.error("Error getting all guests:", error);
+    console.error("Error getting guests:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
@@ -29,16 +38,25 @@ adminRoutes.post("/guests", async (req, res) => {
   try {
     const { code, name, email, phone, maxGuests = 1 } = req.body;
 
-    const existingGuest = await prisma.guest.findUnique({
-      where: { code: code.toUpperCase() },
+    // El eventId viene del JWT (client) o del body (master puede especificarlo)
+    const eventId =
+      req.user.role === "master" ? req.body.eventId : req.user.eventId;
+
+    if (!eventId) {
+      return res.status(400).json({ error: "eventId es requerido" });
+    }
+
+    const existing = await prisma.guest.findUnique({
+      where: { eventId_code: { eventId, code: code.toUpperCase() } },
     });
 
-    if (existingGuest) {
-      return res.status(400).json({ message: "Ya existe un invitado con ese código" });
+    if (existing) {
+      return res.status(400).json({ message: "Ya existe un invitado con ese código en este evento" });
     }
 
     const guest = await prisma.guest.create({
       data: {
+        eventId,
         code: code.toUpperCase(),
         name,
         email: email || undefined,
@@ -60,6 +78,12 @@ adminRoutes.patch("/guests/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, phone, maxGuests, confirmed } = req.body;
+
+    // Verificar que el guest pertenece al evento del usuario (si es client)
+    if (req.user.role === "client") {
+      const guest = await prisma.guest.findFirst({ where: { id, eventId: req.user.eventId } });
+      if (!guest) return res.status(403).json({ error: "Sin acceso a este invitado" });
+    }
 
     const guest = await prisma.guest.update({
       where: { id },
@@ -86,8 +110,12 @@ adminRoutes.delete("/guests/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    await prisma.guest.delete({ where: { id } });
+    if (req.user.role === "client") {
+      const guest = await prisma.guest.findFirst({ where: { id, eventId: req.user.eventId } });
+      if (!guest) return res.status(403).json({ error: "Sin acceso a este invitado" });
+    }
 
+    await prisma.guest.delete({ where: { id } });
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting guest:", error);
@@ -100,10 +128,7 @@ adminRoutes.post("/companions", async (req, res) => {
   try {
     const { guestId, name } = req.body;
 
-    const companion = await prisma.companion.create({
-      data: { guestId, name },
-    });
-
+    const companion = await prisma.companion.create({ data: { guestId, name } });
     res.status(201).json(companion);
   } catch (error) {
     console.error("Error creating companion:", error);
@@ -119,12 +144,8 @@ adminRoutes.patch("/companions/:id", async (req, res) => {
 
     const companion = await prisma.companion.update({
       where: { id },
-      data: {
-        confirmed,
-        confirmedAt: confirmed ? new Date() : null,
-      },
+      data: { confirmed, confirmedAt: confirmed ? new Date() : null },
     });
-
     res.json(companion);
   } catch (error) {
     console.error("Error updating companion:", error);
@@ -136,9 +157,7 @@ adminRoutes.patch("/companions/:id", async (req, res) => {
 adminRoutes.delete("/companions/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
     await prisma.companion.delete({ where: { id } });
-
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting companion:", error);
@@ -146,20 +165,25 @@ adminRoutes.delete("/companions/:id", async (req, res) => {
   }
 });
 
-// Obtener estadísticas
-adminRoutes.get("/stats", async (_req, res) => {
+// Estadísticas
+adminRoutes.get("/stats", async (req, res) => {
   try {
-    const [totalGuests, confirmedGuests, totalCompanions, confirmedCompanions] = await Promise.all([
-      prisma.guest.count(),
-      prisma.guest.count({ where: { confirmed: true } }),
-      prisma.companion.count(),
-      prisma.companion.count({ where: { confirmed: true } }),
-    ]);
+    const filter = eventFilter(req.user);
 
-    const guestsWithSlots = await prisma.guest.findMany({
-      select: { maxGuests: true },
-    });
-    const totalSlots = guestsWithSlots.reduce((sum, guest) => sum + guest.maxGuests, 0);
+    const [totalGuests, confirmedGuests, totalCompanions, confirmedCompanions, guestsWithSlots] =
+      await Promise.all([
+        prisma.guest.count({ where: filter }),
+        prisma.guest.count({ where: { ...filter, confirmed: true } }),
+        prisma.companion.count({
+          where: { guest: filter },
+        }),
+        prisma.companion.count({
+          where: { confirmed: true, guest: filter },
+        }),
+        prisma.guest.findMany({ where: filter, select: { maxGuests: true } }),
+      ]);
+
+    const totalSlots = guestsWithSlots.reduce((sum, g) => sum + g.maxGuests, 0);
 
     res.json({
       totalGuests,
@@ -181,7 +205,10 @@ adminRoutes.get("/stats", async (_req, res) => {
 // Generar códigos aleatorios
 adminRoutes.post("/generate-codes", async (req, res) => {
   try {
-    const { count = 10, prefix = "AYP" } = req.body;
+    const { count = 10, prefix = "INV" } = req.body;
+    const eventId = req.user.role === "master" ? req.body.eventId : req.user.eventId;
+
+    if (!eventId) return res.status(400).json({ error: "eventId requerido" });
 
     const codes = [];
     for (let i = 0; i < count; i++) {
@@ -191,9 +218,10 @@ adminRoutes.post("/generate-codes", async (req, res) => {
       while (exists) {
         const randomPart = nanoid(3).toUpperCase();
         code = `${prefix}${randomPart}`;
-
-        const existingGuest = await prisma.guest.findUnique({ where: { code } });
-        exists = !!existingGuest;
+        const existing = await prisma.guest.findUnique({
+          where: { eventId_code: { eventId, code } },
+        });
+        exists = !!existing;
       }
 
       codes.push(code);
@@ -207,14 +235,19 @@ adminRoutes.post("/generate-codes", async (req, res) => {
 });
 
 // Analytics de accesos
-adminRoutes.get("/analytics", async (_req, res) => {
+adminRoutes.get("/analytics", async (req, res) => {
   try {
+    const filter = eventFilter(req.user);
+    const accessFilter = req.user.role === "master" ? {} : { eventId: req.user.eventId };
+
     const recentAccesses = await prisma.guestAccess.findMany({
+      where: accessFilter,
       take: 10,
       orderBy: { accessedAt: "desc" },
     });
 
     const accessedCodes = await prisma.guestAccess.findMany({
+      where: accessFilter,
       select: { guestCode: true },
       distinct: ["guestCode"],
     });
@@ -222,21 +255,20 @@ adminRoutes.get("/analytics", async (_req, res) => {
     const accessedCodesSet = new Set(accessedCodes.map(a => a.guestCode));
 
     const accessedButNotConfirmed = await prisma.guest.findMany({
-      where: {
-        confirmed: false,
-        code: { in: [...accessedCodesSet] },
-      },
+      where: { ...filter, confirmed: false, code: { in: [...accessedCodesSet] } },
       include: { companions: true },
     });
 
     const allGuests = await prisma.guest.findMany({
+      where: filter,
       select: { code: true, name: true, createdAt: true },
     });
 
-    const neverAccessed = allGuests.filter(guest => !accessedCodesSet.has(guest.code));
+    const neverAccessed = allGuests.filter(g => !accessedCodesSet.has(g.code));
 
     const accessStats = await prisma.guestAccess.groupBy({
       by: ["guestCode"],
+      where: accessFilter,
       _count: { guestCode: true },
       orderBy: { _count: { guestCode: "desc" } },
       take: 10,
@@ -246,12 +278,12 @@ adminRoutes.get("/analytics", async (_req, res) => {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const accessesByDay = await prisma.guestAccess.findMany({
-      where: { accessedAt: { gte: sevenDaysAgo } },
+      where: { ...accessFilter, accessedAt: { gte: sevenDaysAgo } },
       select: { accessedAt: true, guestCode: true },
     });
 
-    const accessesByDayGrouped = accessesByDay.reduce((acc, access) => {
-      const day = access.accessedAt.toISOString().split("T")[0];
+    const accessesByDayGrouped = accessesByDay.reduce((acc, a) => {
+      const day = a.accessedAt.toISOString().split("T")[0];
       acc[day] = (acc[day] || 0) + 1;
       return acc;
     }, {});
@@ -263,14 +295,14 @@ adminRoutes.get("/analytics", async (_req, res) => {
       accessStats,
       accessesByDay: accessesByDayGrouped,
       summary: {
-        totalAccesses: await prisma.guestAccess.count(),
+        totalAccesses: await prisma.guestAccess.count({ where: accessFilter }),
         uniqueAccessedCodes: accessedCodes.length,
         neverAccessedCount: neverAccessed.length,
         accessedButNotConfirmedCount: accessedButNotConfirmed.length,
       },
     });
   } catch (error) {
-    console.error("Error in analytics API:", error);
+    console.error("Error in analytics:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
