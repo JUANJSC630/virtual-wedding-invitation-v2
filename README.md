@@ -97,14 +97,15 @@ src/
 - **ESBuild Minification**: Fast and efficient code compression
 - **CSS Code Splitting**: Separate CSS chunks for better loading
 
-## 🚀 Getting Started
+## 🚀 Getting Started (Local)
 
 ### Prerequisites
 
-- Node.js 20.19+ or 22.12+
-- pnpm (recommended) or npm
+- Node.js 20.x (if using nvm: `nvm use` — the `.nvmrc` file sets the correct version)
+- pnpm 9+ — install with `npm install -g pnpm`
+- A PostgreSQL database (local or [Neon](https://neon.tech))
 
-### Installation
+### Setup
 
 1. **Clone the repository**
 
@@ -119,23 +120,87 @@ src/
    pnpm install
    ```
 
-3. **Start development server**
+3. **Configure environment variables**
+
+   Create a `.env` file at the root (never commit this file):
+
+   ```bash
+   # Database
+   DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+
+   # Auth — genera un string aleatorio de 64+ chars
+   JWT_SECRET="un-string-muy-largo-y-secreto-aqui"
+
+   # CORS — dominio del frontend en producción
+   ALLOWED_ORIGIN="https://tu-app.vercel.app"
+
+   # API server port (default: 3002)
+   API_PORT=3002
+
+   # Admin inicial (solo para el script setup-admin)
+   ADMIN_EMAIL="tu@email.com"
+   ADMIN_PASSWORD="tu-contraseña-segura"
+   ADMIN_NAME="Tu Nombre"
+
+   # Wedding details (shown in the invitation)
+   VITE_WEDDING_DATE=2025-11-22T18:00:00
+   VITE_RSVP_DEADLINE=2025-10-15T12:00:00
+   VITE_GROOM_PHONE=573100000000
+   VITE_BRIDE_PHONE=573100000001
+   ```
+
+4. **Generate Prisma client**
+
+   ```bash
+   pnpm db:generate
+   ```
+
+5. **Run database migrations**
+
+   ```bash
+   pnpm db:migrate
+   ```
+
+6. **Seed the database** *(optional, loads sample guests)*
+
+   ```bash
+   pnpm db:seed
+   ```
+
+7. **Start the development servers**
 
    ```bash
    pnpm dev
    ```
 
-4. **Open in browser**
+   This starts two processes in parallel:
+   - **Frontend** (Vite) → `http://localhost:3000`
+   - **API server** (Express) → `http://localhost:3002`
+
+   The frontend proxies all `/api/*` requests to the Express server automatically.
+
+8. **Verify the API is running**
+
    ```
-   http://localhost:3000
+   http://localhost:3002/api/health
    ```
 
 ### Available Scripts
 
-- `pnpm dev` - Start development server
-- `pnpm build` - Build for production
-- `pnpm preview` - Preview production build
-- `pnpm lint` - Run ESLint
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start frontend + API server in parallel |
+| `pnpm dev:client` | Start only the Vite frontend |
+| `pnpm dev:server` | Start only the Express API server |
+| `pnpm build` | Build frontend for production |
+| `pnpm preview` | Preview production build locally |
+| `pnpm lint` | Run ESLint |
+| `pnpm format` | Format code with Prettier |
+| `pnpm type-check` | Run TypeScript type checker |
+| `pnpm db:migrate` | Run pending database migrations |
+| `pnpm db:generate` | Regenerate Prisma client after schema changes |
+| `pnpm db:studio` | Open Prisma Studio (visual DB browser) |
+| `pnpm db:seed` | Seed the database with sample data |
 
 ## 🎨 Customization
 

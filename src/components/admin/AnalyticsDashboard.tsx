@@ -84,7 +84,7 @@ const AnalyticsDashboard: React.FC = () => {
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
+      const dateStr = date.toISOString().split("T")[0] as string;
       days.push({
         date: dateStr,
         label: date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric" }),

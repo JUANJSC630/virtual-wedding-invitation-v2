@@ -2,8 +2,12 @@ import express from "express";
 import { nanoid } from "nanoid";
 
 import prisma from "../../src/lib/prisma.js";
+import { requireAuth } from "../middleware/auth.js";
 
 export const adminRoutes = express.Router();
+
+// Aplicar autenticación a todas las rutas de este router
+adminRoutes.use(requireAuth);
 
 // Obtener todos los invitados
 adminRoutes.get("/guests", async (_req, res) => {
@@ -25,7 +29,6 @@ adminRoutes.post("/guests", async (req, res) => {
   try {
     const { code, name, email, phone, maxGuests = 1 } = req.body;
 
-    // Verificar que el código no exista
     const existingGuest = await prisma.guest.findUnique({
       where: { code: code.toUpperCase() },
     });
@@ -83,9 +86,7 @@ adminRoutes.delete("/guests/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    await prisma.guest.delete({
-      where: { id },
-    });
+    await prisma.guest.delete({ where: { id } });
 
     res.json({ success: true });
   } catch (error) {
@@ -100,10 +101,7 @@ adminRoutes.post("/companions", async (req, res) => {
     const { guestId, name } = req.body;
 
     const companion = await prisma.companion.create({
-      data: {
-        guestId,
-        name,
-      },
+      data: { guestId, name },
     });
 
     res.status(201).json(companion);
@@ -139,9 +137,7 @@ adminRoutes.delete("/companions/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    await prisma.companion.delete({
-      where: { id },
-    });
+    await prisma.companion.delete({ where: { id } });
 
     res.json({ success: true });
   } catch (error) {
@@ -160,13 +156,12 @@ adminRoutes.get("/stats", async (_req, res) => {
       prisma.companion.count({ where: { confirmed: true } }),
     ]);
 
-    // Calcular cupos totales
     const guestsWithSlots = await prisma.guest.findMany({
       select: { maxGuests: true },
     });
     const totalSlots = guestsWithSlots.reduce((sum, guest) => sum + guest.maxGuests, 0);
 
-    const stats = {
+    res.json({
       totalGuests,
       confirmedGuests,
       pendingGuests: totalGuests - confirmedGuests,
@@ -176,16 +171,14 @@ adminRoutes.get("/stats", async (_req, res) => {
       totalSlots,
       totalConfirmedAttendees: confirmedGuests + confirmedCompanions,
       availableSlots: totalSlots - (confirmedGuests + confirmedCompanions),
-    };
-
-    res.json(stats);
+    });
   } catch (error) {
     console.error("Error getting stats:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
 
-// Generar códigos aleatorios para invitados
+// Generar códigos aleatorios
 adminRoutes.post("/generate-codes", async (req, res) => {
   try {
     const { count = 10, prefix = "AYP" } = req.body;
@@ -195,15 +188,11 @@ adminRoutes.post("/generate-codes", async (req, res) => {
       let code;
       let exists = true;
 
-      // Generar código único
       while (exists) {
         const randomPart = nanoid(3).toUpperCase();
         code = `${prefix}${randomPart}`;
 
-        const existingGuest = await prisma.guest.findUnique({
-          where: { code },
-        });
-
+        const existingGuest = await prisma.guest.findUnique({ where: { code } });
         exists = !!existingGuest;
       }
 
@@ -217,36 +206,12 @@ adminRoutes.post("/generate-codes", async (req, res) => {
   }
 });
 
-// Obtener analytics de accesos
+// Analytics de accesos
 adminRoutes.get("/analytics", async (_req, res) => {
   try {
-    console.log("Getting access analytics...");
-
-    // 1. Últimos accesos (10 más recientes)
     const recentAccesses = await prisma.guestAccess.findMany({
       take: 10,
       orderBy: { accessedAt: "desc" },
-    });
-
-    // 2. Invitados que han accedido pero no confirmado
-    const accessedButNotConfirmed = await prisma.guest.findMany({
-      where: {
-        confirmed: false,
-        code: {
-          in: await prisma.guestAccess
-            .findMany({
-              select: { guestCode: true },
-              distinct: ["guestCode"],
-            })
-            .then(accesses => accesses.map(a => a.guestCode)),
-        },
-      },
-      include: { companions: true },
-    });
-
-    // 3. Códigos nunca usados
-    const allGuests = await prisma.guest.findMany({
-      select: { code: true, name: true, createdAt: true },
     });
 
     const accessedCodes = await prisma.guestAccess.findMany({
@@ -255,46 +220,43 @@ adminRoutes.get("/analytics", async (_req, res) => {
     });
 
     const accessedCodesSet = new Set(accessedCodes.map(a => a.guestCode));
+
+    const accessedButNotConfirmed = await prisma.guest.findMany({
+      where: {
+        confirmed: false,
+        code: { in: [...accessedCodesSet] },
+      },
+      include: { companions: true },
+    });
+
+    const allGuests = await prisma.guest.findMany({
+      select: { code: true, name: true, createdAt: true },
+    });
+
     const neverAccessed = allGuests.filter(guest => !accessedCodesSet.has(guest.code));
 
-    // 4. Estadísticas de accesos por código
     const accessStats = await prisma.guestAccess.groupBy({
       by: ["guestCode"],
-      _count: {
-        guestCode: true,
-      },
-      orderBy: {
-        _count: {
-          guestCode: "desc",
-        },
-      },
+      _count: { guestCode: true },
+      orderBy: { _count: { guestCode: "desc" } },
       take: 10,
     });
 
-    // 5. Accesos por día (últimos 7 días)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const accessesByDay = await prisma.guestAccess.findMany({
-      where: {
-        accessedAt: {
-          gte: sevenDaysAgo,
-        },
-      },
-      select: {
-        accessedAt: true,
-        guestCode: true,
-      },
+      where: { accessedAt: { gte: sevenDaysAgo } },
+      select: { accessedAt: true, guestCode: true },
     });
 
-    // Agrupar por día
     const accessesByDayGrouped = accessesByDay.reduce((acc, access) => {
       const day = access.accessedAt.toISOString().split("T")[0];
       acc[day] = (acc[day] || 0) + 1;
       return acc;
     }, {});
 
-    const analytics = {
+    res.json({
       recentAccesses,
       accessedButNotConfirmed,
       neverAccessed,
@@ -306,17 +268,9 @@ adminRoutes.get("/analytics", async (_req, res) => {
         neverAccessedCount: neverAccessed.length,
         accessedButNotConfirmedCount: accessedButNotConfirmed.length,
       },
-    };
-
-    console.log("Analytics retrieved successfully");
-    res.json(analytics);
+    });
   } catch (error) {
     console.error("Error in analytics API:", error);
-    console.error("Error stack:", error.stack);
-    res.status(500).json({
-      error: "Error interno del servidor",
-      details: error.message,
-      stack: error.stack,
-    });
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
