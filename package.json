@@ -44,6 +44,7 @@
     "lucide-react": "^0.542.0",
     "nanoid": "^5.1.5",
     "prisma": "^6.16.2",
+    "qrcode.react": "^4.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",

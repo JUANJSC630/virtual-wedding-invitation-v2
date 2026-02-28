@@ -79,11 +79,32 @@ const WeddingInvitation: React.FC = () => {
 
   useEffect(() => {
     setIsMounted(true);
+
+    // Leer ?code=XXX de la URL para pre-rellenar código del invitado
+    const urlCode = new URLSearchParams(window.location.search).get("code");
+
     fetch(`/api/events/${EVENT_SLUG}`)
       .then(res => (res.ok ? res.json() : null))
       .then(data => { if (data) setEvent(data); })
       .catch(() => {})
       .finally(() => setEventLoading(false));
+
+    if (urlCode) {
+      // Validar el código pre-rellenado
+      fetch("/api/guests/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: urlCode, eventSlug: EVENT_SLUG }),
+      })
+        .then(res => (res.ok ? res.json() : null))
+        .then(data => {
+          if (data?.guest) {
+            setValidatedCode(urlCode.toUpperCase());
+            setGuest(data.guest);
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   if (!isMounted) {

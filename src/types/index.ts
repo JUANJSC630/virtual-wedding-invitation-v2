@@ -152,6 +152,7 @@ export interface Guest {
   maxGuests: number;
   confirmed: boolean;
   confirmedAt?: Date;
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
   companions: Companion[];
@@ -181,6 +182,7 @@ export interface UpdateGuestInput {
   phone?: string;
   maxGuests?: number;
   confirmed?: boolean;
+  notes?: string;
 }
 
 export interface CreateCompanionInput {

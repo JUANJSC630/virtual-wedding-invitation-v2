@@ -77,7 +77,7 @@ adminRoutes.post("/guests", async (req, res) => {
 adminRoutes.patch("/guests/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, maxGuests, confirmed } = req.body;
+    const { name, email, phone, maxGuests, confirmed, notes } = req.body;
 
     // Verificar que el guest pertenece al evento del usuario (si es client)
     if (req.user.role === "client") {
@@ -94,6 +94,7 @@ adminRoutes.patch("/guests/:id", async (req, res) => {
         maxGuests,
         confirmed,
         confirmedAt: confirmed ? new Date() : null,
+        notes: notes !== undefined ? notes : undefined,
       },
       include: { companions: true },
     });

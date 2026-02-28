@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 
+import { QRCodeSVG } from "qrcode.react";
+
 import {
   Calendar,
   CheckCircle,
   Copy,
+  Download,
   Edit,
   Loader2,
   MessageSquare,
   Plus,
+  QrCode,
   RefreshCw,
   Search,
   Shuffle,
@@ -45,6 +49,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -60,6 +65,7 @@ interface GuestFormData {
   email: string;
   phone: string;
   maxGuests: number;
+  notes: string;
 }
 
 const GuestManager: React.FC = () => {
@@ -71,12 +77,15 @@ const GuestManager: React.FC = () => {
   const [newCompanionName, setNewCompanionName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "confirmed" | "pending" | "companions-pending">("all");
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrGuest, setQrGuest] = useState<Guest | null>(null);
   const [formData, setFormData] = useState<GuestFormData>({
     code: "",
     name: "",
     email: "",
     phone: "",
     maxGuests: 1,
+    notes: "",
   });
 
   const { data: guests = [], isLoading, isFetching } = useAllGuests();
@@ -134,6 +143,7 @@ const GuestManager: React.FC = () => {
       email: "",
       phone: "",
       maxGuests: 1,
+      notes: "",
     });
     setShowGuestModal(false);
     setEditingGuest(null);
@@ -146,6 +156,7 @@ const GuestManager: React.FC = () => {
       email: guest.email || "",
       phone: guest.phone || "",
       maxGuests: guest.maxGuests,
+      notes: guest.notes || "",
     });
     setEditingGuest(guest);
     setShowGuestModal(true);
@@ -158,6 +169,7 @@ const GuestManager: React.FC = () => {
       ...formData,
       email: formData.email || undefined,
       phone: formData.phone || undefined,
+      notes: formData.notes || undefined,
     };
 
     try {
@@ -307,12 +319,13 @@ const GuestManager: React.FC = () => {
       phoneNumber = "57" + phoneNumber;
     }
 
-    // Mensaje personalizado
+    // Mensaje personalizado con enlace directo
+    const invitationUrl = `${window.location.origin}/?code=${guest.code}`;
     const message = `¡Hola ${guest.name}!
 
 Te invitamos cordialmente a nuestra boda.
 
-Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
+Accede a tu invitación digital aquí: ${invitationUrl}
 
 ¡Esperamos celebrar contigo este día tan especial!`;
 
@@ -325,16 +338,6 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
     toast.success(`Enviando invitación por WhatsApp a ${guest.name}`);
   };
 
-  const handleDownloadPDF = () => {
-    const pdfUrl = `${window.location.origin}/invitacion.pdf`;
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    link.download = `invitacion.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success(`PDF descargado`);
-  };
 
   const handleCopyCode = (guest: Guest) => {
     navigator.clipboard
@@ -345,6 +348,42 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
       .catch(() => {
         toast.error("Error al copiar el código");
       });
+  };
+
+  const handleExportCSV = () => {
+    const rows = [
+      ["Código", "Nombre", "Email", "Teléfono", "Cupos", "Confirmado", "Fecha confirmación", "Acompañantes confirmados", "Acompañantes total", "Notas"],
+      ...guests.map(g => [
+        g.code,
+        g.name,
+        g.email ?? "",
+        g.phone ?? "",
+        String(g.maxGuests),
+        g.confirmed ? "Sí" : "No",
+        g.confirmedAt ? new Date(g.confirmedAt).toLocaleDateString("es-CO") : "",
+        String(g.companions.filter(c => c.confirmed).length),
+        String(g.companions.length),
+        g.notes ?? "",
+      ]),
+    ];
+
+    const csv = rows
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `invitados-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${guests.length} invitados exportados a CSV`);
+  };
+
+  const handleShowQR = (guest: Guest) => {
+    setQrGuest(guest);
+    setShowQRModal(true);
   };
 
   if (isLoading) {
@@ -367,8 +406,9 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleDownloadPDF} variant="outline">
-              Descargar PDF
+            <Button onClick={handleExportCSV} variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar CSV
             </Button>
             <Button onClick={() => setShowGuestModal(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -589,7 +629,14 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
                           <TableCell
                             className={`font-medium ${!guest.confirmed ? "text-yellow-400" : ""}`}
                           >
-                            {guest.name}
+                            <div>
+                              {guest.name}
+                              {guest.notes && (
+                                <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[200px]" title={guest.notes}>
+                                  📝 {guest.notes}
+                                </p>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1 text-sm">
@@ -665,6 +712,15 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleShowQR(guest)}
+                                title="Ver QR de invitación"
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                <QrCode className="h-4 w-4" />
+                              </Button>
                               {guest.phone && (
                                 <Button
                                   variant="ghost"
@@ -1112,6 +1168,17 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notas internas</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Notas internas visibles solo para el admin..."
+                rows={2}
+              />
+            </div>
+
             <DialogFooter>
               <div className="flex gap-2 w-full">
                 <Button type="button" variant="outline" onClick={resetForm}>
@@ -1126,6 +1193,41 @@ Para acceder a tu invitación digital, ingresa este código: *${guest.code}*
               </div>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal QR por invitado */}
+      <Dialog open={showQRModal} onOpenChange={setShowQRModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>QR de Invitación</DialogTitle>
+            <DialogDescription>
+              {qrGuest?.name} — Código: <span className="font-mono font-bold">{qrGuest?.code}</span>
+            </DialogDescription>
+          </DialogHeader>
+          {qrGuest && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <QRCodeSVG
+                value={`${window.location.origin}/?code=${qrGuest.code}`}
+                size={220}
+                level="M"
+              />
+              <p className="text-xs text-muted-foreground text-center break-all">
+                {window.location.origin}/?code={qrGuest.code}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/?code=${qrGuest.code}`);
+                  toast.success("Enlace copiado al portapapeles");
+                }}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Copiar enlace
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
