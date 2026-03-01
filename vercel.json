@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm install && pnpm prisma generate --no-engine && pnpm run build",
+  "buildCommand": "pnpm install && pnpm prisma generate && pnpm run build",
   "installCommand": "pnpm install",
   "functions": {
     "api/server.js": {
