@@ -16,10 +16,10 @@ export const useImagePreload = (
       return;
     }
 
-    // Esperar un poco antes de empezar a cargar para evitar bloquear el render
-    const delayTimer = setTimeout(() => {
-      let loadedImages = 0;
+    let loadedImages = 0;
+    const images: HTMLImageElement[] = [];
 
+    const delayTimer = setTimeout(() => {
       const handleImageLoad = () => {
         loadedImages++;
         setLoadedCount(loadedImages);
@@ -30,16 +30,22 @@ export const useImagePreload = (
         }
       };
 
-      // Precargar todas las imágenes
       imageSources.forEach(src => {
         const img = new Image();
         img.onload = handleImageLoad;
-        img.onerror = handleImageLoad; // Continuar incluso si hay errores
+        img.onerror = handleImageLoad;
         img.src = src;
+        images.push(img);
       });
     }, delay);
 
-    return () => clearTimeout(delayTimer);
+    return () => {
+      clearTimeout(delayTimer);
+      images.forEach(img => {
+        img.onload = null;
+        img.onerror = null;
+      });
+    };
   }, [imageSources, delay, onLoadComplete]);
 
   return {
