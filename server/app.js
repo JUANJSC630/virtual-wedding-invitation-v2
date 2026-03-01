@@ -36,11 +36,16 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      callback(new Error(`CORS bloqueado para origin: ${origin}`));
-    },
+    // En producción (Vercel), frontend y API comparten dominio — permitir mismo origen.
+    // En dev, restringir a la lista de orígenes conocidos.
+    origin:
+      process.env.NODE_ENV === "production"
+        ? true
+        : (origin, callback) => {
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.includes(origin)) return callback(null, true);
+            callback(new Error(`CORS bloqueado para origin: ${origin}`));
+          },
     credentials: true,
   })
 );
