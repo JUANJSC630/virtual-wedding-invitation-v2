@@ -160,6 +160,23 @@ function eventToForm(ev: EventWithStats): EventFormData {
   };
 }
 
+const ASSET_LABELS: Record<string, string> = {
+  background:   "Fondo de pantalla",
+  cornerFlower: "Flor esquina",
+  bouquet:      "Ramo central",
+  sideBouquet:  "Ramo lateral",
+  flowers:      "Flores decorativas",
+  tornPaper:    "Hoja rasgada",
+  church:       "Icono iglesia",
+  glasses:      "Icono copas / brindis",
+  dinner:       "Icono cena",
+  reception:    "Icono recepción",
+  waltz:        "Icono vals",
+  decorLine:    "Línea decorativa (itinerario)",
+  gift:         "Icono regalo",
+  envelope:     "Icono sobre",
+};
+
 // ─── EventFormModal ───────────────────────────────────────────────────────────
 
 interface EventFormModalProps {
@@ -498,7 +515,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               {(Object.keys(DEFAULT_ASSETS) as (keyof AssetMap)[]).map(key => (
                 <FileUpload
                   key={key}
-                  label={key}
+                  label={ASSET_LABELS[key] ?? key}
                   value={(form.assets as Record<string, string>)[key] ?? ""}
                   onChange={url => setForm(prev => ({ ...prev, assets: { ...prev.assets, [key]: url } }))}
                   accept="image"
