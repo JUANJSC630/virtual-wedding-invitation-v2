@@ -17,7 +17,17 @@ const app = express();
 const PORT = process.env.API_PORT || 3002;
 
 // ─── Seguridad: headers HTTP ────────────────────────────────────────────────
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "img-src": ["'self'", "data:", "blob:", "*.public.blob.vercel-storage.com"],
+        "media-src": ["'self'", "blob:", "*.public.blob.vercel-storage.com"],
+      },
+    },
+  })
+);
 
 // ─── CORS: solo orígenes permitidos ─────────────────────────────────────────
 const allowedOrigins = [

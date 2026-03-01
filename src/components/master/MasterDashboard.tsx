@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import FileUpload from "@/components/ui/FileUpload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -409,20 +410,32 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Assets (URLs)</h3>
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <Label>Foto principal (heroPhotoUrl)</Label>
-                    <Input value={form.heroPhotoUrl} onChange={set("heroPhotoUrl")} placeholder="/photos/foto.jpg o https://..." />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Foto secundaria (photo2Url)</Label>
-                    <Input value={form.photo2Url} onChange={set("photo2Url")} placeholder="/photos/foto2.jpg o https://..." />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Audio / canción (audioUrl)</Label>
-                    <Input value={form.audioUrl} onChange={set("audioUrl")} placeholder="/cancion.mp3 o https://..." />
-                  </div>
+                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Assets</h3>
+                <div className="space-y-4">
+                  <FileUpload
+                    label="Foto principal"
+                    value={form.heroPhotoUrl}
+                    onChange={url => setForm(prev => ({ ...prev, heroPhotoUrl: url }))}
+                    accept="image"
+                    assetType="hero-photo"
+                    eventId={editingEvent?.id}
+                  />
+                  <FileUpload
+                    label="Foto secundaria"
+                    value={form.photo2Url}
+                    onChange={url => setForm(prev => ({ ...prev, photo2Url: url }))}
+                    accept="image"
+                    assetType="photo2"
+                    eventId={editingEvent?.id}
+                  />
+                  <FileUpload
+                    label="Audio / canción"
+                    value={form.audioUrl}
+                    onChange={url => setForm(prev => ({ ...prev, audioUrl: url }))}
+                    accept="audio"
+                    assetType="audio"
+                    eventId={editingEvent?.id}
+                  />
                 </div>
               </div>
             </TabsContent>

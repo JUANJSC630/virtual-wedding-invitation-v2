@@ -1,5 +1,8 @@
 import bcrypt from "bcryptjs";
 import express from "express";
+import multer from "multer";
+import { put } from "@vercel/blob";
+import { nanoid } from "nanoid";
 
 import prisma from "../../src/lib/prisma.js";
 import { requireMaster } from "../middleware/auth.js";
@@ -227,6 +230,47 @@ masterRoutes.delete("/client-admins/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting client admin:", error);
     res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ─── POST /api/master/upload — subir asset a Vercel Blob ─────────────────────
+
+const ALLOWED_MIME = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "audio/mpeg": "mp3",
+  "audio/mp4": "m4a",
+};
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_MIME[file.mimetype]) cb(null, true);
+    else cb(new Error(`Tipo de archivo no permitido: ${file.mimetype}`));
+  },
+});
+
+masterRoutes.post("/upload", upload.single("file"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No se recibió ningún archivo" });
+
+  const { eventId, assetType = "asset" } = req.body;
+  if (!eventId) return res.status(400).json({ error: "eventId es requerido" });
+
+  const ext = ALLOWED_MIME[req.file.mimetype];
+  const filename = `events/${eventId}/${assetType}/${nanoid(8)}.${ext}`;
+
+  try {
+    const blob = await put(filename, req.file.buffer, {
+      access: "public",
+      contentType: req.file.mimetype,
+    });
+    res.json({ url: blob.url });
+  } catch (error) {
+    console.error("Error uploading to Vercel Blob:", error);
+    res.status(500).json({ error: "Error al subir el archivo" });
   }
 });
 
