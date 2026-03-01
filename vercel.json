@@ -2,14 +2,12 @@
   "buildCommand": "pnpm install && pnpm prisma generate && pnpm run build",
   "installCommand": "pnpm install",
   "functions": {
-    "api/[...path].js": {
+    "api/server.js": {
       "maxDuration": 30
     }
   },
-  "rewrites": [
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/server" },
+    { "src": "/(.*)", "dest": "/index.html", "check": true }
   ]
 }
