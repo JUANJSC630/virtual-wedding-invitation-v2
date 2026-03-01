@@ -1,10 +1,10 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { neon } from "@neondatabase/serverless";
 
 let prisma;
 
 if (process.env.NODE_ENV === "production") {
-  const { PrismaNeon } = await import("@prisma/adapter-neon");
-  const { neon } = await import("@neondatabase/serverless");
   const sql = neon(process.env.DATABASE_URL);
   const adapter = new PrismaNeon(sql);
   prisma = new PrismaClient({ adapter });
