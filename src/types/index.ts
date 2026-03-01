@@ -116,6 +116,8 @@ export interface AssetMap {
   decorLine?: string;
   gift?: string;
   envelope?: string;
+  entryBg?: string;
+  infoBg?: string;
 }
 
 // Event Config
@@ -160,6 +162,22 @@ export interface EventConfig {
     closed?: string;
     groomLabel?: string;
     brideLabel?: string;
+    // Entry screen (GuestCodeEntry)
+    entryTitle?: string;
+    entrySubtitle?: string;
+    entryButton?: string;
+    entrySavedCode?: string;
+    // Info screen (GuestInfo)
+    infoConfirmed?: string;
+    infoConfirmedMessage?: string;
+    infoPendingMessage?: string;
+    infoGuestsLabel?: string;
+    infoStatusTitle?: string;
+    infoMainGuest?: string;
+    infoCompanions?: string;
+    infoTotal?: string;
+    infoContinueButton?: string;
+    infoViewButton?: string;
   };
 }
 

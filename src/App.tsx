@@ -172,7 +172,7 @@ const WeddingInvitation: React.FC = () => {
   };
 
   if (!validatedCode || !guest) {
-    return <GuestCodeEntry eventSlug={eventSlug} onValidGuest={handleValidGuest} />;
+    return <GuestCodeEntry eventSlug={eventSlug} event={event} onValidGuest={handleValidGuest} />;
   }
 
   if (!showInvitation) {
@@ -180,6 +180,7 @@ const WeddingInvitation: React.FC = () => {
       <GuestInfo
         eventSlug={eventSlug}
         guest={guest}
+        event={event}
         onContinue={() => setShowInvitation(true)}
       />
     );

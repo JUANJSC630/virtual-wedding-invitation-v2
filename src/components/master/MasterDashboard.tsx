@@ -95,6 +95,8 @@ interface EventFormData {
   assets: AssetMap;
   // Theme
   theme: ThemeConfig;
+  // Labels
+  labels: Record<string, string>;
 }
 
 interface ClientAdminRow {
@@ -115,7 +117,7 @@ const emptyForm: EventFormData = {
   parentsBride: "", parentsGroom: "", godparents: "", bridesmaids: "",
   groomsmen: "", groomPhone: "", bridePhone: "", groomWAMessage: "",
   brideWAMessage: "", heroPhotoUrl: "", photo2Url: "", photo3Url: "",
-  audioUrl: "", announcementText: "", timeline: [], assets: {}, theme: {},
+  audioUrl: "", announcementText: "", timeline: [], assets: {}, theme: {}, labels: {},
 };
 
 function eventToForm(ev: EventWithStats): EventFormData {
@@ -161,6 +163,7 @@ function eventToForm(ev: EventWithStats): EventFormData {
     timeline: ev.config?.timeline ?? [],
     assets: (ev.assets as AssetMap) ?? {},
     theme: (ev.theme as ThemeConfig) ?? {},
+    labels: (ev.config?.labels as Record<string, string>) ?? {},
   };
 }
 
@@ -179,6 +182,8 @@ const ASSET_LABELS: Record<string, string> = {
   decorLine:    "Línea decorativa (itinerario)",
   gift:         "Icono regalo",
   envelope:     "Icono sobre",
+  entryBg:      "Fondo pantalla de entrada",
+  infoBg:       "Fondo pantalla de confirmación",
 };
 
 // ─── EventFormModal ───────────────────────────────────────────────────────────
@@ -244,15 +249,17 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic">
-            <TabsList className="grid w-full grid-cols-4 mb-1">
+            <TabsList className="grid w-full grid-cols-5 mb-1">
               <TabsTrigger value="basic">Básico</TabsTrigger>
               <TabsTrigger value="venues">Locales</TabsTrigger>
               <TabsTrigger value="texts">Textos</TabsTrigger>
               <TabsTrigger value="families">Familias</TabsTrigger>
-            </TabsList>
-            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="timeline">Itinerario</TabsTrigger>
-              <TabsTrigger value="assets">Assets</TabsTrigger>
+            </TabsList>
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="labels">Etiquetas</TabsTrigger>
+              <TabsTrigger value="photos">Fotos</TabsTrigger>
+              <TabsTrigger value="decor">Decoración</TabsTrigger>
               <TabsTrigger value="tema">Tema</TabsTrigger>
               <TabsTrigger value="contact">Contacto</TabsTrigger>
             </TabsList>
@@ -514,12 +521,169 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               </div>
             </TabsContent>
 
-            {/* ── Tab: Assets ─────────────────────────────── */}
-            <TabsContent value="assets" className="space-y-4 pt-4">
+            {/* ── Tab: Etiquetas ──────────────────────────── */}
+            <TabsContent value="labels" className="space-y-6 pt-4">
               <p className="text-xs text-muted-foreground">
-                Sube imágenes personalizadas para este evento. Los slots sin imagen usan el default de la plantilla.
+                Personaliza todos los textos de la invitación. Dejar en blanco usa el texto por defecto.
               </p>
-              {(Object.keys(DEFAULT_ASSETS) as (keyof AssetMap)[]).map(key => (
+
+              {/* Helper para el input de label */}
+              {(
+                [
+                  {
+                    section: "Pantalla de entrada",
+                    fields: [
+                      { key: "entryTitle",     label: "Título principal",         placeholder: "¡NOS ENCANTARÍA QUE SEAS PARTE DE ESTE DÍA TAN ESPECIAL!" },
+                      { key: "entrySubtitle",  label: "Subtítulo / instrucción",  placeholder: "Ingresa tu código para continuar:" },
+                      { key: "entryButton",    label: "Botón ver invitación",     placeholder: "Ver Invitación" },
+                      { key: "entrySavedCode", label: "Mensaje código guardado",  placeholder: "Código guardado anteriormente" },
+                    ],
+                  },
+                  {
+                    section: "Pantalla de info invitado",
+                    fields: [
+                      { key: "infoConfirmed",         label: "Badge confirmado",              placeholder: "Asistencia Confirmada" },
+                      { key: "infoConfirmedMessage",  label: "Mensaje si confirmado",         placeholder: "¡Gracias por confirmar tu asistencia! Te esperamos en nuestra boda." },
+                      { key: "infoPendingMessage",    label: "Mensaje si no confirmado",      placeholder: "¡Esperamos que puedan compartir esta fiesta junto a nosotros!" },
+                      { key: "infoGuestsLabel",       label: "Etiqueta N° de invitados",      placeholder: "N° de Invitados:" },
+                      { key: "infoStatusTitle",       label: "Título estado confirmaciones",  placeholder: "Estado de Confirmaciones" },
+                      { key: "infoMainGuest",         label: "Etiqueta invitado principal",   placeholder: "Invitado principal:" },
+                      { key: "infoCompanions",        label: "Etiqueta acompañantes",         placeholder: "Acompañantes confirmados:" },
+                      { key: "infoTotal",             label: "Etiqueta total confirmados",    placeholder: "Total confirmados:" },
+                      { key: "infoContinueButton",    label: "Botón (confirmado)",            placeholder: "Volver a ver invitación" },
+                      { key: "infoViewButton",        label: "Botón (no confirmado)",         placeholder: "Ver Invitación Completa" },
+                    ],
+                  },
+                  {
+                    section: "Sección 5 — Familias",
+                    fields: [
+                      { key: "familyTitle",    label: "Título familias",          placeholder: "Con la bendición de Dios y de nuestros padres" },
+                      { key: "companionTitle", label: "Título padrinos/honor",    placeholder: "Y en compañía de nuestros padrinos, damas y caballeros de honor" },
+                      { key: "brideParents",   label: "Etiqueta padres novia",    placeholder: "Padres de la novia" },
+                      { key: "groomParents",   label: "Etiqueta padres novio",    placeholder: "Padres del novio" },
+                      { key: "godparents",     label: "Etiqueta padrinos",        placeholder: "Padrinos" },
+                      { key: "bridesmaids",    label: "Etiqueta damas de honor",  placeholder: "Damas de honor" },
+                      { key: "groomsmen",      label: "Etiqueta caballeros",      placeholder: "Caballeros de honor" },
+                    ],
+                  },
+                  {
+                    section: "Sección 6 — Lugares & Vestimenta",
+                    fields: [
+                      { key: "ceremony",     label: "Etiqueta ceremonia",     placeholder: "CEREMONIA" },
+                      { key: "reception",    label: "Etiqueta recepción",     placeholder: "RECEPCIÓN" },
+                      { key: "viewLocation", label: "Botón ver ubicación",    placeholder: "Ver ubicación" },
+                      { key: "dressCode",    label: "Etiqueta dress code",    placeholder: "Código de vestimenta:" },
+                      { key: "ladies",       label: "Etiqueta ellas",         placeholder: "ELLAS:" },
+                      { key: "gentlemen",    label: "Etiqueta ellos",         placeholder: "ELLOS:" },
+                    ],
+                  },
+                  {
+                    section: "Sección 7 — Itinerario",
+                    fields: [
+                      { key: "timelineTitle", label: "Título del itinerario", placeholder: "Itinerario" },
+                    ],
+                  },
+                  {
+                    section: "Sección 8 — Regalos & RSVP",
+                    fields: [
+                      { key: "gifts",      label: "Título regalos",          placeholder: "SUGERENCIA DE REGALOS" },
+                      { key: "envelope",   label: "Etiqueta lluvia sobres",  placeholder: "LLUVIA DE SOBRES" },
+                      { key: "confirm",    label: "Título confirmar",        placeholder: "CONFIRMAR ASISTENCIA" },
+                      { key: "groomLabel", label: "Botón novio",             placeholder: "Novio" },
+                      { key: "brideLabel", label: "Botón novia",             placeholder: "Novia" },
+                      { key: "deadline",   label: "Texto fecha límite",      placeholder: "* Fecha límite para confirmar:" },
+                      { key: "closed",     label: "Texto cerrado",           placeholder: "(Cerrado)" },
+                      { key: "closing",    label: "Mensaje cierre",          placeholder: "ESPERAMOS CONTAR CON SU PRESENCIA" },
+                      { key: "thanks",     label: "Texto gracias",           placeholder: "Muchas Gracias!" },
+                    ],
+                  },
+                ] as { section: string; fields: { key: string; label: string; placeholder: string }[] }[]
+              ).map(group => (
+                <div key={group.section}>
+                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">
+                    {group.section}
+                  </h3>
+                  <div className="space-y-2">
+                    {group.fields.map(({ key, label, placeholder }) => (
+                      <div key={key} className="grid grid-cols-[180px_1fr] gap-3 items-center">
+                        <Label className="text-xs text-right leading-tight">{label}</Label>
+                        <Input
+                          value={form.labels[key] ?? ""}
+                          onChange={e => setForm(prev => ({
+                            ...prev,
+                            labels: { ...prev.labels, [key]: e.target.value },
+                          }))}
+                          placeholder={placeholder}
+                          className="text-sm"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </TabsContent>
+
+            {/* ── Tab: Fotos ──────────────────────────────── */}
+            <TabsContent value="photos" className="space-y-4 pt-4">
+              <p className="text-xs text-muted-foreground">
+                Fotos y audio del evento. Las pantallas de entrada y confirmación también usan sus propios fondos.
+              </p>
+              <FileUpload
+                label="Foto principal (Sección 1 + portada)"
+                value={form.heroPhotoUrl}
+                onChange={url => setForm(prev => ({ ...prev, heroPhotoUrl: url }))}
+                accept="image"
+                assetType="hero-photo"
+                eventId={editingEvent?.id}
+              />
+              <FileUpload
+                label="Foto secundaria (Sección 2)"
+                value={form.photo2Url}
+                onChange={url => setForm(prev => ({ ...prev, photo2Url: url }))}
+                accept="image"
+                assetType="photo2"
+                eventId={editingEvent?.id}
+              />
+              <FileUpload
+                label="Foto terciaria (Sección 4)"
+                value={form.photo3Url}
+                onChange={url => setForm(prev => ({ ...prev, photo3Url: url }))}
+                accept="image"
+                assetType="photo3"
+                eventId={editingEvent?.id}
+              />
+              <FileUpload
+                label="Fondo pantalla de entrada (código)"
+                value={(form.assets as Record<string, string>).entryBg ?? ""}
+                onChange={url => setForm(prev => ({ ...prev, assets: { ...prev.assets, entryBg: url } }))}
+                accept="image"
+                assetType="asset"
+                eventId={editingEvent?.id}
+              />
+              <FileUpload
+                label="Fondo pantalla de confirmación"
+                value={(form.assets as Record<string, string>).infoBg ?? ""}
+                onChange={url => setForm(prev => ({ ...prev, assets: { ...prev.assets, infoBg: url } }))}
+                accept="image"
+                assetType="asset"
+                eventId={editingEvent?.id}
+              />
+              <FileUpload
+                label="Audio / canción"
+                value={form.audioUrl}
+                onChange={url => setForm(prev => ({ ...prev, audioUrl: url }))}
+                accept="audio"
+                assetType="audio"
+                eventId={editingEvent?.id}
+              />
+            </TabsContent>
+
+            {/* ── Tab: Decoración ──────────────────────────── */}
+            <TabsContent value="decor" className="space-y-4 pt-4">
+              <p className="text-xs text-muted-foreground">
+                Iconos y gráficos decorativos de la plantilla. Sin imagen usa el default de la plantilla.
+              </p>
+              {(Object.keys(DEFAULT_ASSETS).filter(k => k !== "entryBg" && k !== "infoBg") as (keyof AssetMap)[]).map(key => (
                 <FileUpload
                   key={key}
                   label={ASSET_LABELS[key] ?? key}
@@ -667,43 +831,6 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                     <Label>Mensaje WA – Novia</Label>
                     <Textarea value={form.brideWAMessage} onChange={set("brideWAMessage")} rows={3} />
                   </div>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Assets</h3>
-                <div className="space-y-4">
-                  <FileUpload
-                    label="Foto principal"
-                    value={form.heroPhotoUrl}
-                    onChange={url => setForm(prev => ({ ...prev, heroPhotoUrl: url }))}
-                    accept="image"
-                    assetType="hero-photo"
-                    eventId={editingEvent?.id}
-                  />
-                  <FileUpload
-                    label="Foto secundaria (Sección 2)"
-                    value={form.photo2Url}
-                    onChange={url => setForm(prev => ({ ...prev, photo2Url: url }))}
-                    accept="image"
-                    assetType="photo2"
-                    eventId={editingEvent?.id}
-                  />
-                  <FileUpload
-                    label="Foto terciaria (Sección 4)"
-                    value={form.photo3Url}
-                    onChange={url => setForm(prev => ({ ...prev, photo3Url: url }))}
-                    accept="image"
-                    assetType="photo3"
-                    eventId={editingEvent?.id}
-                  />
-                  <FileUpload
-                    label="Audio / canción"
-                    value={form.audioUrl}
-                    onChange={url => setForm(prev => ({ ...prev, audioUrl: url }))}
-                    accept="audio"
-                    assetType="audio"
-                    eventId={editingEvent?.id}
-                  />
                 </div>
               </div>
             </TabsContent>

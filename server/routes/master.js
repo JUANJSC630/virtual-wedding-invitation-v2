@@ -40,6 +40,7 @@ function buildConfig(body) {
     bridesmaids: splitLines(bridesmaids),
     groomsmen: splitLines(groomsmen),
     timeline: Array.isArray(timeline) ? timeline : [],
+    labels: (typeof body.labels === "object" && body.labels !== null) ? body.labels : {},
   };
 }
 

@@ -18,6 +18,8 @@ export const DEFAULT_ASSETS: Required<AssetMap> = {
   decorLine:    "/linea.png",
   gift:         "/regalo.png",
   envelope:     "/sobre.png",
+  entryBg:      "/fondo.png",
+  infoBg:       "/fondo.png",
 };
 
 export const AssetContext = createContext<Required<AssetMap>>(DEFAULT_ASSETS);
