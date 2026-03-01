@@ -10,10 +10,10 @@ import { AdminUser, Event, Guest } from "@/types";
 import { EventContext } from "@/context/EventContext";
 
 import AdminDashboard from "@/components/AdminDashboard";
-import AdminLogin from "@/components/AdminLogin";
 import GuestCodeEntry from "@/components/GuestCodeEntry";
 import GuestInfo from "@/components/GuestInfo";
 import LandingPage from "@/components/LandingPage";
+import LoginPage from "@/components/LoginPage";
 import InvitationSection1 from "@/components/InvitationSection1";
 import InvitationSection2 from "@/components/InvitationSection2";
 import InvitationSection3 from "@/components/InvitationSection3";
@@ -59,22 +59,10 @@ const AdminPanel: React.FC = () => {
     );
   }
 
-  if (!user) {
-    return <AdminLogin onLogin={(loggedUser) => {
-      if (loggedUser.role === "master") {
-        navigate("/master");
-      } else {
-        setUser(loggedUser);
-      }
-    }} />;
-  }
+  if (!user) { navigate("/login", { replace: true }); return null; }
+  if (user.role === "master") { navigate("/master", { replace: true }); return null; }
 
-  if (user.role === "master") {
-    navigate("/master");
-    return null;
-  }
-
-  return <AdminDashboard user={user} onLogout={() => setUser(null)} />;
+  return <AdminDashboard user={user} onLogout={() => { setUser(null); navigate("/login"); }} />;
 };
 
 // ─── Panel de master ──────────────────────────────────────────────────────────
@@ -100,22 +88,10 @@ const MasterPanel: React.FC = () => {
     );
   }
 
-  if (!user) {
-    return <AdminLogin onLogin={(loggedUser) => {
-      if (loggedUser.role !== "master") {
-        navigate("/admin");
-      } else {
-        setUser(loggedUser);
-      }
-    }} />;
-  }
+  if (!user) { navigate("/login", { replace: true }); return null; }
+  if (user.role !== "master") { navigate("/admin", { replace: true }); return null; }
 
-  if (user.role !== "master") {
-    navigate("/admin");
-    return null;
-  }
-
-  return <MasterDashboard user={user} onLogout={() => setUser(null)} />;
+  return <MasterDashboard user={user} onLogout={() => { setUser(null); navigate("/login"); }} />;
 };
 
 // ─── Invitación pública (por slug) ───────────────────────────────────────────
@@ -126,20 +102,21 @@ const WeddingInvitation: React.FC = () => {
 
   const [validatedCode, setValidatedCode] = useState<string | null>(null);
   const [guest, setGuest] = useState<Guest | null>(null);
-  const [isMounted, setIsMounted] = useState(false);
   const [showInvitation, setShowInvitation] = useState(false);
   const [event, setEvent] = useState<Event | null>(null);
   const [eventLoading, setEventLoading] = useState(true);
+  const [eventNotFound, setEventNotFound] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-
     const urlCode = new URLSearchParams(window.location.search).get("code");
 
     fetch(`/api/events/${eventSlug}`)
-      .then(res => (res.ok ? res.json() : null))
+      .then(res => {
+        if (!res.ok) { setEventNotFound(true); return null; }
+        return res.json();
+      })
       .then(data => { if (data) setEvent(data); })
-      .catch(() => {})
+      .catch(() => setEventNotFound(true))
       .finally(() => setEventLoading(false));
 
     if (urlCode) {
@@ -159,9 +136,9 @@ const WeddingInvitation: React.FC = () => {
     }
   }, [eventSlug]);
 
-  if (!isMounted) {
+  if (eventLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white h-screen w-full">
+      <div className="fixed inset-0 flex items-center justify-center bg-white">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url('/fondo.png')` }}
@@ -177,6 +154,20 @@ const WeddingInvitation: React.FC = () => {
               />
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (eventNotFound) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center space-y-3 p-8">
+          <p className="text-6xl">💌</p>
+          <h1 className="text-2xl font-serif text-gray-700">Invitación no encontrada</h1>
+          <p className="text-gray-500 text-sm">
+            El enlace que usaste no corresponde a ninguna invitación activa.
+          </p>
         </div>
       </div>
     );
@@ -228,6 +219,7 @@ function App(): React.JSX.Element {
       <QueryClientProvider client={queryClient}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/master" element={<MasterPanel />} />
           <Route path="/:slug" element={<WeddingInvitation />} />
