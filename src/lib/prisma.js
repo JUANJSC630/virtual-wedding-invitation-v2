@@ -1,16 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaNeonHTTP } from "@prisma/adapter-neon";
 
-let prisma;
+const globalForPrisma = globalThis;
 
-if (process.env.NODE_ENV === "production") {
-  const adapter = new PrismaNeonHTTP(process.env.DATABASE_URL);
-  prisma = new PrismaClient({ adapter });
-} else {
-  if (!globalThis.prisma) {
-    globalThis.prisma = new PrismaClient();
-  }
-  prisma = globalThis.prisma;
+if (!globalForPrisma.prisma) {
+  globalForPrisma.prisma = new PrismaClient();
 }
 
-export default prisma;
+export default globalForPrisma.prisma;
