@@ -184,7 +184,13 @@ const WeddingInvitation: React.FC = () => {
     );
   }
 
-  const mergedAssets = { ...DEFAULT_ASSETS, ...(event?.assets ?? {}) };
+  // Merge: only override defaults with non-empty strings from event assets
+  const mergedAssets = {
+    ...DEFAULT_ASSETS,
+    ...Object.fromEntries(
+      Object.entries((event?.assets as Record<string, string>) ?? {}).filter(([, v]) => typeof v === "string" && v.trim() !== "")
+    ),
+  };
 
   return (
     <EventContext.Provider value={{ event, loading: eventLoading }}>
