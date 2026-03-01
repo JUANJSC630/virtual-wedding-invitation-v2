@@ -145,7 +145,13 @@ guestRoutes.post("/rsvp", async (req, res) => {
       include: { companions: true },
     });
 
-    if (companions && Array.isArray(companions)) {
+    if (!confirmed) {
+      // Si el invitado declina, todos sus acompañantes también se desconfirman
+      await prisma.companion.updateMany({
+        where: { guestId: guest.id },
+        data: { confirmed: false, confirmedAt: null },
+      });
+    } else if (companions && Array.isArray(companions)) {
       const validCompanionIds = new Set(guest.companions.map(c => c.id));
       for (const companion of companions) {
         if (companion.id && validCompanionIds.has(companion.id)) {
