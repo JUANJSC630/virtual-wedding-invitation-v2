@@ -1,4 +1,11 @@
+import { useEventContext } from "@/context/EventContext";
+
+const FALLBACK_PHOTO = "/photos/3c430f49-09f4-4db1-b37d-3fcca9e001bc.png";
+
 const InvitationSection4 = () => {
+  const { event } = useEventContext();
+  const photoUrl = event?.photo3Url ?? FALLBACK_PHOTO;
+
   return (
     <section className="relative w-full flex flex-col items-center justify-center bg-white overflow-hidden p-0 m-0 ">
       <div
@@ -41,8 +48,8 @@ const InvitationSection4 = () => {
         style={{ lineHeight: 0 }}
       >
         <img
-          src="/photos/3c430f49-09f4-4db1-b37d-3fcca9e001bc.png"
-          alt="Main wedding photograph of the couple"
+          src={photoUrl}
+          alt="Fotografía de los novios"
           loading="lazy"
           className="w-full object-cover block"
           style={{

@@ -38,6 +38,7 @@ model Event {
   isActive       Boolean  @default(true)
   heroPhotoUrl   String?
   photo2Url      String?
+  photo3Url      String?
   audioUrl       String?
   groomPhone     String?
   bridePhone     String?

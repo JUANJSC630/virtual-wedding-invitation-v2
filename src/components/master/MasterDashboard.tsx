@@ -17,7 +17,7 @@ import {
   Users2,
 } from "lucide-react";
 
-import { AdminUser, EventWithStats } from "@/types";
+import { AdminUser, EventWithStats, TimelineItem } from "@/types";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,7 +84,11 @@ interface EventFormData {
   brideWAMessage: string;
   heroPhotoUrl: string;
   photo2Url: string;
+  photo3Url: string;
   audioUrl: string;
+  // Section-specific
+  announcementText: string;
+  timeline: TimelineItem[];
 }
 
 interface ClientAdminRow {
@@ -104,7 +108,8 @@ const emptyForm: EventFormData = {
   dressCodeLabel: "", dressCodeLadies: "", dressCodeGentlemen: "",
   parentsBride: "", parentsGroom: "", godparents: "", bridesmaids: "",
   groomsmen: "", groomPhone: "", bridePhone: "", groomWAMessage: "",
-  brideWAMessage: "", heroPhotoUrl: "", photo2Url: "", audioUrl: "",
+  brideWAMessage: "", heroPhotoUrl: "", photo2Url: "", photo3Url: "",
+  audioUrl: "", announcementText: "", timeline: [],
 };
 
 function eventToForm(ev: EventWithStats): EventFormData {
@@ -144,7 +149,10 @@ function eventToForm(ev: EventWithStats): EventFormData {
     brideWAMessage: ev.brideWAMessage || "",
     heroPhotoUrl: ev.heroPhotoUrl || "",
     photo2Url: ev.photo2Url || "",
+    photo3Url: ev.photo3Url || "",
     audioUrl: ev.audioUrl || "",
+    announcementText: ev.config?.announcementText || "",
+    timeline: ev.config?.timeline ?? [],
   };
 }
 
@@ -211,11 +219,12 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="basic">Básico</TabsTrigger>
               <TabsTrigger value="venues">Locales</TabsTrigger>
               <TabsTrigger value="texts">Textos</TabsTrigger>
               <TabsTrigger value="families">Familias</TabsTrigger>
+              <TabsTrigger value="timeline">Itinerario</TabsTrigger>
               <TabsTrigger value="contact">Contacto</TabsTrigger>
             </TabsList>
 
@@ -329,6 +338,10 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                 </div>
               </div>
               <div className="space-y-1">
+                <Label>Texto del anuncio (Sección 1)</Label>
+                <Input value={form.announcementText} onChange={set("announcementText")} placeholder="¡NOS CASAMOS!" />
+              </div>
+              <div className="space-y-1">
                 <Label>Mensaje heroico</Label>
                 <Textarea value={form.heroMessage} onChange={set("heroMessage")} rows={4} placeholder="Con la bendición de Dios y nuestras familias..." />
               </div>
@@ -384,6 +397,94 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               </div>
             </TabsContent>
 
+            {/* ── Tab: Itinerario ─────────────────────────── */}
+            <TabsContent value="timeline" className="space-y-4 pt-4">
+              <p className="text-xs text-muted-foreground">
+                Define los eventos del itinerario. Iconos disponibles: <code>church</code>, <code>glasses</code>, <code>dinner</code>, <code>reception</code>, <code>waltz</code>.
+              </p>
+              <div className="space-y-3">
+                {form.timeline.map((item, idx) => (
+                  <div key={item.id} className="border rounded-md p-3 space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Hora</Label>
+                        <Input
+                          value={item.time}
+                          onChange={e => setForm(prev => ({
+                            ...prev,
+                            timeline: prev.timeline.map((t, i) => i === idx ? { ...t, time: e.target.value } : t),
+                          }))}
+                          placeholder="6:00 PM"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Etiqueta</Label>
+                        <Input
+                          value={item.label}
+                          onChange={e => setForm(prev => ({
+                            ...prev,
+                            timeline: prev.timeline.map((t, i) => i === idx ? { ...t, label: e.target.value } : t),
+                          }))}
+                          placeholder="CEREMONIA"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Icono</Label>
+                        <Input
+                          value={item.icon}
+                          onChange={e => setForm(prev => ({
+                            ...prev,
+                            timeline: prev.timeline.map((t, i) => i === idx ? { ...t, icon: e.target.value } : t),
+                          }))}
+                          placeholder="church"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-1 justify-end">
+                      <Button
+                        type="button" size="sm" variant="ghost"
+                        disabled={idx === 0}
+                        onClick={() => setForm(prev => {
+                          const tl = [...prev.timeline];
+                          [tl[idx - 1], tl[idx]] = [tl[idx], tl[idx - 1]];
+                          return { ...prev, timeline: tl };
+                        })}
+                      >↑</Button>
+                      <Button
+                        type="button" size="sm" variant="ghost"
+                        disabled={idx === form.timeline.length - 1}
+                        onClick={() => setForm(prev => {
+                          const tl = [...prev.timeline];
+                          [tl[idx + 1], tl[idx]] = [tl[idx], tl[idx + 1]];
+                          return { ...prev, timeline: tl };
+                        })}
+                      >↓</Button>
+                      <Button
+                        type="button" size="sm" variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setForm(prev => ({
+                          ...prev,
+                          timeline: prev.timeline.filter((_, i) => i !== idx),
+                        }))}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  type="button" size="sm" variant="outline"
+                  onClick={() => setForm(prev => ({
+                    ...prev,
+                    timeline: [...prev.timeline, { id: crypto.randomUUID(), time: "", label: "", icon: "church" }],
+                  }))}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  Agregar evento
+                </Button>
+              </div>
+            </TabsContent>
+
             {/* ── Tab: Contacto ───────────────────────────── */}
             <TabsContent value="contact" className="space-y-4 pt-4">
               <div>
@@ -421,11 +522,19 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                     eventId={editingEvent?.id}
                   />
                   <FileUpload
-                    label="Foto secundaria"
+                    label="Foto secundaria (Sección 2)"
                     value={form.photo2Url}
                     onChange={url => setForm(prev => ({ ...prev, photo2Url: url }))}
                     accept="image"
                     assetType="photo2"
+                    eventId={editingEvent?.id}
+                  />
+                  <FileUpload
+                    label="Foto terciaria (Sección 4)"
+                    value={form.photo3Url}
+                    onChange={url => setForm(prev => ({ ...prev, photo3Url: url }))}
+                    accept="image"
+                    assetType="photo3"
                     eventId={editingEvent?.id}
                   />
                   <FileUpload

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type AssetType = "hero-photo" | "photo2" | "audio";
+type AssetType = "hero-photo" | "photo2" | "photo3" | "audio";
 
 interface FileUploadProps {
   label: string;

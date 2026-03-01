@@ -18,9 +18,10 @@ function buildConfig(body) {
     verseText, verseReference,
     ceremonyName, ceremonyAddress, ceremonyMapsUrl,
     receptionName, receptionAddress, receptionMapsUrl,
-    heroMessage, giftMessage,
+    heroMessage, giftMessage, announcementText,
     dressCodeLabel, dressCodeLadies, dressCodeGentlemen,
     parentsBride, parentsGroom, godparents, bridesmaids, groomsmen,
+    timeline,
   } = body;
 
   const splitLines = (str) =>
@@ -32,11 +33,13 @@ function buildConfig(body) {
     reception: { name: receptionName || "", address: receptionAddress || "", mapsUrl: receptionMapsUrl || "" },
     heroMessage: heroMessage || "",
     giftMessage: giftMessage || "",
+    announcementText: announcementText || "",
     dressCode: { label: dressCodeLabel || "", ladies: dressCodeLadies || "", gentlemen: dressCodeGentlemen || "" },
     parents: { bride: splitLines(parentsBride), groom: splitLines(parentsGroom) },
     godparents: splitLines(godparents),
     bridesmaids: splitLines(bridesmaids),
     groomsmen: splitLines(groomsmen),
+    timeline: Array.isArray(timeline) ? timeline : [],
   };
 }
 
@@ -75,7 +78,7 @@ masterRoutes.post("/events", async (req, res) => {
     const {
       slug, groomName, brideName, eventDate, rsvpDeadline,
       ceremonyTime, receptionTime, venueName, venueAddress, dressCode,
-      heroPhotoUrl, photo2Url, audioUrl,
+      heroPhotoUrl, photo2Url, photo3Url, audioUrl,
       groomPhone, bridePhone, groomWAMessage, brideWAMessage,
       isActive = true,
     } = req.body;
@@ -105,6 +108,7 @@ masterRoutes.post("/events", async (req, res) => {
         dressCode: dressCode || null,
         heroPhotoUrl: heroPhotoUrl || null,
         photo2Url: photo2Url || null,
+        photo3Url: photo3Url || null,
         audioUrl: audioUrl || null,
         groomPhone: groomPhone || null,
         bridePhone: bridePhone || null,
@@ -131,7 +135,7 @@ masterRoutes.patch("/events/:id", async (req, res) => {
     const {
       slug, groomName, brideName, eventDate, rsvpDeadline,
       ceremonyTime, receptionTime, venueName, venueAddress, dressCode,
-      heroPhotoUrl, photo2Url, audioUrl,
+      heroPhotoUrl, photo2Url, photo3Url, audioUrl,
       groomPhone, bridePhone, groomWAMessage, brideWAMessage,
       isActive,
     } = req.body;
@@ -162,6 +166,7 @@ masterRoutes.patch("/events/:id", async (req, res) => {
         dressCode: dressCode ?? existing.dressCode,
         heroPhotoUrl: heroPhotoUrl ?? existing.heroPhotoUrl,
         photo2Url: photo2Url ?? existing.photo2Url,
+        photo3Url: photo3Url ?? existing.photo3Url,
         audioUrl: audioUrl ?? existing.audioUrl,
         groomPhone: groomPhone ?? existing.groomPhone,
         bridePhone: bridePhone ?? existing.bridePhone,

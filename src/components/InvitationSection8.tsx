@@ -21,6 +21,17 @@ const InvitationSection8 = () => {
   const giftMessage = event?.config?.giftMessage ??
     "El mejor regalo es tu presencia, pero si deseas tener un detalle con nosotros, les dejamos esta opción:";
 
+  const labels = event?.config?.labels;
+  const giftsLabel   = labels?.gifts   ?? "SUGERENCIA DE REGALOS";
+  const envelopeLabel = labels?.envelope ?? "LLUVIA DE SOBRES";
+  const confirmLabel = labels?.confirm  ?? "CONFIRMAR ASISTENCIA";
+  const groomLabel   = labels?.groomLabel ?? "Novio";
+  const brideLabel   = labels?.brideLabel ?? "Novia";
+  const deadlineLabel = labels?.deadline  ?? "* Fecha límite para confirmar:";
+  const closedLabel  = labels?.closed    ?? "(Cerrado)";
+  const closingLabel = labels?.closing   ?? "ESPERAMOS CONTAR CON SU PRESENCIA";
+  const thanksLabel  = labels?.thanks    ?? "Muchas Gracias!";
+
   const rsvpDeadlineDate = event?.rsvpDeadline ? new Date(event.rsvpDeadline) : null;
   const deadlineText = rsvpDeadlineDate
     ? rsvpDeadlineDate.toLocaleDateString("es-CO", { day: "numeric", month: "long", timeZone: "America/Bogota" })
@@ -118,7 +129,7 @@ const InvitationSection8 = () => {
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.7, delay: 0.6 }}
               >
-                SUGERENCIA DE REGALOS
+                {giftsLabel}
               </motion.p>
               <motion.p
                 className="text-center text-base md:text-lg text-[#162b4e] mb-2 max-w-xl"
@@ -136,7 +147,7 @@ const InvitationSection8 = () => {
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.7, delay: 1.0 }}
               >
-                LLUVIA DE SOBRES
+                {envelopeLabel}
               </motion.div>
               <motion.img
                 src="/sobre.png"
@@ -165,7 +176,7 @@ const InvitationSection8 = () => {
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.6, delay: 1.6 }}
               >
-                CONFIRMAR ASISTENCIA
+                {confirmLabel}
               </motion.p>
               <motion.div
                 className="flex flex-row gap-4"
@@ -204,7 +215,7 @@ const InvitationSection8 = () => {
                       className="w-8 h-8"
                       style={{ filter: "invert(1) brightness(2)" }}
                     />
-                    Novio
+                    {groomLabel}
                   </Button>
                 </motion.div>
                 {/* Botón WhatsApp Novia */}
@@ -237,7 +248,7 @@ const InvitationSection8 = () => {
                       className="w-8 h-8"
                       style={{ filter: "invert(1) brightness(2)" }}
                     />
-                    Novia
+                    {brideLabel}
                   </Button>
                 </motion.div>
               </motion.div>
@@ -250,7 +261,7 @@ const InvitationSection8 = () => {
                 transition={{ duration: 0.5, delay: 2.4 }}
               >
                 <p className="text-[#bfa15a] font-serif text-center w-full opacity-80">
-                  * Fecha límite para confirmar:{" "}
+                  {deadlineLabel}{" "}
                   <span className="font-semibold">{deadlineText}</span>
                 </p>
               </motion.div>
@@ -262,7 +273,7 @@ const InvitationSection8 = () => {
                 transition={{ duration: 0.5, delay: 2.6 }}
               >
                 <p className="text-sm text-[#bfa15a] font-serif text-center w-full opacity-80">
-                  {isAfterDeadline ? " (Cerrado)" : ""}
+                  {isAfterDeadline ? closedLabel : ""}
                 </p>
               </motion.div>
             </motion.div>
@@ -270,13 +281,13 @@ const InvitationSection8 = () => {
           {/* Mensaje final */}
           <div className="flex flex-col items-center justify-start w-full h-[250px] gap-2">
             <p className="text-lg md:text-xl font-serif text-[#162b4e] text-center tracking-wide mb-2">
-              ESPERAMOS CONTAR CON SU PRESENCIA
+              {closingLabel}
             </p>
             <p
               className="text-5xl font-[cursive,serif] text-gray-700 text-center font-light italic"
               style={{ fontFamily: '"Great Vibes", cursive, serif' }}
             >
-              Muchas Gracias!
+              {thanksLabel}
             </p>
 
             <div className="absolute w-[500px] h-[500px]" style={{ bottom: "-220px" }}>

@@ -1,4 +1,11 @@
+import { useEventContext } from "@/context/EventContext";
+
+const FALLBACK_PHOTO = "/photos/357deab6-6a7e-47cf-be14-49c22392b2f6.png";
+
 const InvitationSection2 = () => {
+  const { event } = useEventContext();
+  const photoUrl = event?.photo2Url ?? FALLBACK_PHOTO;
+
   return (
     <section className="relative w-full flex flex-col items-center justify-center bg-white overflow-hidden p-0 m-0 ">
       {/* Hoja rasgada arriba */}
@@ -29,8 +36,8 @@ const InvitationSection2 = () => {
         style={{ lineHeight: 0 }}
       >
         <img
-          src="/photos/357deab6-6a7e-47cf-be14-49c22392b2f6.png"
-          alt="Foto principal"
+          src={photoUrl}
+          alt="Foto de los novios"
           className="w-full object-cover block"
           style={{
             aspectRatio: "9/16",

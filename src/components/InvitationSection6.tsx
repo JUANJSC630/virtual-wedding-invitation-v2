@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
 import { motion } from "framer-motion";
 
@@ -6,7 +6,6 @@ import { useEventContext } from "@/context/EventContext";
 import DressCodeIcons from "@/components/ui/DressCodeIcons";
 import { Button } from "@/components/ui/button";
 
-// Definimos el componente de la sección de invitación
 const InvitationSection6 = () => {
   const { event } = useEventContext();
 
@@ -27,31 +26,16 @@ const InvitationSection6 = () => {
     ladies: "EVITAR COLORES BLANCOS Y AZUL MARINO.",
     gentlemen: "EVITAR COLORES BEIGE Y AZUL MARINO.",
   };
+
+  const labels         = event?.config?.labels;
+  const ceremonyLabel  = labels?.ceremony    ?? "CEREMONIA";
+  const receptionLabel = labels?.reception   ?? "RECEPCIÓN";
+  const viewLocation   = labels?.viewLocation ?? "Ver ubicación";
+  const dressCodeLabel = labels?.dressCode   ?? "Código de vestimenta:";
+  const ladiesLabel    = labels?.ladies      ?? "ELLAS:";
+  const gentlemenLabel = labels?.gentlemen   ?? "ELLOS:";
+
   const ref = useRef(null);
-  const [layoutReady, setLayoutReady] = useState(false);
-
-  // Preparar el layout antes de mostrar cualquier contenido
-  useEffect(() => {
-    // Dar tiempo al navegador para calcular el layout correctamente
-    const layoutTimer = setTimeout(() => {
-      setLayoutReady(true);
-    }, 100);
-
-    return () => clearTimeout(layoutTimer);
-  }, []);
-
-  // Precargar las imágenes de manera más robusta
-  useEffect(() => {
-    // Solo intentar cargar imágenes cuando el layout esté listo
-    if (!layoutReady) return;
-
-    const imagesToLoad = ["/ramo-lateral.png", "/fondo.png"];
-
-    imagesToLoad.forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, [layoutReady]);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -104,7 +88,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 0.45, duration: 0.9, ease: "easeOut" }}
                   className="font-bold text-2xl md:text-3xl tracking-wide"
                 >
-                  CEREMONIA
+                  {ceremonyLabel}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: -60 }}
@@ -140,7 +124,7 @@ const InvitationSection6 = () => {
                       )
                     }
                   >
-                    Ver ubicación
+                    {viewLocation}
                   </Button>
                 </motion.div>
               </div>
@@ -179,7 +163,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 0.45, duration: 0.9, ease: "easeOut" }}
                   className="font-bold text-2xl md:text-3xl tracking-wide font-serif"
                 >
-                  RECEPCIÓN
+                  {receptionLabel}
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: 60 }}
@@ -215,7 +199,7 @@ const InvitationSection6 = () => {
                       )
                     }
                   >
-                    Ver ubicación
+                    {viewLocation}
                   </Button>
                 </motion.div>
               </div>
@@ -230,7 +214,7 @@ const InvitationSection6 = () => {
                 transition={{ duration: 0.7, delay: 0.1, type: "spring", stiffness: 80 }}
                 className="text-xl font-serif text-[#162b4e] font-semibold mb-2"
               >
-                Código de vestimenta:
+                {dressCodeLabel}
                 <span className="block text-2xl md:text-3xl font-bold font-serif mt-1">
                   {`"${dressCodeConfig.label}"`}
                 </span>
@@ -253,13 +237,13 @@ const InvitationSection6 = () => {
                 className="text-[#162b4e] font-serif"
               >
                 <span className="block text-sm">
-                  ELLAS:{" "}
+                  {ladiesLabel}{" "}
                   <span className="font-semibold font-serif">
                     {dressCodeConfig.ladies}
                   </span>
                 </span>
                 <span className="block text-sm font-serif">
-                  ELLOS: <span className="font-semibold">{dressCodeConfig.gentlemen}</span>
+                  {gentlemenLabel} <span className="font-semibold">{dressCodeConfig.gentlemen}</span>
                 </span>
               </motion.div>
             </motion.div>

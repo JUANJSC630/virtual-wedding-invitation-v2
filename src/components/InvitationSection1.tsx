@@ -11,6 +11,7 @@ const InvitationSection1 = () => {
 
   const brideInitial = (event?.brideName?.[0] ?? "J").toUpperCase();
   const groomInitial = (event?.groomName?.[0] ?? "J").toUpperCase();
+  const announcementText = event?.config?.announcementText ?? "¡NOS CASAMOS!";
 
   return (
     <section
@@ -74,7 +75,8 @@ const InvitationSection1 = () => {
           >
             <div className="flex items-center justify-center gap-4">
               <motion.span
-                className="text-8xl font-serif text-gray-800 font-bold"
+                className="font-serif text-gray-800 font-bold"
+                style={{ fontSize: "clamp(4rem, 18vw, 6rem)" }}
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
@@ -88,7 +90,8 @@ const InvitationSection1 = () => {
                 transition={{ duration: 0.4, delay: 0.8 }}
               ></motion.div>
               <motion.span
-                className="text-8xl font-serif text-gray-800 font-bold"
+                className="font-serif text-gray-800 font-bold"
+                style={{ fontSize: "clamp(4rem, 18vw, 6rem)" }}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
@@ -105,7 +108,7 @@ const InvitationSection1 = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.0 }}
           >
-            <p className="text-3xl font-medium text-gray-800 tracking-wider">¡NOS CASAMOS!</p>
+            <p className="text-3xl font-medium text-gray-800 tracking-wider">{announcementText}</p>
           </motion.div>
         </div>
       </div>

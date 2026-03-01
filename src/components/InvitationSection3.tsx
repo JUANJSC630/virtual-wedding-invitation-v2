@@ -13,6 +13,14 @@ const InvitationSection3 = () => {
 
   const brideName = (event?.brideName ?? "Jimena").toUpperCase();
   const groomName = (event?.groomName ?? "Jhon").toUpperCase();
+
+  const getNameFontSize = (name: string): string => {
+    const len = name.length;
+    if (len <= 6)  return "clamp(2.8rem, 11vw, 3.75rem)";
+    if (len <= 10) return "clamp(2.2rem, 8.5vw, 3rem)";
+    if (len <= 14) return "clamp(1.75rem, 6.5vw, 2.4rem)";
+    return "clamp(1.4rem, 5vw, 2rem)";
+  };
   const audioUrl = event?.audioUrl ?? "/cancion.mp3";
   const heroMessage = event?.config?.heroMessage ??
     "Hay momentos en la vida que son especiales por si solos, pero compartirlos con las personas que queremos los hacen inolvidables.\n\nPor eso queremos invitarlos a celebrar nuestra boda y que hagan parte de este día tan especial para nosotros.";
@@ -91,7 +99,8 @@ const InvitationSection3 = () => {
               ></div>
 
               <motion.p
-                className="text-start text-6xl font-serif text-gray-700 italic font-light tracking-wider"
+                className="text-start font-serif text-gray-700 italic font-light tracking-wider"
+                style={{ fontSize: getNameFontSize(brideName) }}
                 variants={fadeInUp}
               >
                 {brideName}
@@ -155,7 +164,8 @@ const InvitationSection3 = () => {
               )}
 
               <motion.p
-                className="text-end text-6xl font-serif text-gray-700 italic font-light tracking-wider"
+                className="text-end font-serif text-gray-700 italic font-light tracking-wider"
+                style={{ fontSize: getNameFontSize(groomName) }}
                 variants={fadeInUp}
               >
                 {groomName}

@@ -83,6 +83,14 @@ export interface ContactInfo {
   label: string;
 }
 
+// Timeline item for Section 7
+export interface TimelineItem {
+  id: string;
+  time: string;
+  label: string;
+  icon: "church" | "glasses" | "dinner" | "reception" | "waltz" | string;
+}
+
 // Event Config
 export interface EventConfig {
   verse?: { text: string; reference: string };
@@ -95,6 +103,37 @@ export interface EventConfig {
   heroMessage?: string;
   giftMessage?: string;
   dressCode?: { label: string; ladies: string; gentlemen: string };
+  announcementText?: string;
+  timeline?: TimelineItem[];
+  labels?: {
+    // Section 5
+    familyTitle?: string;
+    companionTitle?: string;
+    brideParents?: string;
+    groomParents?: string;
+    godparents?: string;
+    bridesmaids?: string;
+    groomsmen?: string;
+    // Section 6
+    ceremony?: string;
+    reception?: string;
+    dressCode?: string;
+    viewLocation?: string;
+    ladies?: string;
+    gentlemen?: string;
+    // Section 7
+    timelineTitle?: string;
+    // Section 8
+    gifts?: string;
+    envelope?: string;
+    confirm?: string;
+    closing?: string;
+    thanks?: string;
+    deadline?: string;
+    closed?: string;
+    groomLabel?: string;
+    brideLabel?: string;
+  };
 }
 
 // Event Types
@@ -114,6 +153,7 @@ export interface Event {
   isActive: boolean;
   heroPhotoUrl?: string;
   photo2Url?: string;
+  photo3Url?: string;
   audioUrl?: string;
   groomPhone?: string;
   bridePhone?: string;
