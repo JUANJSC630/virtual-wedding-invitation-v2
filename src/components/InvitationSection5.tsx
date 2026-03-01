@@ -2,12 +2,14 @@ import { useRef } from "react";
 
 import { Variants, motion, useInView } from "framer-motion";
 
+import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 
 import Countdown from "@/components/Countdown";
 
 const InvitationSection5 = () => {
   const { event } = useEventContext();
+  const assets = useAssets();
 
   const parents       = event?.config?.parents;
   const labels        = event?.config?.labels;
@@ -43,7 +45,7 @@ const InvitationSection5 = () => {
       {/* Imagen de fondo */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url('/fondo.png')` }}
+        style={{ backgroundImage: `url('${assets.background}')` }}
       />
 
       {/* Contenido principal */}

@@ -2,6 +2,7 @@ import { useRef } from "react";
 
 import { Variants, motion, useInView } from "framer-motion";
 
+import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 import { TimelineItem } from "@/types";
 
@@ -13,16 +14,17 @@ const DEFAULT_TIMELINE: TimelineItem[] = [
   { id: "5", time: "11:00 PM", label: "CENA",                 icon: "dinner" },
 ];
 
-const ICON_MAP: Record<string, { src: string; alt: string }> = {
-  church:    { src: "/iglesia.png", alt: "Ceremonia religiosa" },
-  glasses:   { src: "/copas.png",   alt: "Brindis" },
-  dinner:    { src: "/cena.png",    alt: "Cena" },
-  reception: { src: "/mesa.png",    alt: "Recepción" },
-  waltz:     { src: "/vals.png",    alt: "Vals" },
-};
-
 const InvitationSection7 = () => {
   const { event } = useEventContext();
+  const assets = useAssets();
+
+  const ICON_MAP: Record<string, { src: string; alt: string }> = {
+    church:    { src: assets.church,    alt: "Ceremonia religiosa" },
+    glasses:   { src: assets.glasses,   alt: "Brindis" },
+    dinner:    { src: assets.dinner,    alt: "Cena" },
+    reception: { src: assets.reception, alt: "Recepción" },
+    waltz:     { src: assets.waltz,     alt: "Vals" },
+  };
   const ref = useRef(null);
 
   const timeline = event?.config?.timeline ?? DEFAULT_TIMELINE;
@@ -64,7 +66,7 @@ const InvitationSection7 = () => {
       {/* Imagen de fondo */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url('/fondo.png')` }}
+        style={{ backgroundImage: `url('${assets.background}')` }}
       />
 
       {/* Contenido principal */}
@@ -98,7 +100,7 @@ const InvitationSection7 = () => {
             {/* Columna central: línea decorativa */}
             <div className="flex flex-col items-center justify-center relative">
               <motion.img
-                src="/linea.png"
+                src={assets.decorLine}
                 alt="Línea decorativa"
                 className="h-[90%] w-8 object-contain mx-auto"
                 initial={{ opacity: 0, scaleY: 0 }}

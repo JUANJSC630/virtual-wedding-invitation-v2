@@ -9,6 +9,7 @@ import { AdminUser, Event, Guest } from "@/types";
 
 import { queryClient } from "@/lib/query-client";
 
+import { AssetContext, DEFAULT_ASSETS } from "@/context/AssetContext";
 import { EventContext } from "@/context/EventContext";
 
 import AdminDashboard from "@/components/AdminDashboard";
@@ -132,7 +133,7 @@ const WeddingInvitation: React.FC = () => {
       <div className="fixed inset-0 flex items-center justify-center bg-white">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url('/fondo.png')` }}
+          style={{ backgroundImage: `url('${(event?.assets as Record<string, string>)?.background ?? "/fondo.png"}')` }}
         />
         <div className="relative z-10 text-center p-4">
           <p className="text-xl font-serif text-gray-800">Cargando invitación...</p>
@@ -183,8 +184,11 @@ const WeddingInvitation: React.FC = () => {
     );
   }
 
+  const mergedAssets = { ...DEFAULT_ASSETS, ...(event?.assets ?? {}) };
+
   return (
     <EventContext.Provider value={{ event, loading: eventLoading }}>
+    <AssetContext.Provider value={mergedAssets}>
       <main className="w-full flex flex-col justify-center items-center bg-white" role="main">
         <div className="max-w-2xl mx-auto">
           <InvitationSection1 />
@@ -198,6 +202,7 @@ const WeddingInvitation: React.FC = () => {
           <InvitationSection8 />
         </div>
       </main>
+    </AssetContext.Provider>
     </EventContext.Provider>
   );
 };

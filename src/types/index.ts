@@ -91,6 +91,24 @@ export interface TimelineItem {
   icon: "church" | "glasses" | "dinner" | "reception" | "waltz" | string;
 }
 
+// Asset Map
+export interface AssetMap {
+  background?: string;
+  cornerFlower?: string;
+  bouquet?: string;
+  sideBouquet?: string;
+  flowers?: string;
+  tornPaper?: string;
+  church?: string;
+  glasses?: string;
+  dinner?: string;
+  reception?: string;
+  waltz?: string;
+  decorLine?: string;
+  gift?: string;
+  envelope?: string;
+}
+
 // Event Config
 export interface EventConfig {
   verse?: { text: string; reference: string };
@@ -150,6 +168,7 @@ export interface Event {
   receptionTime?: string;
   dressCode?: string;
   config: EventConfig;
+  assets: AssetMap;
   isActive: boolean;
   heroPhotoUrl?: string;
   photo2Url?: string;

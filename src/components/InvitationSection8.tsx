@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Variants, motion, useInView } from "framer-motion";
 
+import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
 
@@ -13,6 +14,7 @@ const InvitationSection8 = () => {
   const [layoutReady, setLayoutReady] = useState(false);
   const [isAfterDeadline, setIsAfterDeadline] = useState(false);
   const { event } = useEventContext();
+  const assets = useAssets();
 
   const groomPhone = event?.groomPhone ?? import.meta.env.VITE_GROOM_PHONE;
   const groomWAMessage = event?.groomWAMessage ?? import.meta.env.VITE_GROOM_WHATSAPP_MESSAGE;
@@ -89,7 +91,7 @@ const InvitationSection8 = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
         }}
       />
 
@@ -113,7 +115,7 @@ const InvitationSection8 = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <motion.img
-                src="/regalo.png"
+                src={assets.gift}
                 alt="Gift box icon for wedding present suggestions"
                 loading="lazy"
                 className="w-20 h-20 mb-3"
@@ -150,7 +152,7 @@ const InvitationSection8 = () => {
                 {envelopeLabel}
               </motion.div>
               <motion.img
-                src="/sobre.png"
+                src={assets.envelope}
                 alt="Envelope icon for monetary gift suggestion"
                 loading="lazy"
                 className="w-16 h-16 mt-1"
@@ -292,7 +294,7 @@ const InvitationSection8 = () => {
 
             <div className="absolute w-[500px] h-[500px]" style={{ bottom: "-220px" }}>
               <img
-                src="/ramo-lateral.png"
+                src={assets.sideBouquet}
                 alt="Decorative flower bouquet at the bottom of the invitation"
                 loading="lazy"
                 className="w-full h-full object-contain"

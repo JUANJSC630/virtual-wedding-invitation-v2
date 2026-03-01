@@ -2,12 +2,14 @@ import { useRef } from "react";
 
 import { motion } from "framer-motion";
 
+import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 import DressCodeIcons from "@/components/ui/DressCodeIcons";
 import { Button } from "@/components/ui/button";
 
 const InvitationSection6 = () => {
   const { event } = useEventContext();
+  const assets = useAssets();
 
   const ceremonyTime = event?.ceremonyTime ?? "6:00 PM";
   const ceremony = event?.config?.ceremony ?? {
@@ -43,7 +45,7 @@ const InvitationSection6 = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
         }}
       />
 
@@ -66,7 +68,7 @@ const InvitationSection6 = () => {
                   }}
                 >
                   <img
-                    src="/iglesia.png"
+                    src={assets.church}
                     alt="Iglesia San Juan Bautista"
                     style={{ width: 90, height: 90 }}
                     className="mx-auto"
@@ -141,7 +143,7 @@ const InvitationSection6 = () => {
                   }}
                 >
                   <img
-                    src="/copas.png"
+                    src={assets.glasses}
                     alt="Recepción copas brindis"
                     style={{ width: 90, height: 90 }}
                     className="mx-auto"

@@ -116,6 +116,7 @@ masterRoutes.post("/events", async (req, res) => {
         brideWAMessage: brideWAMessage || null,
         isActive: Boolean(isActive),
         config,
+        assets: (typeof req.body.assets === "object" && req.body.assets !== null) ? req.body.assets : {},
       },
       include: { clientAdmins: true, _count: { select: { guests: true, guestAccesses: true } } },
     });
@@ -174,6 +175,9 @@ masterRoutes.patch("/events/:id", async (req, res) => {
         brideWAMessage: brideWAMessage ?? existing.brideWAMessage,
         isActive: isActive !== undefined ? Boolean(isActive) : existing.isActive,
         config,
+        assets: (typeof req.body.assets === "object" && req.body.assets !== null)
+          ? { ...(existing.assets || {}), ...req.body.assets }
+          : (existing.assets || {}),
       },
       include: { clientAdmins: true, _count: { select: { guests: true, guestAccesses: true } } },
     });

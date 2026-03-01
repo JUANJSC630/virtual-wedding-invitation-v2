@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Variants, motion, useInView } from "framer-motion";
 
+import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
 
@@ -10,6 +11,7 @@ import AudioPlayer from "@/components/ui/AudioPlayer";
 // Definimos el componente de la sección de invitación
 const InvitationSection3 = () => {
   const { event } = useEventContext();
+  const assets = useAssets();
 
   const brideName = (event?.brideName ?? "Jimena").toUpperCase();
   const groomName = (event?.groomName ?? "Jhon").toUpperCase();
@@ -72,7 +74,7 @@ const InvitationSection3 = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
         }}
       />
 
@@ -126,7 +128,7 @@ const InvitationSection3 = () => {
                   }}
                 >
                   <img
-                    src="/ramo-lateral.png"
+                    src={assets.sideBouquet}
                     alt="Flores decorativas"
                     className="w-full h-full object-contain"
                   />
@@ -156,7 +158,7 @@ const InvitationSection3 = () => {
                   }}
                 >
                   <img
-                    src="/ramo-lateral.png"
+                    src={assets.sideBouquet}
                     alt="Flores decorativas"
                     className="w-full h-full object-contain"
                   />

@@ -1,9 +1,11 @@
+import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 
 const FALLBACK_PHOTO = "/photos/3c430f49-09f4-4db1-b37d-3fcca9e001bc.png";
 
 const InvitationSection4 = () => {
   const { event } = useEventContext();
+  const assets = useAssets();
   const photoUrl = event?.photo3Url ?? FALLBACK_PHOTO;
 
   return (
@@ -13,7 +15,7 @@ const InvitationSection4 = () => {
         style={{ zIndex: 60, top: "-40px", left: "-70px" }}
       >
         <img
-          src="/flores.png"
+          src={assets.flowers}
           alt="Decorative flowers arrangement"
           loading="lazy"
           className="w-full h-full object-contain"
@@ -23,15 +25,15 @@ const InvitationSection4 = () => {
       <div
         className="w-full h-[100px] select-none pointer-events-none block"
         style={{
-          maskImage: `url('/hoja-rasgada.png')`,
-          WebkitMaskImage: `url('/hoja-rasgada.png')`,
+          maskImage: `url('${assets.tornPaper}')`,
+          WebkitMaskImage: `url('${assets.tornPaper}')`,
           maskSize: "100% 100%",
           WebkitMaskSize: "100% 100%",
           maskRepeat: "no-repeat",
           WebkitMaskRepeat: "no-repeat",
           maskPosition: "center bottom",
           WebkitMaskPosition: "center bottom",
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           transform: "rotate(180deg)",
@@ -66,15 +68,15 @@ const InvitationSection4 = () => {
       <div
         className="w-full h-[100px] select-none pointer-events-none block"
         style={{
-          maskImage: `url('/hoja-rasgada.png')`,
-          WebkitMaskImage: `url('/hoja-rasgada.png')`,
+          maskImage: `url('${assets.tornPaper}')`,
+          WebkitMaskImage: `url('${assets.tornPaper}')`,
           maskSize: "100% 100%",
           WebkitMaskSize: "100% 100%",
           maskRepeat: "no-repeat",
           WebkitMaskRepeat: "no-repeat",
           maskPosition: "center top",
           WebkitMaskPosition: "center top",
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
           backgroundSize: "cover",
           backgroundPosition: "center top",
           marginTop: "-30px",
@@ -87,7 +89,7 @@ const InvitationSection4 = () => {
         style={{ zIndex: 60, bottom: "-10px", right: "-60px" }}
       >
         <img
-          src="/flores.png"
+          src={assets.flowers}
           alt="Decorative flowers arrangement"
           loading="lazy"
           className="w-full h-full object-contain"

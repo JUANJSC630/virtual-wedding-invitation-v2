@@ -17,7 +17,8 @@ import {
   Users2,
 } from "lucide-react";
 
-import { AdminUser, EventWithStats, TimelineItem } from "@/types";
+import { DEFAULT_ASSETS } from "@/context/AssetContext";
+import { AdminUser, AssetMap, EventWithStats, TimelineItem } from "@/types";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,6 +90,8 @@ interface EventFormData {
   // Section-specific
   announcementText: string;
   timeline: TimelineItem[];
+  // Assets
+  assets: AssetMap;
 }
 
 interface ClientAdminRow {
@@ -109,7 +112,7 @@ const emptyForm: EventFormData = {
   parentsBride: "", parentsGroom: "", godparents: "", bridesmaids: "",
   groomsmen: "", groomPhone: "", bridePhone: "", groomWAMessage: "",
   brideWAMessage: "", heroPhotoUrl: "", photo2Url: "", photo3Url: "",
-  audioUrl: "", announcementText: "", timeline: [],
+  audioUrl: "", announcementText: "", timeline: [], assets: {},
 };
 
 function eventToForm(ev: EventWithStats): EventFormData {
@@ -153,6 +156,7 @@ function eventToForm(ev: EventWithStats): EventFormData {
     audioUrl: ev.audioUrl || "",
     announcementText: ev.config?.announcementText || "",
     timeline: ev.config?.timeline ?? [],
+    assets: (ev.assets as AssetMap) ?? {},
   };
 }
 
@@ -219,12 +223,13 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="basic">Básico</TabsTrigger>
               <TabsTrigger value="venues">Locales</TabsTrigger>
               <TabsTrigger value="texts">Textos</TabsTrigger>
               <TabsTrigger value="families">Familias</TabsTrigger>
               <TabsTrigger value="timeline">Itinerario</TabsTrigger>
+              <TabsTrigger value="assets">Assets</TabsTrigger>
               <TabsTrigger value="contact">Contacto</TabsTrigger>
             </TabsList>
 
@@ -483,6 +488,24 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                   Agregar evento
                 </Button>
               </div>
+            </TabsContent>
+
+            {/* ── Tab: Assets ─────────────────────────────── */}
+            <TabsContent value="assets" className="space-y-4 pt-4">
+              <p className="text-xs text-muted-foreground">
+                Sube imágenes personalizadas para este evento. Los slots sin imagen usan el default de la plantilla.
+              </p>
+              {(Object.keys(DEFAULT_ASSETS) as (keyof AssetMap)[]).map(key => (
+                <FileUpload
+                  key={key}
+                  label={key}
+                  value={(form.assets as Record<string, string>)[key] ?? ""}
+                  onChange={url => setForm(prev => ({ ...prev, assets: { ...prev.assets, [key]: url } }))}
+                  accept="image"
+                  assetType="asset"
+                  eventId={editingEvent?.id}
+                />
+              ))}
             </TabsContent>
 
             {/* ── Tab: Contacto ───────────────────────────── */}

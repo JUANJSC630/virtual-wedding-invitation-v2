@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
 
+import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 
 const InvitationSection1 = () => {
   const { event } = useEventContext();
+  const assets = useAssets();
 
   const verse = event?.config?.verse;
   const verseText = verse?.text ?? "El que encontró una esposa encontró la felicidad; Yavé es quien le otorgó ese favor.";
@@ -22,7 +24,7 @@ const InvitationSection1 = () => {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
         }}
       />
       {/* Flor en la esquina superior izquierda */}
@@ -34,7 +36,7 @@ const InvitationSection1 = () => {
         transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
       >
         <img
-          src="/flor-esquina.png"
+          src={assets.cornerFlower}
           alt="Decorative floral border in upper left corner"
           loading="lazy"
           className="w-full h-full object-contain"
@@ -44,7 +46,7 @@ const InvitationSection1 = () => {
       {/* Ramo en el centro derecho */}
       <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] opacity-60">
         <img
-          src="/ramo.png"
+          src={assets.bouquet}
           alt="Wedding flower bouquet decoration on the right side"
           loading="lazy"
           className="w-full h-full object-contain"

@@ -1,7 +1,9 @@
+import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 
 const InvitationSection9 = () => {
   const { event } = useEventContext();
+  const assets = useAssets();
   const heroPhotoUrl = event?.heroPhotoUrl ?? "/photos/IMG_2041.jpeg";
 
   return (
@@ -10,15 +12,15 @@ const InvitationSection9 = () => {
       <div
         className="w-full h-[100px] select-none pointer-events-none block"
         style={{
-          maskImage: `url('/hoja-rasgada.png')`,
-          WebkitMaskImage: `url('/hoja-rasgada.png')`,
+          maskImage: `url('${assets.tornPaper}')`,
+          WebkitMaskImage: `url('${assets.tornPaper}')`,
           maskSize: "100% 100%",
           WebkitMaskSize: "100% 100%",
           maskRepeat: "no-repeat",
           WebkitMaskRepeat: "no-repeat",
           maskPosition: "center bottom",
           WebkitMaskPosition: "center bottom",
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           transform: "rotate(180deg)",
@@ -51,15 +53,15 @@ const InvitationSection9 = () => {
       <div
         className="w-full h-[100px] select-none pointer-events-none block"
         style={{
-          maskImage: `url('/hoja-rasgada.png')`,
-          WebkitMaskImage: `url('/hoja-rasgada.png')`,
+          maskImage: `url('${assets.tornPaper}')`,
+          WebkitMaskImage: `url('${assets.tornPaper}')`,
           maskSize: "100% 100%",
           WebkitMaskSize: "100% 100%",
           maskRepeat: "no-repeat",
           WebkitMaskRepeat: "no-repeat",
           maskPosition: "center top",
           WebkitMaskPosition: "center top",
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
           backgroundSize: "cover",
           backgroundPosition: "center top",
           marginTop: "-50px",

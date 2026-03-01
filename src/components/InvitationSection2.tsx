@@ -1,9 +1,11 @@
+import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 
 const FALLBACK_PHOTO = "/photos/357deab6-6a7e-47cf-be14-49c22392b2f6.png";
 
 const InvitationSection2 = () => {
   const { event } = useEventContext();
+  const assets = useAssets();
   const photoUrl = event?.photo2Url ?? FALLBACK_PHOTO;
 
   return (
@@ -12,15 +14,15 @@ const InvitationSection2 = () => {
       <div
         className="w-full h-[100px] select-none pointer-events-none block"
         style={{
-          maskImage: `url('/hoja-rasgada.png')`,
-          WebkitMaskImage: `url('/hoja-rasgada.png')`,
+          maskImage: `url('${assets.tornPaper}')`,
+          WebkitMaskImage: `url('${assets.tornPaper}')`,
           maskSize: "100% 100%",
           WebkitMaskSize: "100% 100%",
           maskRepeat: "no-repeat",
           WebkitMaskRepeat: "no-repeat",
           maskPosition: "center bottom",
           WebkitMaskPosition: "center bottom",
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           transform: "rotate(180deg)",
@@ -53,15 +55,15 @@ const InvitationSection2 = () => {
       <div
         className="w-full h-[100px] select-none pointer-events-none block"
         style={{
-          maskImage: `url('/hoja-rasgada.png')`,
-          WebkitMaskImage: `url('/hoja-rasgada.png')`,
+          maskImage: `url('${assets.tornPaper}')`,
+          WebkitMaskImage: `url('${assets.tornPaper}')`,
           maskSize: "100% 100%",
           WebkitMaskSize: "100% 100%",
           maskRepeat: "no-repeat",
           WebkitMaskRepeat: "no-repeat",
           maskPosition: "center top",
           WebkitMaskPosition: "center top",
-          backgroundImage: `url('/fondo.png')`,
+          backgroundImage: `url('${assets.background}')`,
           backgroundSize: "cover",
           backgroundPosition: "center top",
           marginTop: "-50px",
