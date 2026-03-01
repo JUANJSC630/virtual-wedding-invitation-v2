@@ -20,17 +20,19 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ eventSlug, onValidGuest
 
   const validateMutation = useValidateGuestCode(eventSlug);
 
+  const storageKey = `guestCode_${eventSlug}`;
+
   // Cargar código desde localStorage al montar el componente
   useEffect(() => {
-    const savedCode = localStorage.getItem("guestCode");
+    const savedCode = localStorage.getItem(storageKey);
     if (savedCode) {
       setCode(savedCode);
     }
-  }, []);
+  }, [storageKey]);
 
   // Mostrar mensaje de código guardado por 5 segundos
   useEffect(() => {
-    if (code && localStorage.getItem("guestCode") === code && !error) {
+    if (code && localStorage.getItem(storageKey) === code && !error) {
       setShowSavedMsg(true);
       const timer = setTimeout(() => setShowSavedMsg(false), 5000);
       return () => clearTimeout(timer);
@@ -58,7 +60,7 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ eventSlug, onValidGuest
 
       if (result.valid && result.guest) {
         // Guardar código en localStorage para futuros usos
-        localStorage.setItem("guestCode", code.trim().toUpperCase());
+        localStorage.setItem(storageKey, code.trim().toUpperCase());
 
         // Registrar acceso del guest
         try {
