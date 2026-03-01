@@ -79,7 +79,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="guests" className="mt-6">
-              <GuestManager />
+              <GuestManager eventSlug={user.eventSlug ?? ""} />
             </TabsContent>
             <TabsContent value="analytics" className="mt-6">
               <AnalyticsDashboard />

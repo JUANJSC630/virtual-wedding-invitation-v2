@@ -9,15 +9,16 @@ import { useValidateGuestCode } from "@/hooks/useGuests";
 import { Button } from "@/components/ui/button";
 
 interface GuestCodeEntryProps {
+  eventSlug: string;
   onValidGuest: (code: string, guest: Guest) => void;
 }
 
-const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ onValidGuest }) => {
+const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ eventSlug, onValidGuest }) => {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [showSavedMsg, setShowSavedMsg] = useState(false);
 
-  const validateMutation = useValidateGuestCode();
+  const validateMutation = useValidateGuestCode(eventSlug);
 
   // Cargar código desde localStorage al montar el componente
   useEffect(() => {
@@ -64,7 +65,7 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ onValidGuest }) => {
           await fetch("/api/guests/access", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ guestCode: code.trim().toUpperCase() }),
+            body: JSON.stringify({ guestCode: code.trim().toUpperCase(), eventSlug }),
           });
         } catch (accessError) {
           console.warn("No se pudo registrar el acceso:", accessError);

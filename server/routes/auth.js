@@ -59,13 +59,14 @@ authRoutes.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Credenciales incorrectas." });
     }
 
-    const payload = { id: user.id, email: user.email, name: user.name, role, eventId };
+    const eventSlug = role === "client" ? user.event?.slug ?? null : null;
+    const payload = { id: user.id, email: user.email, name: user.name, role, eventId, eventSlug };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
 
     res.cookie("admin_token", token, cookieOptions);
 
     return res.json({
-      user: { id: user.id, email: user.email, name: user.name, role, eventId },
+      user: { id: user.id, email: user.email, name: user.name, role, eventId, eventSlug },
     });
   } catch (error) {
     console.error("Error en login:", error);

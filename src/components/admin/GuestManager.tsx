@@ -68,7 +68,11 @@ interface GuestFormData {
   notes: string;
 }
 
-const GuestManager: React.FC = () => {
+interface GuestManagerProps {
+  eventSlug: string;
+}
+
+const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [showCompanions, setShowCompanions] = useState(false);
@@ -320,7 +324,7 @@ const GuestManager: React.FC = () => {
     }
 
     // Mensaje personalizado con enlace directo
-    const invitationUrl = `${window.location.origin}/?code=${guest.code}`;
+    const invitationUrl = `${window.location.origin}/${eventSlug}?code=${guest.code}`;
     const message = `¡Hola ${guest.name}!
 
 Te invitamos cordialmente a nuestra boda.
@@ -1208,18 +1212,18 @@ Accede a tu invitación digital aquí: ${invitationUrl}
           {qrGuest && (
             <div className="flex flex-col items-center gap-4 py-4">
               <QRCodeSVG
-                value={`${window.location.origin}/?code=${qrGuest.code}`}
+                value={`${window.location.origin}/${eventSlug}?code=${qrGuest.code}`}
                 size={220}
                 level="M"
               />
               <p className="text-xs text-muted-foreground text-center break-all">
-                {window.location.origin}/?code={qrGuest.code}
+                {window.location.origin}/{eventSlug}?code={qrGuest.code}
               </p>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/?code=${qrGuest.code}`);
+                  navigator.clipboard.writeText(`${window.location.origin}/${eventSlug}?code=${qrGuest.code}`);
                   toast.success("Enlace copiado al portapapeles");
                 }}
               >

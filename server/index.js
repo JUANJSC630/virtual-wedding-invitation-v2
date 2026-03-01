@@ -9,6 +9,7 @@ import { authRoutes } from "./routes/auth.js";
 import { adminRoutes } from "./routes/admin.js";
 import { eventRoutes } from "./routes/events.js";
 import { guestRoutes } from "./routes/guests.js";
+import { masterRoutes } from "./routes/master.js";
 
 dotenv.config();
 
@@ -36,11 +37,19 @@ app.use(
   })
 );
 
-// ─── Rate limiting en auth ───────────────────────────────────────────────────
+// ─── Rate limiting ───────────────────────────────────────────────────────────
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  limit: 10,                 // máx 10 intentos por ventana
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
   message: { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." },
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+});
+
+const guestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  limit: 60,                 // máx 60 intentos por ventana (validaciones + rsvp)
+  message: { error: "Demasiadas peticiones. Espera unos minutos e intenta de nuevo." },
   standardHeaders: "draft-8",
   legacyHeaders: false,
 });
@@ -52,8 +61,9 @@ app.use(express.json());
 // ─── Rutas ───────────────────────────────────────────────────────────────────
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/events", eventRoutes);
-app.use("/api/guests", guestRoutes);
+app.use("/api/guests", guestLimiter, guestRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/master", masterRoutes);
 
 // ─── Health check ────────────────────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {

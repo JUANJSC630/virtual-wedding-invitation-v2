@@ -9,17 +9,16 @@ import {
 
 const API_BASE = "/api";
 
-// Slug del evento activo — en Phase 2 vendrá de la URL
-const EVENT_SLUG = import.meta.env.VITE_EVENT_SLUG || "jimena-juan";
-
 // ─── RUTAS PÚBLICAS (invitados) ───────────────────────────────────────────────
 
-export const validateGuestCode = async (code: string): Promise<GuestValidationResult> => {
+export const validateGuestCode = async (
+  { code, eventSlug }: { code: string; eventSlug: string }
+): Promise<GuestValidationResult> => {
   try {
     const response = await fetch(`${API_BASE}/guests/validate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, eventSlug: EVENT_SLUG }),
+      body: JSON.stringify({ code, eventSlug }),
     });
     if (!response.ok) throw new Error("Error al validar el código");
     return await response.json();
@@ -35,7 +34,7 @@ export const confirmRSVP = async (rsvpData: RSVPData): Promise<Guest> => {
   const response = await fetch(`${API_BASE}/guests/rsvp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...rsvpData, eventSlug: EVENT_SLUG }),
+    body: JSON.stringify(rsvpData),
   });
 
   if (!response.ok) throw new Error("Error al confirmar asistencia");

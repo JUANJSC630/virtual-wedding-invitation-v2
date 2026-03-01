@@ -8,32 +8,32 @@ import { Companion, Guest } from "@/types";
 import { Button } from "@/components/ui/button";
 
 interface GuestInfoProps {
+  eventSlug: string;
   guest: Guest;
   onContinue: () => void;
 }
 
 // Hook para obtener guest actualizado por código
-const useGuestByCode = (code: string) => {
+const useGuestByCode = (code: string, eventSlug: string) => {
   return useQuery<Guest | null>({
-    queryKey: ["guest", "byCode", code],
+    queryKey: ["guest", "byCode", code, eventSlug],
     queryFn: async () => {
       const response = await fetch(`/api/guests/validate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, eventSlug }),
       });
       const data = await response.json();
       return data.valid ? data.guest : null;
     },
-    refetchInterval: 5000, // Actualizar cada 5 segundos
+    refetchInterval: 5000,
     refetchOnWindowFocus: true,
-    staleTime: 1000, // Considerar datos obsoletos después de 1 segundo
+    staleTime: 1000,
   });
 };
 
-const GuestInfo: React.FC<GuestInfoProps> = ({ guest: initialGuest, onContinue }) => {
-  // Obtener datos actualizados del guest
-  const { data: updatedGuest } = useGuestByCode(initialGuest.code);
+const GuestInfo: React.FC<GuestInfoProps> = ({ eventSlug, guest: initialGuest, onContinue }) => {
+  const { data: updatedGuest } = useGuestByCode(initialGuest.code, eventSlug);
 
   // Usar datos actualizados o los iniciales como fallback
   const guest = updatedGuest || initialGuest;

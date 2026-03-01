@@ -6,16 +6,16 @@ import { requireAuth } from "../middleware/auth.js";
 
 export const adminRoutes = express.Router();
 
-// Todas las rutas requieren autenticación
-adminRoutes.use(requireAuth);
+// Solo client admins — el master tiene su propio panel en /master
+adminRoutes.use(requireAuth, (req, res, next) => {
+  if (req.user.role !== "client") {
+    return res.status(403).json({ error: "Este panel es exclusivo para admins de evento. Usa /master." });
+  }
+  next();
+});
 
-/**
- * Devuelve el filtro de eventId según el rol:
- * - master: sin filtro (ve todos los eventos)
- * - client: filtrado por su eventId
- */
 function eventFilter(user) {
-  return user.role === "master" ? {} : { eventId: user.eventId };
+  return { eventId: user.eventId };
 }
 
 // Obtener todos los invitados

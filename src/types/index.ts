@@ -123,6 +123,18 @@ export interface Event {
   updatedAt: string;
 }
 
+// Master Panel Types
+export interface EventStats {
+  totalGuests: number;
+  confirmedGuests: number;
+  totalAccesses: number;
+}
+
+export interface EventWithStats extends Event {
+  clientAdmins: Pick<ClientAdmin, "id" | "email" | "name">[];
+  stats: EventStats;
+}
+
 // Admin Types
 export interface AdminUser {
   id: string;
@@ -130,6 +142,7 @@ export interface AdminUser {
   name: string;
   role: "master" | "client";
   eventId?: string | null;
+  eventSlug?: string | null;
 }
 
 export interface ClientAdmin {
@@ -197,8 +210,9 @@ export interface GuestValidationResult {
 }
 
 export interface RSVPData {
-  guestId: string;
+  guestCode: string;
   confirmed: boolean;
+  eventSlug: string;
   companions: Array<{
     id?: string;
     name: string;

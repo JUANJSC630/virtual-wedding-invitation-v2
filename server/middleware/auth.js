@@ -27,3 +27,12 @@ export function requireAuth(req, res, next) {
     return res.status(401).json({ error: "Sesión inválida o expirada. Inicia sesión de nuevo." });
   }
 }
+
+export function requireMaster(req, res, next) {
+  requireAuth(req, res, () => {
+    if (req.user.role !== "master") {
+      return res.status(403).json({ error: "Acceso denegado. Solo para master admin." });
+    }
+    next();
+  });
+}

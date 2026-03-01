@@ -17,9 +17,9 @@ import {
 } from "@/services/guest-service";
 
 // Hook para validar código de invitado
-export const useValidateGuestCode = () => {
+export const useValidateGuestCode = (eventSlug: string) => {
   return useMutation({
-    mutationFn: validateGuestCode,
+    mutationFn: (code: string) => validateGuestCode({ code, eventSlug }),
   });
 };
 

@@ -48,6 +48,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.13.1",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {

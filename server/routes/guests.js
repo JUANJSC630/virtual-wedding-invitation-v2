@@ -4,16 +4,26 @@ import prisma from "../../src/lib/prisma.js";
 
 export const guestRoutes = express.Router();
 
-const DEFAULT_SLUG = process.env.DEFAULT_EVENT_SLUG || "jimena-juan";
+const DEFAULT_SLUG = process.env.DEFAULT_EVENT_SLUG;
 
 /**
  * Resuelve el evento a partir del slug.
  * Usa el slug del body/params, con fallback al DEFAULT_EVENT_SLUG.
  */
 async function resolveEvent(slug) {
-  const event = await prisma.event.findUnique({ where: { slug: slug || DEFAULT_SLUG } });
-  return event;
+  const resolvedSlug = slug || DEFAULT_SLUG;
+  if (!resolvedSlug) return null;
+  return prisma.event.findUnique({ where: { slug: resolvedSlug } });
 }
+
+// Campos públicos del invitado — excluye notas internas del admin
+const GUEST_PUBLIC_SELECT = {
+  id: true, eventId: true, code: true, name: true,
+  email: true, phone: true, maxGuests: true,
+  confirmed: true, confirmedAt: true,
+  createdAt: true, updatedAt: true,
+  companions: true,
+};
 
 // POST /api/guests/validate
 guestRoutes.post("/validate", async (req, res) => {
@@ -31,7 +41,7 @@ guestRoutes.post("/validate", async (req, res) => {
 
     const guest = await prisma.guest.findUnique({
       where: { eventId_code: { eventId: event.id, code: code.toUpperCase() } },
-      include: { companions: true },
+      select: GUEST_PUBLIC_SELECT,
     });
 
     if (!guest) {
@@ -58,7 +68,7 @@ guestRoutes.get("/validate/:code", async (req, res) => {
 
     const guest = await prisma.guest.findUnique({
       where: { eventId_code: { eventId: event.id, code: code.toUpperCase() } },
-      include: { companions: true },
+      select: GUEST_PUBLIC_SELECT,
     });
 
     if (!guest) {
@@ -83,7 +93,7 @@ guestRoutes.get("/code/:code", async (req, res) => {
 
     const guest = await prisma.guest.findUnique({
       where: { eventId_code: { eventId: event.id, code: code.toUpperCase() } },
-      include: { companions: true },
+      select: GUEST_PUBLIC_SELECT,
     });
 
     if (!guest) return res.status(404).json({ error: "Invitado no encontrado" });
@@ -103,10 +113,11 @@ guestRoutes.post("/access", async (req, res) => {
     const userAgent = req.get("User-Agent");
 
     const event = await resolveEvent(eventSlug);
+    if (!event) return res.json({ success: false });
 
     await prisma.guestAccess.create({
       data: {
-        eventId: event?.id || (await getDefaultEventId()),
+        eventId: event.id,
         guestCode: guestCode.toUpperCase(),
         ipAddress: ipAddress ?? null,
         userAgent: userAgent ?? null,
@@ -135,8 +146,9 @@ guestRoutes.post("/rsvp", async (req, res) => {
     });
 
     if (companions && Array.isArray(companions)) {
+      const validCompanionIds = new Set(guest.companions.map(c => c.id));
       for (const companion of companions) {
-        if (companion.id) {
+        if (companion.id && validCompanionIds.has(companion.id)) {
           await prisma.companion.update({
             where: { id: companion.id },
             data: {
@@ -150,7 +162,7 @@ guestRoutes.post("/rsvp", async (req, res) => {
 
     const finalGuest = await prisma.guest.findUnique({
       where: { eventId_code: { eventId: event.id, code: guestCode.toUpperCase() } },
-      include: { companions: true },
+      select: GUEST_PUBLIC_SELECT,
     });
 
     res.json(finalGuest);
@@ -160,8 +172,3 @@ guestRoutes.post("/rsvp", async (req, res) => {
   }
 });
 
-// Helper para /access cuando no viene el slug
-async function getDefaultEventId() {
-  const event = await prisma.event.findUnique({ where: { slug: DEFAULT_SLUG } });
-  return event?.id;
-}
