@@ -36,6 +36,7 @@ model Event {
   dressCode      String?
   config         Json     @default("{}")
   assets         Json     @default("{}")
+  theme          Json     @default("{}")
   isActive       Boolean  @default(true)
   heroPhotoUrl   String?
   photo2Url      String?

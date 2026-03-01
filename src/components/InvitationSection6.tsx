@@ -79,7 +79,7 @@ const InvitationSection6 = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ delay: 0.25, duration: 0.9, ease: "easeOut" }}
-                  className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]"
+                  className="mt-2 text-xl md:text-2xl font-serif text-[var(--color-primary)]"
                 >
                   {ceremonyTime}
                 </motion.div>
@@ -88,7 +88,7 @@ const InvitationSection6 = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ delay: 0.45, duration: 0.9, ease: "easeOut" }}
-                  className="font-bold text-2xl md:text-3xl tracking-wide"
+                  className="font-bold text-2xl md:text-3xl tracking-wide text-[var(--color-accent)]"
                 >
                   {ceremonyLabel}
                 </motion.div>
@@ -97,7 +97,7 @@ const InvitationSection6 = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ delay: 0.65, duration: 0.9, ease: "easeOut" }}
-                  className="text-lg md:text-xl font-serif text-[#162b4e]"
+                  className="text-lg md:text-xl font-serif text-[var(--color-primary)]"
                 >
                   {ceremony.name}
                 </motion.div>
@@ -106,7 +106,7 @@ const InvitationSection6 = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ delay: 0.85, duration: 0.9, ease: "easeOut" }}
-                  className="text-base md:text-lg text-gray-700"
+                  className="text-base md:text-lg text-[var(--color-text)]"
                 >
                   {ceremony.address}
                 </motion.div>
@@ -117,7 +117,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 1.05, duration: 0.9, ease: "easeOut" }}
                 >
                   <Button
-                    className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
+                    className="!bg-[var(--color-action)] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
                     onClick={() =>
                       window.open(
                         ceremony.mapsUrl,
@@ -154,7 +154,7 @@ const InvitationSection6 = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ delay: 0.25, duration: 0.9, ease: "easeOut" }}
-                  className="mt-2 text-xl md:text-2xl font-serif text-[#162b4e]"
+                  className="mt-2 text-xl md:text-2xl font-serif text-[var(--color-primary)]"
                 >
                   {receptionTime}
                 </motion.div>
@@ -163,7 +163,7 @@ const InvitationSection6 = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ delay: 0.45, duration: 0.9, ease: "easeOut" }}
-                  className="font-bold text-2xl md:text-3xl tracking-wide font-serif"
+                  className="font-bold text-2xl md:text-3xl tracking-wide font-serif text-[var(--color-accent)]"
                 >
                   {receptionLabel}
                 </motion.div>
@@ -172,7 +172,7 @@ const InvitationSection6 = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ delay: 0.65, duration: 0.9, ease: "easeOut" }}
-                  className="text-lg md:text-xl font-serif text-[#162b4e]"
+                  className="text-lg md:text-xl font-serif text-[var(--color-primary)]"
                 >
                   {reception.name}
                 </motion.div>
@@ -181,7 +181,7 @@ const InvitationSection6 = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ delay: 0.85, duration: 0.9, ease: "easeOut" }}
-                  className="text-base md:text-lg text-gray-700 font-serif"
+                  className="text-base md:text-lg text-[var(--color-text)] font-serif"
                 >
                   {reception.address}
                 </motion.div>
@@ -192,7 +192,7 @@ const InvitationSection6 = () => {
                   transition={{ delay: 1.05, duration: 0.9, ease: "easeOut" }}
                 >
                   <Button
-                    className="!bg-[#466691] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
+                    className="!bg-[var(--color-action)] !text-white !hover:bg-[#0e1f36] !rounded-full mt-4 !text-xl"
                     onClick={() =>
                       window.open(
                         reception.mapsUrl,
@@ -214,7 +214,7 @@ const InvitationSection6 = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.7, delay: 0.1, type: "spring", stiffness: 80 }}
-                className="text-xl font-serif text-[#162b4e] font-semibold mb-2"
+                className="text-xl font-serif text-[var(--color-primary)] font-semibold mb-2"
               >
                 {dressCodeLabel}
                 <span className="block text-2xl md:text-3xl font-bold font-serif mt-1">
@@ -236,7 +236,7 @@ const InvitationSection6 = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.7, delay: 0.7, type: "spring", stiffness: 80 }}
-                className="text-[#162b4e] font-serif"
+                className="text-[var(--color-primary)] font-serif"
               >
                 <span className="block text-sm">
                   {ladiesLabel}{" "}

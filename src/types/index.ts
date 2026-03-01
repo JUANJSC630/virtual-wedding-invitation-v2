@@ -91,6 +91,15 @@ export interface TimelineItem {
   icon: "church" | "glasses" | "dinner" | "reception" | "waltz" | string;
 }
 
+// Theme Config
+export interface ThemeConfig {
+  primaryColor?: string;  // default #162b4e (navy)
+  accentColor?:  string;  // default #bfa15a (gold)
+  actionColor?:  string;  // default #466691 (blue buttons)
+  textColor?:    string;  // default #374151 (body text)
+  fontSpecial?:  string;  // default "Great Vibes", cursive
+}
+
 // Asset Map
 export interface AssetMap {
   background?: string;
@@ -169,6 +178,7 @@ export interface Event {
   dressCode?: string;
   config: EventConfig;
   assets: AssetMap;
+  theme: ThemeConfig;
   isActive: boolean;
   heroPhotoUrl?: string;
   photo2Url?: string;

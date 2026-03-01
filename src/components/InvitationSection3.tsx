@@ -101,7 +101,7 @@ const InvitationSection3 = () => {
               ></div>
 
               <motion.p
-                className="text-start font-serif text-gray-700 italic font-light tracking-wider"
+                className="text-start font-serif text-[var(--color-primary)] italic font-light tracking-wider"
                 style={{ fontSize: getNameFontSize(brideName) }}
                 variants={fadeInUp}
               >
@@ -135,7 +135,7 @@ const InvitationSection3 = () => {
                 </motion.div>
               )}
               <motion.div className="py-1" variants={fadeInUp}>
-                <span className="text-4xl text-gray-700">&</span>
+                <span className="text-4xl text-[var(--color-accent)]">&</span>
               </motion.div>
               {imagesLoaded && (
                 <motion.div
@@ -166,7 +166,7 @@ const InvitationSection3 = () => {
               )}
 
               <motion.p
-                className="text-end font-serif text-gray-700 italic font-light tracking-wider"
+                className="text-end font-serif text-[var(--color-primary)] italic font-light tracking-wider"
                 style={{ fontSize: getNameFontSize(groomName) }}
                 variants={fadeInUp}
               >
@@ -179,7 +179,7 @@ const InvitationSection3 = () => {
             </motion.div>
 
             <motion.div variants={fadeInUp}>
-              <p className="font-serif text-gray-700 tracking-wide leading-relaxed text-base whitespace-pre-line">
+              <p className="font-serif text-[var(--color-text)] tracking-wide leading-relaxed text-base whitespace-pre-line">
                 {heroMessage}
               </p>
             </motion.div>

@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 
 import { DEFAULT_ASSETS } from "@/context/AssetContext";
-import { AdminUser, AssetMap, EventWithStats, TimelineItem } from "@/types";
+import { DEFAULT_THEME } from "@/context/ThemeContext";
+import { AdminUser, AssetMap, EventWithStats, ThemeConfig, TimelineItem } from "@/types";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,8 @@ interface EventFormData {
   timeline: TimelineItem[];
   // Assets
   assets: AssetMap;
+  // Theme
+  theme: ThemeConfig;
 }
 
 interface ClientAdminRow {
@@ -112,7 +115,7 @@ const emptyForm: EventFormData = {
   parentsBride: "", parentsGroom: "", godparents: "", bridesmaids: "",
   groomsmen: "", groomPhone: "", bridePhone: "", groomWAMessage: "",
   brideWAMessage: "", heroPhotoUrl: "", photo2Url: "", photo3Url: "",
-  audioUrl: "", announcementText: "", timeline: [], assets: {},
+  audioUrl: "", announcementText: "", timeline: [], assets: {}, theme: {},
 };
 
 function eventToForm(ev: EventWithStats): EventFormData {
@@ -157,6 +160,7 @@ function eventToForm(ev: EventWithStats): EventFormData {
     announcementText: ev.config?.announcementText || "",
     timeline: ev.config?.timeline ?? [],
     assets: (ev.assets as AssetMap) ?? {},
+    theme: (ev.theme as ThemeConfig) ?? {},
   };
 }
 
@@ -240,13 +244,16 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-4 mb-1">
               <TabsTrigger value="basic">Básico</TabsTrigger>
               <TabsTrigger value="venues">Locales</TabsTrigger>
               <TabsTrigger value="texts">Textos</TabsTrigger>
               <TabsTrigger value="families">Familias</TabsTrigger>
+            </TabsList>
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="timeline">Itinerario</TabsTrigger>
               <TabsTrigger value="assets">Assets</TabsTrigger>
+              <TabsTrigger value="tema">Tema</TabsTrigger>
               <TabsTrigger value="contact">Contacto</TabsTrigger>
             </TabsList>
 
@@ -523,6 +530,118 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                   eventId={editingEvent?.id}
                 />
               ))}
+            </TabsContent>
+
+            {/* ── Tab: Tema ───────────────────────────────── */}
+            <TabsContent value="tema" className="space-y-4 pt-4">
+              <p className="text-xs text-muted-foreground">
+                Personaliza los colores y la fuente especial de la invitación. Dejar en blanco usa el valor por defecto.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {(
+                  [
+                    { field: "primaryColor", label: "Color primario", hint: `default: ${DEFAULT_THEME.primaryColor}` },
+                    { field: "accentColor",  label: "Color acento",   hint: `default: ${DEFAULT_THEME.accentColor}` },
+                    { field: "actionColor",  label: "Color botones",  hint: `default: ${DEFAULT_THEME.actionColor}` },
+                    { field: "textColor",    label: "Color texto",    hint: `default: ${DEFAULT_THEME.textColor}` },
+                  ] as { field: keyof ThemeConfig; label: string; hint: string }[]
+                ).map(({ field, label, hint }) => (
+                  <div key={field} className="space-y-1">
+                    <Label>{label}</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={(form.theme[field] as string) || DEFAULT_THEME[field]}
+                        onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, [field]: e.target.value } }))}
+                        className="h-9 w-12 rounded border cursor-pointer"
+                      />
+                      <Input
+                        value={(form.theme[field] as string) || ""}
+                        onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, [field]: e.target.value } }))}
+                        placeholder={hint}
+                        className="flex-1 font-mono text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-1">
+                <Label>Fuente especial (CSS font-family)</Label>
+                <Input
+                  value={form.theme.fontSpecial || ""}
+                  onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, fontSpecial: e.target.value } }))}
+                  placeholder={`default: ${DEFAULT_THEME.fontSpecial}`}
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">Ej: <code>"Dancing Script", cursive</code></p>
+              </div>
+              {/* Preview */}
+              {(() => {
+                const primary = (form.theme.primaryColor as string) || DEFAULT_THEME.primaryColor;
+                const accent  = (form.theme.accentColor  as string) || DEFAULT_THEME.accentColor;
+                const action  = (form.theme.actionColor  as string) || DEFAULT_THEME.actionColor;
+                const text    = (form.theme.textColor    as string) || DEFAULT_THEME.textColor;
+                const font    = form.theme.fontSpecial || DEFAULT_THEME.fontSpecial;
+                return (
+                  <div className="rounded-lg border overflow-hidden shadow-sm">
+                    {/* Header bar */}
+                    <div className="px-3 py-1.5 flex items-center gap-1.5" style={{ backgroundColor: accent }}>
+                      <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: primary }}>Vista previa</span>
+                    </div>
+                    {/* Invitation mock */}
+                    <div className="p-5 space-y-4" style={{ backgroundColor: primary }}>
+                      {/* Nombres / iniciales */}
+                      <div className="text-center space-y-1">
+                        <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: accent }}>
+                          ¡NOS CASAMOS!
+                        </p>
+                        <p className="text-4xl font-bold tracking-wide" style={{ color: accent, fontFamily: "serif" }}>
+                          J &amp; J
+                        </p>
+                        <p className="text-xs font-serif italic" style={{ color: accent, opacity: 0.75 }}>
+                          22 de Noviembre, 2025
+                        </p>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-px w-2/3 mx-auto" style={{ backgroundColor: accent, opacity: 0.3 }} />
+
+                      {/* Texto cuerpo */}
+                      <div className="text-center space-y-1">
+                        <p className="text-[11px] font-semibold tracking-wider uppercase" style={{ color: accent }}>
+                          CEREMONIA
+                        </p>
+                        <p className="text-[11px]" style={{ color: text }}>
+                          Iglesia La Medalla Milagrosa
+                        </p>
+                        <p className="text-[10px] opacity-70" style={{ color: text }}>
+                          Zarzal, Valle Del Cauca
+                        </p>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-px w-2/3 mx-auto" style={{ backgroundColor: accent, opacity: 0.3 }} />
+
+                      {/* Confirmar + texto especial */}
+                      <div className="text-center space-y-3">
+                        <p className="text-[11px] font-semibold tracking-wider uppercase" style={{ color: accent }}>
+                          CONFIRMAR ASISTENCIA
+                        </p>
+                        <button
+                          type="button"
+                          className="px-5 py-1.5 rounded-full text-white text-xs font-medium"
+                          style={{ backgroundColor: action }}
+                        >
+                          Novio &nbsp;·&nbsp; Novia
+                        </button>
+                        <p className="text-3xl" style={{ color: accent, fontFamily: font }}>
+                          Muchas Gracias!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </TabsContent>
 
             {/* ── Tab: Contacto ───────────────────────────── */}

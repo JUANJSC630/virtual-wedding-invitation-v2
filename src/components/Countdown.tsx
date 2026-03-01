@@ -86,7 +86,7 @@ const Countdown = () => {
         </motion.span>
       </motion.div>
       <motion.div
-        className="text-[#bfa15a] text-2xl md:text-3xl font-serif my-1"
+        className="text-[var(--color-accent)] text-2xl md:text-3xl font-serif my-1"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.6 }}
@@ -94,7 +94,7 @@ const Countdown = () => {
         Faltan
       </motion.div>
       <motion.div
-        className="flex items-center justify-center gap-2 text-3xl md:text-4xl font-bold text-[#162b4e]"
+        className="flex items-center justify-center gap-2 text-3xl md:text-4xl font-bold text-[var(--color-primary)]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.1, duration: 0.6 }}
@@ -110,7 +110,7 @@ const Countdown = () => {
             {String(timeLeft.days).padStart(2, "0")}
           </motion.span>
         </AnimatePresence>
-        <span className="text-[#bfa15a] font-normal">:</span>
+        <span className="text-[var(--color-accent)] font-normal">:</span>
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={timeLeft.hours}
@@ -122,7 +122,7 @@ const Countdown = () => {
             {String(timeLeft.hours).padStart(2, "0")}
           </motion.span>
         </AnimatePresence>
-        <span className="text-[#bfa15a] font-normal">:</span>
+        <span className="text-[var(--color-accent)] font-normal">:</span>
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={timeLeft.minutes}
@@ -134,7 +134,7 @@ const Countdown = () => {
             {String(timeLeft.minutes).padStart(2, "0")}
           </motion.span>
         </AnimatePresence>
-        <span className="text-[#bfa15a] font-normal">:</span>
+        <span className="text-[var(--color-accent)] font-normal">:</span>
         <AnimatePresence mode="wait" initial={false}>
           <motion.span
             key={timeLeft.seconds}

@@ -117,6 +117,7 @@ masterRoutes.post("/events", async (req, res) => {
         isActive: Boolean(isActive),
         config,
         assets: (typeof req.body.assets === "object" && req.body.assets !== null) ? req.body.assets : {},
+        theme: (typeof req.body.theme === "object" && req.body.theme !== null) ? req.body.theme : {},
       },
       include: { clientAdmins: true, _count: { select: { guests: true, guestAccesses: true } } },
     });
@@ -178,6 +179,9 @@ masterRoutes.patch("/events/:id", async (req, res) => {
         assets: (typeof req.body.assets === "object" && req.body.assets !== null)
           ? { ...(existing.assets || {}), ...req.body.assets }
           : (existing.assets || {}),
+        theme: (typeof req.body.theme === "object" && req.body.theme !== null)
+          ? { ...(existing.theme || {}), ...req.body.theme }
+          : (existing.theme || {}),
       },
       include: { clientAdmins: true, _count: { select: { guests: true, guestAccesses: true } } },
     });

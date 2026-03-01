@@ -5,12 +5,13 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Route, Routes, useNavigate, useParams } from "react-router-dom";
 
-import { AdminUser, Event, Guest } from "@/types";
+import { AdminUser, Event, Guest, ThemeConfig } from "@/types";
 
 import { queryClient } from "@/lib/query-client";
 
 import { AssetContext, DEFAULT_ASSETS } from "@/context/AssetContext";
 import { EventContext } from "@/context/EventContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 import AdminDashboard from "@/components/AdminDashboard";
 import GuestCodeEntry from "@/components/GuestCodeEntry";
@@ -194,6 +195,7 @@ const WeddingInvitation: React.FC = () => {
 
   return (
     <EventContext.Provider value={{ event, loading: eventLoading }}>
+    <ThemeProvider theme={(event?.theme as ThemeConfig) ?? {}}>
     <AssetContext.Provider value={mergedAssets}>
       <main className="w-full flex flex-col justify-center items-center bg-white" role="main">
         <div className="max-w-2xl mx-auto">
@@ -209,6 +211,7 @@ const WeddingInvitation: React.FC = () => {
         </div>
       </main>
     </AssetContext.Provider>
+    </ThemeProvider>
     </EventContext.Provider>
   );
 };

@@ -125,7 +125,7 @@ const InvitationSection8 = () => {
                 transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 200 }}
               />
               <motion.p
-                className="text-2xl md:text-3xl font-serif font-semibold text-[#162b4e] text-center mb-2 tracking-wide"
+                className="text-2xl md:text-3xl font-serif font-semibold text-[var(--color-primary)] text-center mb-2 tracking-wide"
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
@@ -134,7 +134,7 @@ const InvitationSection8 = () => {
                 {giftsLabel}
               </motion.p>
               <motion.p
-                className="text-center text-base md:text-lg text-[#162b4e] mb-2 max-w-xl"
+                className="text-center text-base md:text-lg text-[var(--color-primary)] mb-2 max-w-xl"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true, amount: 0.3 }}
@@ -143,7 +143,7 @@ const InvitationSection8 = () => {
                 {giftMessage}
               </motion.p>
               <motion.div
-                className="text-xl md:text-2xl font-serif font-semibold text-[#162b4e] text-center mt-4 mb-2 tracking-wide"
+                className="text-xl md:text-2xl font-serif font-semibold text-[var(--color-primary)] text-center mt-4 mb-2 tracking-wide"
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
@@ -172,7 +172,7 @@ const InvitationSection8 = () => {
               transition={{ duration: 0.8, delay: 1.4 }}
             >
               <motion.p
-                className="text-2xl md:text-3xl font-serif font-bold text-center tracking-wide text-[#bfa15a]"
+                className="text-2xl md:text-3xl font-serif font-bold text-center tracking-wide text-[var(--color-accent)]"
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, amount: 0.3 }}
@@ -195,7 +195,7 @@ const InvitationSection8 = () => {
                   transition={{ duration: 0.4, delay: 2.0, type: "spring", stiffness: 200 }}
                 >
                   <Button
-                    className={`!bg-[#466691] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
+                    className={`!bg-[var(--color-action)] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
                       isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
                     }`}
                     onClick={() => {
@@ -228,7 +228,7 @@ const InvitationSection8 = () => {
                   transition={{ duration: 0.4, delay: 2.2, type: "spring", stiffness: 200 }}
                 >
                   <Button
-                    className={`!bg-[#466691] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
+                    className={`!bg-[var(--color-action)] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
                       isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
                     }`}
                     onClick={() => {
@@ -262,7 +262,7 @@ const InvitationSection8 = () => {
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.5, delay: 2.4 }}
               >
-                <p className="text-[#bfa15a] font-serif text-center w-full opacity-80">
+                <p className="text-[var(--color-accent)] font-serif text-center w-full opacity-80">
                   {deadlineLabel}{" "}
                   <span className="font-semibold">{deadlineText}</span>
                 </p>
@@ -274,7 +274,7 @@ const InvitationSection8 = () => {
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.5, delay: 2.6 }}
               >
-                <p className="text-sm text-[#bfa15a] font-serif text-center w-full opacity-80">
+                <p className="text-sm text-[var(--color-accent)] font-serif text-center w-full opacity-80">
                   {isAfterDeadline ? closedLabel : ""}
                 </p>
               </motion.div>
@@ -282,12 +282,12 @@ const InvitationSection8 = () => {
           </div>
           {/* Mensaje final */}
           <div className="flex flex-col items-center justify-start w-full h-[250px] gap-2">
-            <p className="text-lg md:text-xl font-serif text-[#162b4e] text-center tracking-wide mb-2">
+            <p className="text-lg md:text-xl font-serif text-[var(--color-primary)] text-center tracking-wide mb-2">
               {closingLabel}
             </p>
             <p
-              className="text-5xl font-[cursive,serif] text-gray-700 text-center font-light italic"
-              style={{ fontFamily: '"Great Vibes", cursive, serif' }}
+              className="text-5xl font-[cursive,serif] text-[var(--color-primary)] text-center font-light italic"
+              style={{ fontFamily: "var(--font-special)" }}
             >
               {thanksLabel}
             </p>

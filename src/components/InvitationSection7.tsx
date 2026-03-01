@@ -53,8 +53,8 @@ const InvitationSection7 = () => {
         className={`flex flex-col ${side === "left" ? "items-end" : "items-start"}`}
       >
         <img src={icon.src} alt={icon.alt} loading="lazy" className="w-20 h-20 mb-1" />
-        <span className="text-base font-semibold text-[#162b4e]">{item.time}</span>
-        <span className={`text-sm md:text-base font-serif text-[#162b4e] ${side === "left" ? "text-right" : "text-left"}`}>
+        <span className="text-base font-semibold text-[var(--color-primary)]">{item.time}</span>
+        <span className={`text-sm md:text-base font-serif text-[var(--color-primary)] ${side === "left" ? "text-right" : "text-left"}`}>
           {item.label}
         </span>
       </motion.div>
@@ -87,7 +87,7 @@ const InvitationSection7 = () => {
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <p className="text-4xl font-serif text-[#bfa15a] text-center">{title}</p>
+            <p className="text-4xl font-serif text-[var(--color-accent)] text-center">{title}</p>
           </motion.div>
 
           {/* Grid de 3 columnas */}

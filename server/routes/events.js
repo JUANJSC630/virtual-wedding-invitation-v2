@@ -25,6 +25,7 @@ eventRoutes.get("/:slug", async (req, res) => {
         dressCode: true,
         config: true,
         assets: true,
+        theme: true,
         isActive: true,
         heroPhotoUrl: true,
         photo2Url: true,

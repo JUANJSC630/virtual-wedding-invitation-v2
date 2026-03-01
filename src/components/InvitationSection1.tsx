@@ -62,10 +62,10 @@ const InvitationSection1 = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <p className="text-xl font-serif text-gray-800 leading-relaxed italic mb-4">
+            <p className="text-xl font-serif text-[var(--color-primary)] leading-relaxed italic mb-4">
               "{verseText}"
             </p>
-            <p className="text-sm text-gray-600 font-light">{verseRef}</p>
+            <p className="text-sm text-[var(--color-primary)] opacity-70 font-light">{verseRef}</p>
           </motion.div>
 
           {/* Iniciales elegantes */}
@@ -77,7 +77,7 @@ const InvitationSection1 = () => {
           >
             <div className="flex items-center justify-center gap-4">
               <motion.span
-                className="font-serif text-gray-800 font-bold"
+                className="font-serif text-[var(--color-primary)] font-bold"
                 style={{ fontSize: "clamp(4rem, 18vw, 6rem)" }}
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -86,13 +86,13 @@ const InvitationSection1 = () => {
                 {brideInitial}
               </motion.span>
               <motion.div
-                className="w-px h-16 bg-gray-400"
+                className="w-px h-16 bg-[var(--color-accent)]"
                 initial={{ opacity: 0, scaleY: 0 }}
                 animate={{ opacity: 1, scaleY: 1 }}
                 transition={{ duration: 0.4, delay: 0.8 }}
               ></motion.div>
               <motion.span
-                className="font-serif text-gray-800 font-bold"
+                className="font-serif text-[var(--color-primary)] font-bold"
                 style={{ fontSize: "clamp(4rem, 18vw, 6rem)" }}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -110,7 +110,7 @@ const InvitationSection1 = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.0 }}
           >
-            <p className="text-3xl font-medium text-gray-800 tracking-wider">{announcementText}</p>
+            <p className="text-3xl font-medium text-[var(--color-primary)] tracking-wider">{announcementText}</p>
           </motion.div>
         </div>
       </div>

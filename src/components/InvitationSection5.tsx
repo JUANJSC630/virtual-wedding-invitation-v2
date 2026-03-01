@@ -61,7 +61,7 @@ const InvitationSection5 = () => {
           <div className="flex flex-col gap-8 text-center">
             <div className="flex flex-col gap-6 relative">
               <motion.h2
-                className="text-2xl md:text-3xl text-[#bfa15a] font-serif text-center mb-2"
+                className="text-2xl md:text-3xl text-[var(--color-accent)] font-serif text-center mb-2"
                 custom={0}
                 variants={fadeInUp}
                 initial="hidden"
@@ -72,7 +72,7 @@ const InvitationSection5 = () => {
 
               {brideParents.length > 0 && (
                 <motion.div
-                  className="text-center mb-2"
+                  className="text-center mb-2 text-[var(--color-primary)]"
                   custom={1}
                   variants={fadeInUp}
                   initial="hidden"
@@ -87,7 +87,7 @@ const InvitationSection5 = () => {
 
               {groomParents.length > 0 && (
                 <motion.div
-                  className="text-center mb-2"
+                  className="text-center mb-2 text-[var(--color-primary)]"
                   custom={2}
                   variants={fadeInUp}
                   initial="hidden"
@@ -102,7 +102,7 @@ const InvitationSection5 = () => {
 
               {(godparents.length > 0 || bridesmaids.length > 0 || groomsmen.length > 0) && (
                 <motion.h3
-                  className="text-xl md:text-2xl text-[#bfa15a] font-serif text-center my-2"
+                  className="text-xl md:text-2xl text-[var(--color-accent)] font-serif text-center my-2"
                   custom={3}
                   variants={fadeInUp}
                   initial="hidden"
@@ -114,7 +114,7 @@ const InvitationSection5 = () => {
 
               {godparents.length > 0 && (
                 <motion.div
-                  className="text-center mb-2"
+                  className="text-center mb-2 text-[var(--color-primary)]"
                   custom={4}
                   variants={fadeInUp}
                   initial="hidden"
@@ -129,7 +129,7 @@ const InvitationSection5 = () => {
 
               {(bridesmaids.length > 0 || groomsmen.length > 0) && (
                 <motion.div
-                  className="flex flex-col md:flex-row justify-center gap-8 mt-4 w-full max-w-2xl mx-auto"
+                  className="flex flex-col md:flex-row justify-center gap-8 mt-4 w-full max-w-2xl mx-auto text-[var(--color-primary)]"
                   custom={5}
                   variants={fadeInUp}
                   initial="hidden"
