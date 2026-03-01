@@ -51,9 +51,6 @@ export const useAllGuests = () => {
   return useQuery({
     queryKey: ["guests", "all"],
     queryFn: getAllGuests,
-    refetchOnWindowFocus: true,
-    refetchInterval: 10000, // Actualizar cada 10 segundos
-    staleTime: 0, // Considerar datos como obsoletos inmediatamente
   });
 };
 
@@ -79,12 +76,8 @@ export const useUpdateGuest = () => {
       updateGuest(id, updates),
     onSuccess: updatedGuest => {
       queryClient.setQueryData(["guest", "code", updatedGuest.code], updatedGuest);
-      // Invalidar y refetch inmediatamente
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
-      // Forzar refetch inmediato
-      queryClient.refetchQueries({ queryKey: ["guests", "all"] });
-      queryClient.refetchQueries({ queryKey: ["admin", "stats"] });
     },
   });
 };
@@ -109,14 +102,9 @@ export const useCreateCompanion = () => {
   return useMutation({
     mutationFn: createCompanion,
     onSuccess: () => {
-      // Invalidar y refetch inmediatamente
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
       queryClient.invalidateQueries({ queryKey: ["guest", "byCode"] });
-      // Forzar refetch inmediato
-      queryClient.refetchQueries({ queryKey: ["guests", "all"] });
-      queryClient.refetchQueries({ queryKey: ["admin", "stats"] });
-      queryClient.refetchQueries({ queryKey: ["guest", "byCode"] });
     },
   });
 };
@@ -129,14 +117,9 @@ export const useUpdateCompanion = () => {
     mutationFn: ({ id, updates }: { id: string; updates: { confirmed: boolean } }) =>
       updateCompanion(id, updates),
     onSuccess: () => {
-      // Invalidar y refetch inmediatamente
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
       queryClient.invalidateQueries({ queryKey: ["guest", "byCode"] });
-      // Forzar refetch inmediato
-      queryClient.refetchQueries({ queryKey: ["guests", "all"] });
-      queryClient.refetchQueries({ queryKey: ["admin", "stats"] });
-      queryClient.refetchQueries({ queryKey: ["guest", "byCode"] });
     },
   });
 };
@@ -148,14 +131,9 @@ export const useDeleteCompanion = () => {
   return useMutation({
     mutationFn: deleteCompanion,
     onSuccess: () => {
-      // Invalidar y refetch inmediatamente
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
       queryClient.invalidateQueries({ queryKey: ["guest", "byCode"] });
-      // Forzar refetch inmediato
-      queryClient.refetchQueries({ queryKey: ["guests", "all"] });
-      queryClient.refetchQueries({ queryKey: ["admin", "stats"] });
-      queryClient.refetchQueries({ queryKey: ["guest", "byCode"] });
     },
   });
 };
@@ -165,9 +143,6 @@ export const useGuestStats = () => {
   return useQuery({
     queryKey: ["admin", "stats"],
     queryFn: getGuestStats,
-    refetchOnWindowFocus: true,
-    refetchInterval: 15000, // Actualizar cada 15 segundos
-    staleTime: 0, // Considerar datos como obsoletos inmediatamente
   });
 };
 
@@ -176,8 +151,5 @@ export const useAnalytics = () => {
   return useQuery({
     queryKey: ["admin", "analytics"],
     queryFn: getAnalytics,
-    refetchOnWindowFocus: true,
-    refetchInterval: 30000, // Actualizar cada 30 segundos
-    staleTime: 0, // Considerar datos como obsoletos inmediatamente
   });
 };

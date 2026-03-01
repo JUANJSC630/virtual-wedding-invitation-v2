@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Route, Routes, useNavigate, useParams } from "react-router-dom";
 
 import { AdminUser, Event, Guest } from "@/types";
+
+import { queryClient } from "@/lib/query-client";
 
 import { EventContext } from "@/context/EventContext";
 
@@ -24,17 +26,6 @@ import InvitationSection7 from "@/components/InvitationSection7";
 import InvitationSection8 from "@/components/InvitationSection8";
 import InvitationSection9 from "@/components/InvitationSection9";
 import MasterDashboard from "@/components/master/MasterDashboard";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 30,
-      retry: 1,
-      refetchOnWindowFocus: true,
-      refetchOnReconnect: true,
-    },
-  },
-});
 
 // ─── Panel de admin (client) ──────────────────────────────────────────────────
 
