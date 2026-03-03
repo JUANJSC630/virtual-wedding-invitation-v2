@@ -1484,12 +1484,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
   const [selectedEventForAdmin, setSelectedEventForAdmin] = useState<EventWithStats | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importEventId, setImportEventId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoadingEvents(true);
     try {
       const [evRes, stRes] = await Promise.all([
-        fetch("/api/master/events", { credentials: "include" }),
+        fetch(`/api/master/events${showArchived ? "?archived=1" : ""}`, { credentials: "include" }),
         fetch("/api/master/stats", { credentials: "include" }),
       ]);
       if (evRes.ok) setEvents(await evRes.json());
@@ -1499,7 +1500,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
     } finally {
       setLoadingEvents(false);
     }
-  }, []);
+  }, [showArchived]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -1551,6 +1552,29 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
       loadData();
     } catch {
       toast.error("Error al eliminar evento");
+    }
+  };
+
+  const handleArchiveEvent = async (ev: EventWithStats) => {
+    if (!confirm(`¿Archivar "${ev.slug}"? El evento dejará de ser accesible públicamente.`)) return;
+    try {
+      const res = await fetch(`/api/master/events/${ev.id}/archive`, { method: "POST", credentials: "include" });
+      if (!res.ok) throw new Error();
+      toast.success("Evento archivado");
+      loadData();
+    } catch {
+      toast.error("Error al archivar evento");
+    }
+  };
+
+  const handleUnarchiveEvent = async (ev: EventWithStats) => {
+    try {
+      const res = await fetch(`/api/master/events/${ev.id}/unarchive`, { method: "POST", credentials: "include" });
+      if (!res.ok) throw new Error();
+      toast.success("Evento restaurado");
+      loadData();
+    } catch {
+      toast.error("Error al restaurar evento");
     }
   };
 
@@ -1649,12 +1673,30 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
 
         {/* Events section */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Eventos</h2>
-            <Button onClick={handleCreateEvent} size="sm">
-              <Plus className="h-4 w-4 mr-1" />
-              Nuevo evento
-            </Button>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold">Eventos</h2>
+              <div className="flex rounded-lg border overflow-hidden text-xs">
+                <button
+                  onClick={() => setShowArchived(false)}
+                  className={`px-3 py-1.5 transition-colors ${!showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                >
+                  Activos
+                </button>
+                <button
+                  onClick={() => setShowArchived(true)}
+                  className={`px-3 py-1.5 transition-colors ${showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                >
+                  Archivados
+                </button>
+              </div>
+            </div>
+            {!showArchived && (
+              <Button onClick={handleCreateEvent} size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Nuevo evento
+              </Button>
+            )}
           </div>
 
           {loadingEvents ? (
@@ -1675,9 +1717,10 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                         <p className="font-semibold text-base">{ev.brideName} &amp; {ev.groomName}</p>
                         <p className="text-xs text-muted-foreground font-mono">/{ev.slug}</p>
                       </div>
-                      <Badge variant={ev.isActive ? "default" : "secondary"}>
-                        {ev.isActive ? "Activo" : "Inactivo"}
-                      </Badge>
+                      {ev.archivedAt
+                        ? <Badge variant="outline" className="text-amber-600 border-amber-300">Archivado</Badge>
+                        : <Badge variant={ev.isActive ? "default" : "secondary"}>{ev.isActive ? "Activo" : "Inactivo"}</Badge>
+                      }
                     </div>
                   </CardHeader>
 
@@ -1775,6 +1818,28 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                         <FileUp className="h-3.5 w-3.5" />
                         Importar CSV
                       </Button>
+
+                      {showArchived ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUnarchiveEvent(ev)}
+                          className="flex items-center gap-1"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          Restaurar
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleArchiveEvent(ev)}
+                          className="flex items-center gap-1 text-amber-600 hover:text-amber-700 border-amber-300 hover:border-amber-400"
+                        >
+                          <EyeOff className="h-3.5 w-3.5" />
+                          Archivar
+                        </Button>
+                      )}
 
                       <Button
                         size="sm"

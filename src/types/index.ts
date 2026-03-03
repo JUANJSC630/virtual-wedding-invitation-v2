@@ -236,6 +236,7 @@ export interface Event {
   assets: AssetMap;
   theme: ThemeConfig;
   isActive: boolean;
+  archivedAt?: string | null;
   heroPhotoUrl?: string;
   photo2Url?: string;
   photo3Url?: string;

@@ -60,7 +60,9 @@ function buildConfig(body) {
 
 masterRoutes.get("/events", async (req, res) => {
   try {
+    const showArchived = req.query.archived === "1";
     const events = await prisma.event.findMany({
+      where: showArchived ? { archivedAt: { not: null } } : { archivedAt: null },
       orderBy: { createdAt: "desc" },
       include: {
         clientAdmins: { select: { id: true, email: true, name: true } },
@@ -257,6 +259,40 @@ masterRoutes.post("/events/:id/duplicate", async (req, res) => {
   }
 });
 
+// ─── POST /api/master/events/:id/archive — archivar evento ───────────────────
+
+masterRoutes.post("/events/:id/archive", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const event = await prisma.event.update({
+      where: { id },
+      data: { archivedAt: new Date(), isActive: false },
+      include: { clientAdmins: true, _count: { select: { guests: true, guestAccesses: true } } },
+    });
+    res.json(event);
+  } catch (error) {
+    console.error("Error archiving event:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ─── POST /api/master/events/:id/unarchive — desarchivar evento ───────────────
+
+masterRoutes.post("/events/:id/unarchive", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const event = await prisma.event.update({
+      where: { id },
+      data: { archivedAt: null },
+      include: { clientAdmins: true, _count: { select: { guests: true, guestAccesses: true } } },
+    });
+    res.json(event);
+  } catch (error) {
+    console.error("Error unarchiving event:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // ─── DELETE /api/master/events/:id — eliminar evento ─────────────────────────
 
 masterRoutes.delete("/events/:id", async (req, res) => {
@@ -440,11 +476,11 @@ masterRoutes.get("/stats", async (req, res) => {
   try {
     const [totalEvents, activeEvents, totalGuests, confirmedGuests, totalAccesses] =
       await Promise.all([
-        prisma.event.count(),
-        prisma.event.count({ where: { isActive: true } }),
-        prisma.guest.count(),
-        prisma.guest.count({ where: { confirmed: true } }),
-        prisma.guestAccess.count(),
+        prisma.event.count({ where: { archivedAt: null } }),
+        prisma.event.count({ where: { isActive: true, archivedAt: null } }),
+        prisma.guest.count({ where: { event: { archivedAt: null } } }),
+        prisma.guest.count({ where: { confirmed: true, event: { archivedAt: null } } }),
+        prisma.guestAccess.count({ where: { event: { archivedAt: null } } }),
       ]);
 
     res.json({ totalEvents, activeEvents, totalGuests, confirmedGuests, totalAccesses });

@@ -37,7 +37,8 @@ model Event {
   config         Json     @default("{}")
   assets         Json     @default("{}")
   theme          Json     @default("{}")
-  isActive       Boolean  @default(true)
+  isActive       Boolean   @default(true)
+  archivedAt     DateTime?
   heroPhotoUrl   String?
   photo2Url      String?
   photo3Url      String?

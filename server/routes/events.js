@@ -27,6 +27,7 @@ eventRoutes.get("/:slug", async (req, res) => {
         assets: true,
         theme: true,
         isActive: true,
+        archivedAt: true,
         heroPhotoUrl: true,
         photo2Url: true,
         photo3Url: true,
@@ -38,7 +39,7 @@ eventRoutes.get("/:slug", async (req, res) => {
       },
     });
 
-    if (!event || !event.isActive) {
+    if (!event || !event.isActive || event.archivedAt) {
       return res.status(404).json({ error: "Evento no encontrado" });
     }
 
