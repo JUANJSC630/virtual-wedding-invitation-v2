@@ -36,3 +36,4 @@ dev.db-journal
 
 # Prisma
 generated/
+.claude/settings.local.json
