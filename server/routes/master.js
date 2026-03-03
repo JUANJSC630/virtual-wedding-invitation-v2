@@ -470,6 +470,26 @@ masterRoutes.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
+// ─── GET /api/master/recent-confirmations — últimas 10 confirmaciones ────────
+
+masterRoutes.get("/recent-confirmations", async (req, res) => {
+  try {
+    const guests = await prisma.guest.findMany({
+      where: { confirmed: true, confirmedAt: { not: null }, event: { archivedAt: null } },
+      orderBy: { confirmedAt: "desc" },
+      take: 10,
+      select: {
+        id: true, name: true, confirmedAt: true,
+        event: { select: { slug: true, groomName: true, brideName: true } },
+      },
+    });
+    res.json(guests);
+  } catch (error) {
+    console.error("Error getting recent confirmations:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // ─── GET /api/master/stats — estadísticas globales ───────────────────────────
 
 masterRoutes.get("/stats", async (req, res) => {
