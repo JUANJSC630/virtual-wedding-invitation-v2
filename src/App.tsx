@@ -244,7 +244,7 @@ function App(): React.JSX.Element {
             error: { style: { background: "#ef4444" } },
           }}
         />
-        <ReactQueryDevtools initialIsOpen={false} />
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
     </BrowserRouter>
   );

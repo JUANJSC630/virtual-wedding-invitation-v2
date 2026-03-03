@@ -70,6 +70,7 @@ const InvitationSection6 = () => {
                   <img
                     src={assets.church}
                     alt="Iglesia San Juan Bautista"
+                    loading="lazy"
                     style={{ width: 90, height: 90 }}
                     className="mx-auto"
                   />
@@ -145,6 +146,7 @@ const InvitationSection6 = () => {
                   <img
                     src={assets.glasses}
                     alt="Recepción copas brindis"
+                    loading="lazy"
                     style={{ width: 90, height: 90 }}
                     className="mx-auto"
                   />

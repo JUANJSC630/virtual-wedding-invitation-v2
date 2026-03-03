@@ -130,6 +130,7 @@ const InvitationSection3 = () => {
                   <img
                     src={assets.sideBouquet}
                     alt="Flores decorativas"
+                    loading="lazy"
                     className="w-full h-full object-contain"
                   />
                 </motion.div>
@@ -160,6 +161,7 @@ const InvitationSection3 = () => {
                   <img
                     src={assets.sideBouquet}
                     alt="Flores decorativas"
+                    loading="lazy"
                     className="w-full h-full object-contain"
                   />
                 </motion.div>

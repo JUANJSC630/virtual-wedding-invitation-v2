@@ -26,9 +26,9 @@ const useGuestByCode = (code: string, eventSlug: string) => {
       const data = await response.json();
       return data.valid ? data.guest : null;
     },
-    refetchInterval: 5000,
+    refetchInterval: 30000,
     refetchOnWindowFocus: true,
-    staleTime: 1000,
+    staleTime: 10000,
   });
 };
 

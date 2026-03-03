@@ -40,6 +40,7 @@ const InvitationSection2 = () => {
         <img
           src={photoUrl}
           alt="Foto de los novios"
+          loading="lazy"
           className="w-full object-cover block"
           style={{
             aspectRatio: "9/16",
