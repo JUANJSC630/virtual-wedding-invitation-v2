@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import { DEFAULT_ASSETS } from "@/context/AssetContext";
-import { DEFAULT_THEME } from "@/context/ThemeContext";
+import { DEFAULT_THEME, SERIF_PRESETS } from "@/context/ThemeContext";
 import { AdminUser, AssetMap, EventWithStats, GalleryPhoto, SectionsConfig, ThemeConfig, TimelineItem } from "@/types";
 
 import { Badge } from "@/components/ui/badge";
@@ -219,6 +219,19 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
   useEffect(() => {
     setForm(editingEvent ? eventToForm(editingEvent) : emptyForm);
   }, [editingEvent, open]);
+
+  // Cargar Google Font para el preview cuando cambia el selector
+  useEffect(() => {
+    const fontSerif = form.theme.fontSerif?.trim();
+    if (!fontSerif || !SERIF_PRESETS.includes(fontSerif)) return;
+    const id = `gfont-${fontSerif.replace(/\s+/g, "-")}`;
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?family=${fontSerif.replace(/ /g, "+")}:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap`;
+    document.head.appendChild(link);
+  }, [form.theme.fontSerif]);
 
   const set = (field: keyof EventFormData) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -873,7 +886,21 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                 ))}
               </div>
               <div className="space-y-1">
-                <Label>Fuente especial (CSS font-family)</Label>
+                <Label>Fuente serif (textos principales)</Label>
+                <select
+                  value={form.theme.fontSerif || ""}
+                  onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, fontSerif: e.target.value } }))}
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                >
+                  <option value="">Serif del sistema (default)</option>
+                  {SERIF_PRESETS.map(f => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground">Se aplica a todos los textos de la invitación.</p>
+              </div>
+              <div className="space-y-1">
+                <Label>Fuente especial (cursiva — CSS font-family)</Label>
                 <Input
                   value={form.theme.fontSpecial || ""}
                   onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, fontSpecial: e.target.value } }))}
@@ -884,54 +911,41 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               </div>
               {/* Preview */}
               {(() => {
-                const primary = (form.theme.primaryColor as string) || DEFAULT_THEME.primaryColor;
-                const accent  = (form.theme.accentColor  as string) || DEFAULT_THEME.accentColor;
-                const action  = (form.theme.actionColor  as string) || DEFAULT_THEME.actionColor;
-                const text    = (form.theme.textColor    as string) || DEFAULT_THEME.textColor;
-                const font    = form.theme.fontSpecial || DEFAULT_THEME.fontSpecial;
+                const primary  = (form.theme.primaryColor as string) || DEFAULT_THEME.primaryColor;
+                const accent   = (form.theme.accentColor  as string) || DEFAULT_THEME.accentColor;
+                const action   = (form.theme.actionColor  as string) || DEFAULT_THEME.actionColor;
+                const text     = (form.theme.textColor    as string) || DEFAULT_THEME.textColor;
+                const font     = form.theme.fontSpecial || DEFAULT_THEME.fontSpecial;
+                const serif    = form.theme.fontSerif ? `"${form.theme.fontSerif}", serif` : "ui-serif, Georgia, serif";
                 return (
                   <div className="rounded-lg border overflow-hidden shadow-sm">
-                    {/* Header bar */}
                     <div className="px-3 py-1.5 flex items-center gap-1.5" style={{ backgroundColor: accent }}>
                       <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: primary }}>Vista previa</span>
                     </div>
-                    {/* Invitation mock */}
                     <div className="p-5 space-y-4" style={{ backgroundColor: primary }}>
-                      {/* Nombres / iniciales */}
                       <div className="text-center space-y-1">
-                        <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: accent }}>
+                        <p className="text-[10px] tracking-[0.3em] uppercase" style={{ color: accent, fontFamily: serif }}>
                           ¡NOS CASAMOS!
                         </p>
-                        <p className="text-4xl font-bold tracking-wide" style={{ color: accent, fontFamily: "serif" }}>
+                        <p className="text-4xl font-bold tracking-wide" style={{ color: accent, fontFamily: serif }}>
                           J &amp; J
                         </p>
-                        <p className="text-xs font-serif italic" style={{ color: accent, opacity: 0.75 }}>
+                        <p className="text-xs italic" style={{ color: accent, opacity: 0.75, fontFamily: serif }}>
                           22 de Noviembre, 2025
                         </p>
                       </div>
-
-                      {/* Divider */}
                       <div className="h-px w-2/3 mx-auto" style={{ backgroundColor: accent, opacity: 0.3 }} />
-
-                      {/* Texto cuerpo */}
                       <div className="text-center space-y-1">
-                        <p className="text-[11px] font-semibold tracking-wider uppercase" style={{ color: accent }}>
+                        <p className="text-[11px] font-semibold tracking-wider uppercase" style={{ color: accent, fontFamily: serif }}>
                           CEREMONIA
                         </p>
-                        <p className="text-[11px]" style={{ color: text }}>
+                        <p className="text-[11px]" style={{ color: text, fontFamily: serif }}>
                           Iglesia La Medalla Milagrosa
                         </p>
-                        <p className="text-[10px] opacity-70" style={{ color: text }}>
-                          Zarzal, Valle Del Cauca
-                        </p>
                       </div>
-
-                      {/* Divider */}
                       <div className="h-px w-2/3 mx-auto" style={{ backgroundColor: accent, opacity: 0.3 }} />
-
-                      {/* Confirmar + texto especial */}
                       <div className="text-center space-y-3">
-                        <p className="text-[11px] font-semibold tracking-wider uppercase" style={{ color: accent }}>
+                        <p className="text-[11px] font-semibold tracking-wider uppercase" style={{ color: accent, fontFamily: serif }}>
                           CONFIRMAR ASISTENCIA
                         </p>
                         <button

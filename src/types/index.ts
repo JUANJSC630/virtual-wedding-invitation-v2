@@ -105,6 +105,7 @@ export interface ThemeConfig {
   actionColor?:  string;  // default #466691 (blue buttons)
   textColor?:    string;  // default #374151 (body text)
   fontSpecial?:  string;  // default "Great Vibes", cursive
+  fontSerif?:    string;  // default "" (system serif); Google Font name e.g. "Playfair Display"
 }
 
 // Asset Map
