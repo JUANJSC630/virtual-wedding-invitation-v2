@@ -1,9 +1,11 @@
 import { useRef } from "react";
 
+import { CalendarPlus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
+import { downloadICS } from "@/lib/generateICS";
 import DressCodeIcons from "@/components/ui/DressCodeIcons";
 import { Button } from "@/components/ui/button";
 
@@ -29,13 +31,28 @@ const InvitationSection6 = () => {
     gentlemen: "EVITAR COLORES BEIGE Y AZUL MARINO.",
   };
 
-  const labels         = event?.config?.labels;
-  const ceremonyLabel  = labels?.ceremony    ?? "CEREMONIA";
-  const receptionLabel = labels?.reception   ?? "RECEPCIÓN";
-  const viewLocation   = labels?.viewLocation ?? "Ver ubicación";
-  const dressCodeLabel = labels?.dressCode   ?? "Código de vestimenta:";
-  const ladiesLabel    = labels?.ladies      ?? "ELLAS:";
-  const gentlemenLabel = labels?.gentlemen   ?? "ELLOS:";
+  const labels            = event?.config?.labels;
+  const ceremonyLabel     = labels?.ceremony       ?? "CEREMONIA";
+  const receptionLabel    = labels?.reception      ?? "RECEPCIÓN";
+  const viewLocation      = labels?.viewLocation   ?? "Ver ubicación";
+  const dressCodeLabel    = labels?.dressCode      ?? "Código de vestimenta:";
+  const ladiesLabel       = labels?.ladies         ?? "ELLAS:";
+  const gentlemenLabel    = labels?.gentlemen      ?? "ELLOS:";
+  const addCalendarLabel  = labels?.addToCalendar  ?? "Guardar en calendario";
+
+  const handleAddToCalendar = () => {
+    if (!event?.eventDate) return;
+    downloadICS({
+      title:            `${event.brideName} & ${event.groomName}`,
+      date:             event.eventDate,
+      ceremonyTime:     event.ceremonyTime    ?? "6:00 PM",
+      ceremonyName:     ceremony.name,
+      ceremonyAddress:  ceremony.address,
+      receptionTime:    event.receptionTime   ?? "8:00 PM",
+      receptionName:    reception.name,
+      receptionAddress: reception.address,
+    });
+  };
 
   const ref = useRef(null);
 
@@ -208,6 +225,22 @@ const InvitationSection6 = () => {
                 </motion.div>
               </div>
             </div>
+            {/* Agregar al calendario */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Button
+                onClick={handleAddToCalendar}
+                className="!bg-[var(--color-action)] !text-white !rounded-full gap-2"
+              >
+                <CalendarPlus className="h-4 w-4" />
+                {addCalendarLabel}
+              </Button>
+            </motion.div>
+
             {/* Bloque código de vestimenta */}
             <motion.div className="flex flex-col items-center justify-center w-full gap-6">
               {/* Título animado hacia abajo */}
