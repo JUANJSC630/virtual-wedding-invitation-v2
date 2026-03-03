@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Guest } from "@/types";
@@ -10,6 +10,7 @@ import { useAllGuests, useDeleteGuest, useUpdateGuest } from "@/hooks/useGuests"
 import { Button } from "@/components/ui/button";
 
 import CompanionsModal from "./CompanionsModal";
+import CSVImportModal from "./CSVImportModal";
 import GuestFilterBar from "./GuestFilterBar";
 import GuestFormModal from "./GuestFormModal";
 import GuestList from "./GuestList";
@@ -29,6 +30,7 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrGuest, setQrGuest] = useState<Guest | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -177,10 +179,14 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
             Administra y da seguimiento a todos los invitados de tu boda
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button onClick={handleExportCSV} variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
+          </Button>
+          <Button onClick={() => setShowImportModal(true)} variant="outline">
+            <Upload className="mr-2 h-4 w-4" />
+            Importar CSV
           </Button>
           <Button
             onClick={() => {
@@ -246,6 +252,11 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
         onOpenChange={setShowQRModal}
         guest={qrGuest}
         eventSlug={eventSlug}
+      />
+
+      <CSVImportModal
+        open={showImportModal}
+        onOpenChange={setShowImportModal}
       />
     </div>
   );

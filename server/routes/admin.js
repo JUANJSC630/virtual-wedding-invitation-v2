@@ -124,6 +124,55 @@ adminRoutes.delete("/guests/:id", async (req, res) => {
   }
 });
 
+// Importar invitados desde CSV
+adminRoutes.post("/guests/import", async (req, res) => {
+  try {
+    const eventId = req.user.eventId;
+    if (!eventId) return res.status(400).json({ error: "eventId es requerido" });
+
+    const { rows } = req.body; // [{ code, name, email, phone, maxGuests }]
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ error: "No hay filas para importar" });
+    }
+
+    let created = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (const row of rows) {
+      const code = (row.code || "").trim().toUpperCase();
+      const name = (row.name || "").trim();
+      if (!code || !name) {
+        errors.push({ code: code || "?", reason: "código y nombre son obligatorios" });
+        continue;
+      }
+      const maxGuests = parseInt(row.maxGuests, 10) || 1;
+
+      const exists = await prisma.guest.findUnique({
+        where: { eventId_code: { eventId, code } },
+      });
+      if (exists) { skipped++; continue; }
+
+      await prisma.guest.create({
+        data: {
+          eventId,
+          code,
+          name,
+          email: row.email?.trim() || undefined,
+          phone: row.phone?.trim() || undefined,
+          maxGuests,
+        },
+      });
+      created++;
+    }
+
+    res.json({ created, skipped, errors });
+  } catch (error) {
+    console.error("Error importing guests:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // Crear acompañante
 adminRoutes.post("/companions", async (req, res) => {
   try {
