@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 
 import { Shuffle } from "lucide-react";
 import toast from "react-hot-toast";
+import { z } from "zod";
+
+import { extractZodErrors, guestFormSchema } from "@/lib/schemas";
 
 import { CreateGuestInput, Guest, UpdateGuestInput } from "@/types";
 
@@ -46,6 +49,7 @@ interface GuestFormModalProps {
 
 const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, editingGuest }) => {
   const [formData, setFormData] = useState<GuestFormData>(EMPTY_FORM);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createMutation = useCreateGuest();
   const updateMutation = useUpdateGuest();
@@ -53,6 +57,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
   // Sync form when dialog opens or editingGuest changes
   useEffect(() => {
     if (!open) return;
+    setErrors({});
     if (editingGuest) {
       setFormData({
         code: editingGuest.code,
@@ -80,14 +85,26 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
     onOpenChange(false);
   };
 
+  const clearError = (field: string) =>
+    setErrors(prev => { const next = { ...prev }; delete next[field]; return next; });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Client-side validation
+    const parsed = guestFormSchema.safeParse(formData);
+    if (!parsed.success) {
+      setErrors(extractZodErrors(parsed.error));
+      return;
+    }
+    setErrors({});
+
+    const { data: valid } = parsed;
     const data = {
-      ...formData,
-      email: formData.email || undefined,
-      phone: formData.phone || undefined,
-      notes: formData.notes || undefined,
+      ...valid,
+      email: valid.email || undefined,
+      phone: valid.phone || undefined,
+      notes: valid.notes || undefined,
     };
 
     try {
@@ -97,16 +114,15 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
           id: editingGuest.id,
           updates: updateData as UpdateGuestInput,
         });
-        toast.success(`${formData.name} actualizado exitosamente`);
+        toast.success(`${valid.name} actualizado exitosamente`);
       } else {
         await createMutation.mutateAsync(data as CreateGuestInput);
-        toast.success(`${formData.name} creado exitosamente`);
+        toast.success(`${valid.name} creado exitosamente`);
       }
       handleClose();
     } catch (error) {
       console.error("Error saving guest:", error);
-      const message =
-        error instanceof Error ? error.message : "Error desconocido";
+      const message = error instanceof Error ? error.message : "Error desconocido";
       toast.error(editingGuest ? `Error al actualizar invitado: ${message}` : `Error al crear invitado: ${message}`);
     }
   };
@@ -134,11 +150,10 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
                   id="code"
                   type="text"
                   value={formData.code}
-                  onChange={e => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                  required
+                  onChange={e => { setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() })); clearError("code"); }}
                   disabled={!!editingGuest}
                   placeholder="AYP001"
-                  className="flex-1"
+                  className={`flex-1 ${errors.code ? "border-destructive" : ""}`}
                 />
                 {!editingGuest && (
                   <Button
@@ -152,6 +167,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
                   </Button>
                 )}
               </div>
+              {errors.code && <p className="text-xs text-destructive">{errors.code}</p>}
             </div>
 
             <div className="space-y-2">
@@ -160,11 +176,12 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
                 id="maxGuests"
                 type="number"
                 value={formData.maxGuests}
-                onChange={e => setFormData(prev => ({ ...prev, maxGuests: parseInt(e.target.value) || 1 }))}
+                onChange={e => { setFormData(prev => ({ ...prev, maxGuests: parseInt(e.target.value) || 1 })); clearError("maxGuests"); }}
                 min="1"
                 max="20"
-                required
+                className={errors.maxGuests ? "border-destructive" : ""}
               />
+              {errors.maxGuests && <p className="text-xs text-destructive">{errors.maxGuests}</p>}
             </div>
           </div>
 
@@ -174,10 +191,11 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
               id="name"
               type="text"
               value={formData.name}
-              onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              required
+              onChange={e => { setFormData(prev => ({ ...prev, name: e.target.value })); clearError("name"); }}
               placeholder="Juan Pérez"
+              className={errors.name ? "border-destructive" : ""}
             />
+            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
           </div>
 
           <div className="space-y-2">
@@ -186,9 +204,11 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
               id="email"
               type="email"
               value={formData.email}
-              onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              onChange={e => { setFormData(prev => ({ ...prev, email: e.target.value })); clearError("email"); }}
               placeholder="correo@ejemplo.com"
+              className={errors.email ? "border-destructive" : ""}
             />
+            {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
           </div>
 
           <div className="space-y-2">
@@ -197,9 +217,11 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
               id="phone"
               type="tel"
               value={formData.phone}
-              onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+              onChange={e => { setFormData(prev => ({ ...prev, phone: e.target.value })); clearError("phone"); }}
               placeholder="+57 300 123 4567"
+              className={errors.phone ? "border-destructive" : ""}
             />
+            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
           </div>
 
           <div className="space-y-2">
@@ -207,10 +229,12 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({ open, onOpenChange, edi
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              onChange={e => { setFormData(prev => ({ ...prev, notes: e.target.value })); clearError("notes"); }}
               placeholder="Notas internas visibles solo para el admin..."
               rows={2}
+              className={errors.notes ? "border-destructive" : ""}
             />
+            {errors.notes && <p className="text-xs text-destructive">{errors.notes}</p>}
           </div>
 
           <DialogFooter>

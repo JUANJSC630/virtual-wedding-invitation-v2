@@ -27,6 +27,7 @@ import {
 import { DEFAULT_ASSETS } from "@/context/AssetContext";
 import { DEFAULT_THEME, SERIF_PRESETS } from "@/context/ThemeContext";
 import { compressImage } from "@/lib/compressImage";
+import { eventBasicSchema, extractZodErrors } from "@/lib/schemas";
 import CSVImportModal from "@/components/admin/CSVImportModal";
 import { AdminUser, AssetMap, EventWithStats, GalleryPhoto, SectionsConfig, ThemeConfig, TimelineItem } from "@/types";
 
@@ -249,11 +250,13 @@ interface EventFormModalProps {
 const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onClose, onSaved }) => {
   const [form, setForm] = useState<EventFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const bulkInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    setFormErrors({});
     setForm(editingEvent ? eventToForm(editingEvent) : emptyForm);
   }, [editingEvent, open]);
 
@@ -314,6 +317,23 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate basic fields before sending
+    const parsed = eventBasicSchema.safeParse({
+      slug: form.slug,
+      groomName: form.groomName,
+      brideName: form.brideName,
+      eventDate: form.eventDate,
+    });
+    if (!parsed.success) {
+      const errs = extractZodErrors(parsed.error);
+      setFormErrors(errs);
+      // Show a toast summary and switch to the basic tab visually
+      toast.error("Revisa los campos en la pestaña Básico");
+      return;
+    }
+    setFormErrors({});
+
     setSaving(true);
     try {
       const url = editingEvent
@@ -376,7 +396,13 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Slug *</Label>
-                  <Input value={form.slug} onChange={set("slug")} placeholder="jimena-juan" required />
+                  <Input
+                    value={form.slug}
+                    onChange={e => { set("slug")(e); setFormErrors(p => { const n = {...p}; delete n.slug; return n; }); }}
+                    placeholder="jimena-juan"
+                    className={formErrors.slug ? "border-destructive" : ""}
+                  />
+                  {formErrors.slug && <p className="text-xs text-destructive">{formErrors.slug}</p>}
                 </div>
                 <div className="space-y-1">
                   <Label>Activo</Label>
@@ -395,17 +421,35 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Nombre del novio *</Label>
-                  <Input value={form.groomName} onChange={set("groomName")} placeholder="Juan" required />
+                  <Input
+                    value={form.groomName}
+                    onChange={e => { set("groomName")(e); setFormErrors(p => { const n = {...p}; delete n.groomName; return n; }); }}
+                    placeholder="Juan"
+                    className={formErrors.groomName ? "border-destructive" : ""}
+                  />
+                  {formErrors.groomName && <p className="text-xs text-destructive">{formErrors.groomName}</p>}
                 </div>
                 <div className="space-y-1">
                   <Label>Nombre de la novia *</Label>
-                  <Input value={form.brideName} onChange={set("brideName")} placeholder="Jimena" required />
+                  <Input
+                    value={form.brideName}
+                    onChange={e => { set("brideName")(e); setFormErrors(p => { const n = {...p}; delete n.brideName; return n; }); }}
+                    placeholder="Jimena"
+                    className={formErrors.brideName ? "border-destructive" : ""}
+                  />
+                  {formErrors.brideName && <p className="text-xs text-destructive">{formErrors.brideName}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Fecha del evento *</Label>
-                  <Input type="date" value={form.eventDate} onChange={set("eventDate")} required />
+                  <Input
+                    type="date"
+                    value={form.eventDate}
+                    onChange={e => { set("eventDate")(e); setFormErrors(p => { const n = {...p}; delete n.eventDate; return n; }); }}
+                    className={formErrors.eventDate ? "border-destructive" : ""}
+                  />
+                  {formErrors.eventDate && <p className="text-xs text-destructive">{formErrors.eventDate}</p>}
                 </div>
                 <div className="space-y-1">
                   <Label>Límite RSVP</Label>

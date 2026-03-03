@@ -1,8 +1,17 @@
 import express from "express";
 import { nanoid } from "nanoid";
+import { z } from "zod";
 
 import prisma from "../../src/lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
+
+const createGuestSchema = z.object({
+  code: z.string().min(2).max(20).regex(/^[A-Z0-9_-]+$/, "Código inválido"),
+  name: z.string().min(2).max(100),
+  email: z.string().email().or(z.literal("")).optional(),
+  phone: z.string().regex(/^[+\d\s()-]{7,20}$/).or(z.literal("")).optional(),
+  maxGuests: z.coerce.number().int().min(1).max(20).default(1),
+});
 
 export const adminRoutes = express.Router();
 
@@ -40,8 +49,15 @@ adminRoutes.get("/guests", async (req, res) => {
 
 // Crear nuevo invitado
 adminRoutes.post("/guests", async (req, res) => {
+  const parsed = createGuestSchema.safeParse({
+    ...req.body,
+    code: req.body.code?.toUpperCase(),
+  });
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" });
+  }
   try {
-    const { code, name, email, phone, maxGuests = 1 } = req.body;
+    const { code, name, email, phone, maxGuests } = parsed.data;
 
     // El eventId viene del JWT (client) o del body (master puede especificarlo)
     const eventId =
