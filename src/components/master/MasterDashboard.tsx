@@ -22,6 +22,7 @@ import {
 
 import { DEFAULT_ASSETS } from "@/context/AssetContext";
 import { DEFAULT_THEME, SERIF_PRESETS } from "@/context/ThemeContext";
+import { compressImage } from "@/lib/compressImage";
 import { AdminUser, AssetMap, EventWithStats, GalleryPhoto, SectionsConfig, ThemeConfig, TimelineItem } from "@/types";
 
 import { Badge } from "@/components/ui/badge";
@@ -258,8 +259,9 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
     const uploaded: { id: string; url: string; caption: string }[] = [];
     await Promise.all(
       files.map(async file => {
+        const compressed = await compressImage(file, 1200);
         const fd = new FormData();
-        fd.append("file", file);
+        fd.append("file", compressed);
         fd.append("eventId", editingEvent.id);
         fd.append("assetType", "gallery");
         try {

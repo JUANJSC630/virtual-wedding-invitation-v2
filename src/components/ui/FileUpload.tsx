@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 
 import { ImageIcon, Music, Upload, X } from "lucide-react";
 
+import { compressImage } from "@/lib/compressImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,8 +42,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
     setError("");
     setUploading(true);
 
+    const maxWidth = assetType === "gallery" ? 1200 : 1920;
+    const toUpload = accept === "image" ? await compressImage(file, maxWidth) : file;
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", toUpload);
     formData.append("eventId", eventId!);
     formData.append("assetType", assetType);
 
