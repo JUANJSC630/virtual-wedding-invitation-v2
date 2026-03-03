@@ -27,6 +27,7 @@ import InvitationSection6 from "@/components/InvitationSection6";
 import InvitationSection7 from "@/components/InvitationSection7";
 import InvitationSection8 from "@/components/InvitationSection8";
 import InvitationSection9 from "@/components/InvitationSection9";
+import InvitationSectionGallery from "@/components/InvitationSectionGallery";
 import MasterDashboard from "@/components/master/MasterDashboard";
 
 // ─── Panel de admin (client) ──────────────────────────────────────────────────
@@ -204,6 +205,7 @@ const WeddingInvitation: React.FC = () => {
           <InvitationSection2 />
           <InvitationSection3 />
           <InvitationSection4 />
+          <InvitationSectionGallery />
           <InvitationSection5 />
           <InvitationSection6 />
           <InvitationSection9 />

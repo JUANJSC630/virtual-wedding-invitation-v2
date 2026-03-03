@@ -83,6 +83,13 @@ export interface ContactInfo {
   label: string;
 }
 
+// Gallery photo
+export interface GalleryPhoto {
+  id: string;
+  url: string;
+  caption?: string;
+}
+
 // Timeline item for Section 7
 export interface TimelineItem {
   id: string;
@@ -134,6 +141,7 @@ export interface EventConfig {
   dressCode?: { label: string; ladies: string; gentlemen: string };
   announcementText?: string;
   timeline?: TimelineItem[];
+  gallery?: GalleryPhoto[];
   labels?: {
     // Section 5
     familyTitle?: string;
@@ -162,6 +170,8 @@ export interface EventConfig {
     closed?: string;
     groomLabel?: string;
     brideLabel?: string;
+    // Gallery
+    galleryTitle?: string;
     // Entry screen (GuestCodeEntry)
     entryTitle?: string;
     entrySubtitle?: string;

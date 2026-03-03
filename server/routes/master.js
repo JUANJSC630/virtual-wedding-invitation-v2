@@ -21,7 +21,7 @@ function buildConfig(body) {
     heroMessage, giftMessage, announcementText,
     dressCodeLabel, dressCodeLadies, dressCodeGentlemen,
     parentsBride, parentsGroom, godparents, bridesmaids, groomsmen,
-    timeline,
+    timeline, gallery,
   } = body;
 
   const splitLines = (str) =>
@@ -40,6 +40,7 @@ function buildConfig(body) {
     bridesmaids: splitLines(bridesmaids),
     groomsmen: splitLines(groomsmen),
     timeline: Array.isArray(timeline) ? timeline : [],
+    gallery: Array.isArray(gallery) ? gallery : [],
     labels: (typeof body.labels === "object" && body.labels !== null) ? body.labels : {},
   };
 }

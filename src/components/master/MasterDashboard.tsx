@@ -19,7 +19,7 @@ import {
 
 import { DEFAULT_ASSETS } from "@/context/AssetContext";
 import { DEFAULT_THEME } from "@/context/ThemeContext";
-import { AdminUser, AssetMap, EventWithStats, ThemeConfig, TimelineItem } from "@/types";
+import { AdminUser, AssetMap, EventWithStats, GalleryPhoto, ThemeConfig, TimelineItem } from "@/types";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,6 +95,8 @@ interface EventFormData {
   assets: AssetMap;
   // Theme
   theme: ThemeConfig;
+  // Gallery
+  gallery: GalleryPhoto[];
   // Labels
   labels: Record<string, string>;
 }
@@ -117,7 +119,7 @@ const emptyForm: EventFormData = {
   parentsBride: "", parentsGroom: "", godparents: "", bridesmaids: "",
   groomsmen: "", groomPhone: "", bridePhone: "", groomWAMessage: "",
   brideWAMessage: "", heroPhotoUrl: "", photo2Url: "", photo3Url: "",
-  audioUrl: "", announcementText: "", timeline: [], assets: {}, theme: {}, labels: {},
+  audioUrl: "", announcementText: "", timeline: [], gallery: [], assets: {}, theme: {}, labels: {},
 };
 
 function eventToForm(ev: EventWithStats): EventFormData {
@@ -161,6 +163,7 @@ function eventToForm(ev: EventWithStats): EventFormData {
     audioUrl: ev.audioUrl || "",
     announcementText: ev.config?.announcementText || "",
     timeline: ev.config?.timeline ?? [],
+    gallery: ev.config?.gallery ?? [],
     assets: (ev.assets as AssetMap) ?? {},
     theme: (ev.theme as ThemeConfig) ?? {},
     labels: (ev.config?.labels as Record<string, string>) ?? {},
@@ -256,8 +259,9 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               <TabsTrigger value="families">Familias</TabsTrigger>
               <TabsTrigger value="timeline">Itinerario</TabsTrigger>
             </TabsList>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="labels">Etiquetas</TabsTrigger>
+              <TabsTrigger value="gallery">Galería</TabsTrigger>
               <TabsTrigger value="photos">Fotos</TabsTrigger>
               <TabsTrigger value="decor">Decoración</TabsTrigger>
               <TabsTrigger value="tema">Tema</TabsTrigger>
@@ -482,7 +486,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                         disabled={idx === 0}
                         onClick={() => setForm(prev => {
                           const tl = [...prev.timeline];
-                          [tl[idx - 1], tl[idx]] = [tl[idx], tl[idx - 1]];
+                          const tmp = tl[idx - 1]!; tl[idx - 1] = tl[idx]!; tl[idx] = tmp;
                           return { ...prev, timeline: tl };
                         })}
                       >↑</Button>
@@ -491,7 +495,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                         disabled={idx === form.timeline.length - 1}
                         onClick={() => setForm(prev => {
                           const tl = [...prev.timeline];
-                          [tl[idx + 1], tl[idx]] = [tl[idx], tl[idx + 1]];
+                          const tmp = tl[idx + 1]!; tl[idx + 1] = tl[idx]!; tl[idx] = tmp;
                           return { ...prev, timeline: tl };
                         })}
                       >↓</Button>
@@ -597,6 +601,12 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                       { key: "thanks",     label: "Texto gracias",           placeholder: "Muchas Gracias!" },
                     ],
                   },
+                  {
+                    section: "Galería — Nuestra Historia",
+                    fields: [
+                      { key: "galleryTitle", label: "Título de la galería", placeholder: "Nuestra Historia" },
+                    ],
+                  },
                 ] as { section: string; fields: { key: string; label: string; placeholder: string }[] }[]
               ).map(group => (
                 <div key={group.section}>
@@ -621,6 +631,88 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                   </div>
                 </div>
               ))}
+            </TabsContent>
+
+            {/* ── Tab: Galería ─────────────────────────────── */}
+            <TabsContent value="gallery" className="space-y-4 pt-4">
+              <p className="text-xs text-muted-foreground">
+                Fotos de la galería "Nuestra Historia". Se muestran en orden, en 2 columnas masonry.
+              </p>
+              <div className="space-y-3">
+                {form.gallery.map((photo, idx) => (
+                  <div key={photo.id} className="border rounded-md p-3 space-y-2">
+                    <div className="flex gap-3 items-start">
+                      {photo.url && (
+                        <img src={photo.url} alt="" className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <FileUpload
+                          label="Foto"
+                          value={photo.url}
+                          onChange={url => setForm(prev => ({
+                            ...prev,
+                            gallery: prev.gallery.map((p, i) => i === idx ? { ...p, url } : p),
+                          }))}
+                          accept="image"
+                          assetType="gallery"
+                          eventId={editingEvent?.id}
+                        />
+                        <div className="space-y-1">
+                          <Label className="text-xs">Pie de foto (opcional)</Label>
+                          <Input
+                            value={photo.caption ?? ""}
+                            onChange={e => setForm(prev => ({
+                              ...prev,
+                              gallery: prev.gallery.map((p, i) => i === idx ? { ...p, caption: e.target.value } : p),
+                            }))}
+                            placeholder="Ej: En nuestro primer viaje juntos"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 justify-end">
+                      <Button
+                        type="button" size="sm" variant="ghost"
+                        disabled={idx === 0}
+                        onClick={() => setForm(prev => {
+                          const g = [...prev.gallery];
+                          const tmp = g[idx - 1]!; g[idx - 1] = g[idx]!; g[idx] = tmp;
+                          return { ...prev, gallery: g };
+                        })}
+                      >↑</Button>
+                      <Button
+                        type="button" size="sm" variant="ghost"
+                        disabled={idx === form.gallery.length - 1}
+                        onClick={() => setForm(prev => {
+                          const g = [...prev.gallery];
+                          const tmp = g[idx + 1]!; g[idx + 1] = g[idx]!; g[idx] = tmp;
+                          return { ...prev, gallery: g };
+                        })}
+                      >↓</Button>
+                      <Button
+                        type="button" size="sm" variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setForm(prev => ({
+                          ...prev,
+                          gallery: prev.gallery.filter((_, i) => i !== idx),
+                        }))}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  type="button" size="sm" variant="outline"
+                  onClick={() => setForm(prev => ({
+                    ...prev,
+                    gallery: [...prev.gallery, { id: crypto.randomUUID(), url: "", caption: "" }],
+                  }))}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  Agregar foto
+                </Button>
+              </div>
             </TabsContent>
 
             {/* ── Tab: Fotos ──────────────────────────────── */}
