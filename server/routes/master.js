@@ -206,6 +206,57 @@ masterRoutes.patch("/events/:id", async (req, res) => {
   }
 });
 
+// ─── POST /api/master/events/:id/duplicate — clonar evento ───────────────────
+
+masterRoutes.post("/events/:id/duplicate", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const original = await prisma.event.findUnique({ where: { id } });
+    if (!original) return res.status(404).json({ error: "Evento no encontrado" });
+
+    // Generar slug único: {slug}-copia, con sufijo numérico si ya existe
+    let baseSlug = `${original.slug}-copia`;
+    let newSlug = baseSlug;
+    let attempt = 1;
+    while (await prisma.event.findUnique({ where: { slug: newSlug } })) {
+      newSlug = `${baseSlug}-${attempt++}`;
+    }
+
+    const clone = await prisma.event.create({
+      data: {
+        slug: newSlug,
+        groomName: original.groomName,
+        brideName: original.brideName,
+        eventDate: original.eventDate,
+        rsvpDeadline: original.rsvpDeadline,
+        ceremonyTime: original.ceremonyTime,
+        receptionTime: original.receptionTime,
+        venueName: original.venueName,
+        venueAddress: original.venueAddress,
+        dressCode: original.dressCode,
+        heroPhotoUrl: original.heroPhotoUrl,
+        photo2Url: original.photo2Url,
+        photo3Url: original.photo3Url,
+        audioUrl: original.audioUrl,
+        groomPhone: original.groomPhone,
+        bridePhone: original.bridePhone,
+        groomWAMessage: original.groomWAMessage,
+        brideWAMessage: original.brideWAMessage,
+        config: original.config ?? {},
+        assets: original.assets ?? {},
+        theme: original.theme ?? {},
+        isActive: false,
+      },
+      include: { clientAdmins: true, _count: { select: { guests: true, guestAccesses: true } } },
+    });
+
+    res.status(201).json(clone);
+  } catch (error) {
+    console.error("Error duplicating event:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // ─── DELETE /api/master/events/:id — eliminar evento ─────────────────────────
 
 masterRoutes.delete("/events/:id", async (req, res) => {

@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import {
   CalendarDays,
   CheckCircle2,
+  Copy,
   Edit2,
   Eye,
   EyeOff,
@@ -1264,6 +1265,20 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
     }
   };
 
+  const handleDuplicateEvent = async (ev: EventWithStats) => {
+    try {
+      const res = await fetch(`/api/master/events/${ev.id}/duplicate`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Error al duplicar");
+      toast.success(`Evento duplicado como "${ev.slug}-copia"`);
+      loadData();
+    } catch {
+      toast.error("Error al duplicar evento");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -1439,6 +1454,16 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                           ? <EyeOff className="h-3.5 w-3.5" />
                           : <Eye className="h-3.5 w-3.5" />}
                         {ev.isActive ? "Desactivar" : "Activar"}
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDuplicateEvent(ev)}
+                        className="flex items-center gap-1"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        Duplicar
                       </Button>
 
                       <Button
