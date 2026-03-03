@@ -91,13 +91,23 @@ const MasterPanel: React.FC = () => {
 
 // ─── Invitación pública (por slug) ───────────────────────────────────────────
 
+const PREVIEW_GUEST: Guest = {
+  id: "preview", eventId: "", code: "PREVIEW", name: "Vista Previa",
+  email: null, phone: null, maxGuests: 2, confirmed: true,
+  confirmedAt: new Date().toISOString(), notes: null,
+  createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  companions: [{ id: "preview-c1", guestId: "preview", name: "Acompañante", confirmed: true, confirmedAt: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }],
+};
+
 const WeddingInvitation: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const eventSlug = slug!;
 
-  const [validatedCode, setValidatedCode] = useState<string | null>(null);
-  const [guest, setGuest] = useState<Guest | null>(null);
-  const [showInvitation, setShowInvitation] = useState(false);
+  const isPreview = new URLSearchParams(window.location.search).get("preview") === "1";
+
+  const [validatedCode, setValidatedCode] = useState<string | null>(isPreview ? "PREVIEW" : null);
+  const [guest, setGuest] = useState<Guest | null>(isPreview ? PREVIEW_GUEST : null);
+  const [showInvitation, setShowInvitation] = useState(isPreview);
   const [event, setEvent] = useState<Event | null>(null);
   const [eventLoading, setEventLoading] = useState(true);
   const [eventNotFound, setEventNotFound] = useState(false);
@@ -114,7 +124,7 @@ const WeddingInvitation: React.FC = () => {
       .catch(() => setEventNotFound(true))
       .finally(() => setEventLoading(false));
 
-    if (urlCode) {
+    if (urlCode && !isPreview) {
       fetch("/api/guests/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,7 +139,7 @@ const WeddingInvitation: React.FC = () => {
         })
         .catch(() => {});
     }
-  }, [eventSlug]);
+  }, [eventSlug, isPreview]);
 
   if (eventLoading) {
     return (
@@ -204,7 +214,15 @@ const WeddingInvitation: React.FC = () => {
     <ThemeProvider theme={(event?.theme as ThemeConfig) ?? {}}>
     <AssetContext.Provider value={mergedAssets}>
     <GuestContext.Provider value={{ guest, setGuest: (g: Guest) => setGuest(g), code: validatedCode, eventSlug }}>
-      <main className="w-full flex flex-col justify-center items-center bg-white" role="main">
+      {isPreview && (
+        <div className="fixed top-0 inset-x-0 z-50 flex items-center justify-between gap-3 bg-amber-500 px-4 py-2 text-sm font-medium text-white shadow-lg">
+          <span>👁 Modo Vista Previa — los datos son ficticios</span>
+          <button onClick={() => window.close()} className="rounded bg-white/20 px-2 py-0.5 text-xs hover:bg-white/30">
+            Cerrar
+          </button>
+        </div>
+      )}
+      <main className="w-full flex flex-col justify-center items-center bg-white" role="main" style={isPreview ? { paddingTop: "2.5rem" } : undefined}>
         <div className="max-w-2xl mx-auto">
           {show("showVerse")    && <InvitationSection1 />}
           {show("showPhotos")   && <InvitationSection2 />}

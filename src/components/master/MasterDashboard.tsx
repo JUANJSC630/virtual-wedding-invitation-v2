@@ -11,6 +11,7 @@ import {
   FileUp,
   KeyRound,
   LogOut,
+  MonitorSmartphone,
   Plus,
   Settings,
   Shield,
@@ -1742,6 +1743,17 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                           ? <EyeOff className="h-3.5 w-3.5" />
                           : <Eye className="h-3.5 w-3.5" />}
                         {ev.isActive ? "Desactivar" : "Activar"}
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(`/${ev.slug}?preview=1`, "_blank")}
+                        className="flex items-center gap-1"
+                        title="Abrir vista previa de la invitación"
+                      >
+                        <MonitorSmartphone className="h-3.5 w-3.5" />
+                        Vista previa
                       </Button>
 
                       <Button
