@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { Download, Upload } from "lucide-react";
+import { Download, Loader2, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,6 +30,10 @@ interface ImportResult {
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** When provided, uses the master endpoint for the given event ID */
+  eventId?: string;
+  /** Called after a successful import so the parent can refresh its data */
+  onImported?: () => void;
 }
 
 const TEMPLATE_HEADERS = "code,name,email,phone,maxGuests";
@@ -72,14 +76,22 @@ function parseCSV(text: string): CSVRow[] {
     .filter(r => r.code || r.name); // drop empty rows
 }
 
-const CSVImportModal = ({ open, onOpenChange }: Props) => {
+const CSVImportModal = ({ open, onOpenChange, eventId, onImported }: Props) => {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [rows, setRows] = useState<CSVRow[]>([]);
   const [fileName, setFileName] = useState("");
   const [importing, setImporting] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const [result, setResult] = useState<ImportResult | null>(null);
+
+  // Tick elapsed seconds while importing
+  useEffect(() => {
+    if (!importing) { setElapsed(0); return; }
+    const id = setInterval(() => setElapsed(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [importing]);
 
   const handleClose = () => {
     setRows([]);
@@ -116,7 +128,10 @@ const CSVImportModal = ({ open, onOpenChange }: Props) => {
     if (!rows.length) return;
     setImporting(true);
     try {
-      const res = await fetch("/api/admin/guests/import", {
+      const url = eventId
+        ? `/api/master/events/${eventId}/import-guests`
+        : "/api/admin/guests/import";
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -129,6 +144,7 @@ const CSVImportModal = ({ open, onOpenChange }: Props) => {
       const data: ImportResult = await res.json();
       setResult(data);
       queryClient.invalidateQueries({ queryKey: ["guests"] });
+      onImported?.();
       if (data.created > 0) toast.success(`${data.created} invitado(s) importado(s)`);
       if (data.skipped > 0) toast(`${data.skipped} omitido(s) por código duplicado`, { icon: "⚠️" });
     } catch (err) {
@@ -244,7 +260,12 @@ const CSVImportModal = ({ open, onOpenChange }: Props) => {
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-2">
+          <div className="flex items-center justify-end gap-2">
+            {importing && (
+              <p className="text-xs text-muted-foreground mr-1">
+                ~{Math.max(1, Math.ceil(rows.length / 10))}s estimado · {elapsed}s transcurrido
+              </p>
+            )}
             <Button variant="outline" onClick={handleClose}>
               {result ? "Cerrar" : "Cancelar"}
             </Button>
@@ -253,6 +274,7 @@ const CSVImportModal = ({ open, onOpenChange }: Props) => {
                 onClick={handleImport}
                 disabled={rows.length === 0 || importing}
               >
+                {importing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {importing ? "Importando..." : `Importar ${rows.length > 0 ? rows.length + " invitados" : ""}`}
               </Button>
             )}

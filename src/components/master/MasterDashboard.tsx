@@ -8,6 +8,7 @@ import {
   Edit2,
   Eye,
   EyeOff,
+  FileUp,
   KeyRound,
   LogOut,
   Plus,
@@ -23,6 +24,7 @@ import {
 import { DEFAULT_ASSETS } from "@/context/AssetContext";
 import { DEFAULT_THEME, SERIF_PRESETS } from "@/context/ThemeContext";
 import { compressImage } from "@/lib/compressImage";
+import CSVImportModal from "@/components/admin/CSVImportModal";
 import { AdminUser, AssetMap, EventWithStats, GalleryPhoto, SectionsConfig, ThemeConfig, TimelineItem } from "@/types";
 
 import { Badge } from "@/components/ui/badge";
@@ -1345,6 +1347,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
   const [editingEvent, setEditingEvent] = useState<EventWithStats | null>(null);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [selectedEventForAdmin, setSelectedEventForAdmin] = useState<EventWithStats | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importEventId, setImportEventId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoadingEvents(true);
@@ -1619,6 +1623,16 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                       <Button
                         size="sm"
                         variant="outline"
+                        onClick={() => { setImportEventId(ev.id); setShowImportModal(true); }}
+                        className="flex items-center gap-1"
+                      >
+                        <FileUp className="h-3.5 w-3.5" />
+                        Importar CSV
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleDeleteEvent(ev)}
                         className="flex items-center gap-1 text-destructive hover:text-destructive border-destructive/30 hover:border-destructive"
                       >
@@ -1645,6 +1659,12 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
         open={showAdminModal}
         event={selectedEventForAdmin}
         onClose={() => setShowAdminModal(false)}
+      />
+      <CSVImportModal
+        open={showImportModal}
+        onOpenChange={open => { setShowImportModal(open); if (!open) setImportEventId(null); }}
+        eventId={importEventId ?? undefined}
+        onImported={loadData}
       />
     </div>
   );

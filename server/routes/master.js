@@ -262,10 +262,69 @@ masterRoutes.post("/events/:id/duplicate", async (req, res) => {
 masterRoutes.delete("/events/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.event.delete({ where: { id } });
+    // Delete related records first (no onDelete: Cascade on Event relations)
+    // Companion already cascades from Guest, so deleting guests covers it.
+    await prisma.$transaction([
+      prisma.guestAccess.deleteMany({ where: { eventId: id } }),
+      prisma.guest.deleteMany({ where: { eventId: id } }),
+      prisma.clientAdmin.deleteMany({ where: { eventId: id } }),
+      prisma.event.delete({ where: { id } }),
+    ]);
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting event:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ─── POST /api/master/events/:id/import-guests — importar invitados CSV ──────
+
+masterRoutes.post("/events/:id/import-guests", async (req, res) => {
+  try {
+    const { id: eventId } = req.params;
+
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    if (!event) return res.status(404).json({ error: "Evento no encontrado" });
+
+    const { rows } = req.body;
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ error: "No hay filas para importar" });
+    }
+
+    let created = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (const row of rows) {
+      const code = (row.code || "").trim().toUpperCase();
+      const name = (row.name || "").trim();
+      if (!code || !name) {
+        errors.push({ code: code || "?", reason: "código y nombre son obligatorios" });
+        continue;
+      }
+      const maxGuests = parseInt(row.maxGuests, 10) || 1;
+
+      const exists = await prisma.guest.findUnique({
+        where: { eventId_code: { eventId, code } },
+      });
+      if (exists) { skipped++; continue; }
+
+      await prisma.guest.create({
+        data: {
+          eventId,
+          code,
+          name,
+          email: row.email?.trim() || undefined,
+          phone: row.phone?.trim() || undefined,
+          maxGuests,
+        },
+      });
+      created++;
+    }
+
+    res.json({ created, skipped, errors });
+  } catch (error) {
+    console.error("Error importing guests (master):", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
