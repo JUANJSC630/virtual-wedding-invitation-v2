@@ -15,6 +15,7 @@ import { GuestContext } from "@/context/GuestContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 import AdminDashboard from "@/components/AdminDashboard";
+import { PanelErrorBoundary, SectionErrorBoundary } from "@/components/ErrorBoundary";
 import GuestCodeEntry from "@/components/GuestCodeEntry";
 import GuestInfo from "@/components/GuestInfo";
 import LandingPage from "@/components/LandingPage";
@@ -57,7 +58,11 @@ const AdminPanel: React.FC = () => {
   if (!user) { navigate("/login", { replace: true }); return null; }
   if (user.role === "master") { navigate("/master", { replace: true }); return null; }
 
-  return <AdminDashboard user={user} onLogout={() => { setUser(null); navigate("/login"); }} />;
+  return (
+    <PanelErrorBoundary>
+      <AdminDashboard user={user} onLogout={() => { setUser(null); navigate("/login"); }} />
+    </PanelErrorBoundary>
+  );
 };
 
 // ─── Panel de master ──────────────────────────────────────────────────────────
@@ -86,7 +91,11 @@ const MasterPanel: React.FC = () => {
   if (!user) { navigate("/login", { replace: true }); return null; }
   if (user.role !== "master") { navigate("/admin", { replace: true }); return null; }
 
-  return <MasterDashboard user={user} onLogout={() => { setUser(null); navigate("/login"); }} />;
+  return (
+    <PanelErrorBoundary>
+      <MasterDashboard user={user} onLogout={() => { setUser(null); navigate("/login"); }} />
+    </PanelErrorBoundary>
+  );
 };
 
 // ─── Invitación pública (por slug) ───────────────────────────────────────────
@@ -224,16 +233,16 @@ const WeddingInvitation: React.FC = () => {
       )}
       <main className="w-full flex flex-col justify-center items-center bg-white" role="main" style={isPreview ? { paddingTop: "2.5rem" } : undefined}>
         <div className="max-w-2xl mx-auto">
-          {show("showVerse")    && <InvitationSection1 />}
-          {show("showPhotos")   && <InvitationSection2 />}
-          {show("showNames")    && <InvitationSection3 />}
-          {show("showPhotos")   && <InvitationSection4 />}
-          {show("showGallery")  && <InvitationSectionGallery />}
-          {show("showFamily")   && <InvitationSection5 />}
-          {show("showVenues")   && <InvitationSection6 />}
-          {show("showPhotos")   && <InvitationSection9 />}
-          {show("showTimeline") && <InvitationSection7 />}
-          {show("showGifts")    && <InvitationSection8 />}
+          {show("showVerse")    && <SectionErrorBoundary><InvitationSection1 /></SectionErrorBoundary>}
+          {show("showPhotos")   && <SectionErrorBoundary><InvitationSection2 /></SectionErrorBoundary>}
+          {show("showNames")    && <SectionErrorBoundary><InvitationSection3 /></SectionErrorBoundary>}
+          {show("showPhotos")   && <SectionErrorBoundary><InvitationSection4 /></SectionErrorBoundary>}
+          {show("showGallery")  && <SectionErrorBoundary><InvitationSectionGallery /></SectionErrorBoundary>}
+          {show("showFamily")   && <SectionErrorBoundary><InvitationSection5 /></SectionErrorBoundary>}
+          {show("showVenues")   && <SectionErrorBoundary><InvitationSection6 /></SectionErrorBoundary>}
+          {show("showPhotos")   && <SectionErrorBoundary><InvitationSection9 /></SectionErrorBoundary>}
+          {show("showTimeline") && <SectionErrorBoundary><InvitationSection7 /></SectionErrorBoundary>}
+          {show("showGifts")    && <SectionErrorBoundary><InvitationSection8 /></SectionErrorBoundary>}
         </div>
       </main>
     </GuestContext.Provider>
