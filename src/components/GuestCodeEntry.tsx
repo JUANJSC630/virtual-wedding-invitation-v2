@@ -30,11 +30,19 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ eventSlug, event, onVal
   const savedLabel  = labels?.entrySavedCode ?? "Código guardado anteriormente";
 
   // ── Theme ─────────────────────────────────────────────────────────────────
-  const t = (event?.theme ?? {}) as Record<string, string>;
-  const primaryColor = t.primaryColor || "#162b4e";
-  const accentColor  = t.accentColor  || "#bfa15a";
-  const actionColor  = t.actionColor  || "#466691";
-  const textColor    = t.textColor    || "#374151";
+  const t = (event?.theme ?? {}) as Record<string, string | number>;
+  const primaryColor   = (t.primaryColor as string)   || "#162b4e";
+  const accentColor    = (t.accentColor  as string)   || "#bfa15a";
+  const actionColor    = (t.actionColor  as string)   || "#466691";
+  const textColor      = (t.textColor    as string)   || "#374151";
+  const overlayOpacity = (t.overlayOpacity != null ? Number(t.overlayOpacity) : 20) / 100;
+  const cardOpacity    = (t.cardOpacity    != null ? Number(t.cardOpacity)    : 30) / 100;
+  const cardBgColor    = (t.cardBgColor  as string) || "#ffffff";
+  const inputBgColor   = (t.inputBgColor as string) || "#ffffff";
+  const inputOpacity   = (t.inputOpacity  != null ? Number(t.inputOpacity)  : 70) / 100;
+  // Convert hex to rgb for use with opacity
+  const cardRgb  = cardBgColor.match( /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)?.slice(1).map(x => parseInt(x, 16)) ?? [255, 255, 255];
+  const inputRgb = inputBgColor.match(/^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)?.slice(1).map(x => parseInt(x, 16)) ?? [255, 255, 255];
 
   // ── Background ────────────────────────────────────────────────────────────
   const bgImage = (event?.assets as Record<string, string>)?.entryBg?.trim()
@@ -92,10 +100,13 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ eventSlug, event, onVal
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url('${bgImage}')` }}
       />
-      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} />
 
       <div className="relative z-10 w-full max-w-md mx-auto p-6">
-        <div className="bg-white/30 backdrop-blur rounded-2xl shadow-2xl p-8 text-center">
+        <div
+          className="backdrop-blur rounded-2xl shadow-2xl p-8 text-center"
+          style={{ backgroundColor: `rgba(${cardRgb[0]},${cardRgb[1]},${cardRgb[2]},${cardOpacity})` }}
+        >
           {/* Título */}
           <h1
             className="text-xl font-bold mb-1"
@@ -117,10 +128,11 @@ const GuestCodeEntry: React.FC<GuestCodeEntryProps> = ({ eventSlug, event, onVal
                 value={code}
                 onChange={e => setCode(e.target.value.toUpperCase())}
                 placeholder="Ej: AYP001"
-                className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent text-center text-lg font-mono tracking-wider bg-white/70"
+                className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:border-transparent text-center text-lg font-mono tracking-wider"
                 style={{
                   borderColor: accentColor + "80",
                   color: primaryColor,
+                  backgroundColor: `rgba(${inputRgb[0]},${inputRgb[1]},${inputRgb[2]},${inputOpacity})`,
                   "--tw-ring-color": actionColor,
                 } as React.CSSProperties}
                 maxLength={10}

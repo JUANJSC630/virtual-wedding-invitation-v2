@@ -100,12 +100,17 @@ export interface TimelineItem {
 
 // Theme Config
 export interface ThemeConfig {
-  primaryColor?: string;  // default #162b4e (navy)
-  accentColor?:  string;  // default #bfa15a (gold)
-  actionColor?:  string;  // default #466691 (blue buttons)
-  textColor?:    string;  // default #374151 (body text)
-  fontSpecial?:  string;  // default "Great Vibes", cursive
-  fontSerif?:    string;  // default "" (system serif); Google Font name e.g. "Playfair Display"
+  primaryColor?:    string;  // default #162b4e (navy)
+  accentColor?:     string;  // default #bfa15a (gold)
+  actionColor?:     string;  // default #466691 (blue buttons)
+  textColor?:       string;  // default #374151 (body text)
+  fontSpecial?:     string;  // default "Great Vibes", cursive
+  fontSerif?:       string;  // default "" (system serif); Google Font name e.g. "Playfair Display"
+  overlayOpacity?:  number;  // 0-80, default 20 — black overlay on entry/info screens
+  cardOpacity?:     number;  // 10-95, default 30 — card background opacity on entry/info screens
+  cardBgColor?:     string;  // default #ffffff — card background color on entry/info screens
+  inputBgColor?:    string;  // default #ffffff — input background color on entry screen
+  inputOpacity?:    number;  // 10-95, default 70 — input background opacity on entry screen
 }
 
 // Asset Map

@@ -53,11 +53,18 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ eventSlug, guest: initialGuest, e
   const viewButton      = labels?.infoViewButton        ?? "Ver Invitación Completa";
 
   // ── Theme ─────────────────────────────────────────────────────────────────
-  const t = (event?.theme ?? {}) as Record<string, string>;
-  const primaryColor = t.primaryColor || "#162b4e";
-  const accentColor  = t.accentColor  || "#bfa15a";
-  const actionColor  = t.actionColor  || "#466691";
-  const textColor    = t.textColor    || "#374151";
+  const t = (event?.theme ?? {}) as Record<string, string | number>;
+  const primaryColor   = (t.primaryColor as string)   || "#162b4e";
+  const accentColor    = (t.accentColor  as string)   || "#bfa15a";
+  const actionColor    = (t.actionColor  as string)   || "#466691";
+  const textColor      = (t.textColor    as string)   || "#374151";
+  const overlayOpacity = (t.overlayOpacity != null ? Number(t.overlayOpacity) : 20) / 100;
+  const cardOpacity    = (t.cardOpacity    != null ? Number(t.cardOpacity)    : 30) / 100;
+  const cardBgColor  = (t.cardBgColor  as string) || "#ffffff";
+  const inputBgColor = (t.inputBgColor as string) || "#ffffff";
+  const inputOpacity = (t.inputOpacity  != null ? Number(t.inputOpacity)  : 70) / 100;
+  const cardRgb  = cardBgColor.match( /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)?.slice(1).map(x => parseInt(x, 16)) ?? [255, 255, 255];
+  const inputRgb = inputBgColor.match(/^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i)?.slice(1).map(x => parseInt(x, 16)) ?? [255, 255, 255];
 
   // ── Background ────────────────────────────────────────────────────────────
   const bgImage = (event?.assets as Record<string, string>)?.infoBg?.trim()
@@ -71,10 +78,13 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ eventSlug, guest: initialGuest, e
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url('${bgImage}')` }}
       />
-      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }} />
 
       <div className="relative z-10 w-full max-w-md mx-auto p-6">
-        <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-2xl p-8 text-center">
+        <div
+          className="backdrop-blur-sm rounded-2xl shadow-2xl p-8 text-center"
+          style={{ backgroundColor: `rgba(${cardRgb[0]},${cardRgb[1]},${cardRgb[2]},${cardOpacity})` }}
+        >
 
           {/* Nombre del invitado */}
           <div className="mb-6">
@@ -110,7 +120,10 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ eventSlug, guest: initialGuest, e
           </div>
 
           {/* N° de invitados */}
-          <div className="bg-white/50 rounded-lg p-2 mb-6">
+          <div
+            className="rounded-lg p-2 mb-6"
+            style={{ backgroundColor: `rgba(${inputRgb[0]},${inputRgb[1]},${inputRgb[2]},${inputOpacity})` }}
+          >
             <div className="flex items-center justify-center gap-2 mb-3">
               <Users className="w-5 h-5" style={{ color: actionColor }} />
               <span className="font-semibold" style={{ color: primaryColor }}>{guestsLabel}</span>

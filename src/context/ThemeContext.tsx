@@ -3,12 +3,17 @@ import React, { createContext, useContext, useEffect } from "react";
 import { ThemeConfig } from "@/types";
 
 export const DEFAULT_THEME: Required<ThemeConfig> = {
-  primaryColor: "#162b4e",
-  accentColor:  "#bfa15a",
-  actionColor:  "#466691",
-  textColor:    "#374151",
-  fontSpecial:  '"Great Vibes", cursive, serif',
-  fontSerif:    "",
+  primaryColor:   "#162b4e",
+  accentColor:    "#bfa15a",
+  actionColor:    "#466691",
+  textColor:      "#374151",
+  fontSpecial:    '"Great Vibes", cursive, serif',
+  fontSerif:      "",
+  overlayOpacity: 20,
+  cardOpacity:    30,
+  cardBgColor:    "#ffffff",
+  inputBgColor:   "#ffffff",
+  inputOpacity:   70,
 };
 
 // Google Fonts disponibles como preset (deben coincidir exactamente con el nombre en Google Fonts)
@@ -48,12 +53,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ theme, children })
   }, [fontSerif]);
 
   const merged: Required<ThemeConfig> = {
-    primaryColor: theme.primaryColor?.trim() || DEFAULT_THEME.primaryColor,
-    accentColor:  theme.accentColor?.trim()  || DEFAULT_THEME.accentColor,
-    actionColor:  theme.actionColor?.trim()  || DEFAULT_THEME.actionColor,
-    textColor:    theme.textColor?.trim()    || DEFAULT_THEME.textColor,
-    fontSpecial:  theme.fontSpecial?.trim()  || DEFAULT_THEME.fontSpecial,
+    primaryColor:   theme.primaryColor?.trim() || DEFAULT_THEME.primaryColor,
+    accentColor:    theme.accentColor?.trim()  || DEFAULT_THEME.accentColor,
+    actionColor:    theme.actionColor?.trim()  || DEFAULT_THEME.actionColor,
+    textColor:      theme.textColor?.trim()    || DEFAULT_THEME.textColor,
+    fontSpecial:    theme.fontSpecial?.trim()  || DEFAULT_THEME.fontSpecial,
     fontSerif,
+    overlayOpacity: theme.overlayOpacity ?? DEFAULT_THEME.overlayOpacity,
+    cardOpacity:    theme.cardOpacity    ?? DEFAULT_THEME.cardOpacity,
+    cardBgColor:    theme.cardBgColor?.trim()  || DEFAULT_THEME.cardBgColor,
+    inputBgColor:   theme.inputBgColor?.trim() || DEFAULT_THEME.inputBgColor,
+    inputOpacity:   theme.inputOpacity   ?? DEFAULT_THEME.inputOpacity,
   };
 
   const cssVars = {

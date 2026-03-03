@@ -117,6 +117,27 @@ interface ClientAdminRow {
   name: string;
 }
 
+// ─── Color palettes ───────────────────────────────────────────────────────────
+
+interface ColorPalette {
+  name: string;
+  primaryColor: string;
+  accentColor: string;
+  actionColor: string;
+  textColor: string;
+}
+
+const COLOR_PALETTES: ColorPalette[] = [
+  { name: "Navy + Gold",        primaryColor: "#162b4e", accentColor: "#bfa15a", actionColor: "#466691", textColor: "#bfa15a" },
+  { name: "Blush + Rosa",       primaryColor: "#f5e6e0", accentColor: "#c4887f", actionColor: "#b06f65", textColor: "#4a3030" },
+  { name: "Sage + Marfil",      primaryColor: "#f8f5f0", accentColor: "#7d9b76", actionColor: "#5a7a53", textColor: "#3d4a38" },
+  { name: "Borgoña + Champán",  primaryColor: "#3d1a24", accentColor: "#d4b896", actionColor: "#8b3a52", textColor: "#d4b896" },
+  { name: "Azul Pizarra + Plata", primaryColor: "#2c3e5c", accentColor: "#c0c8d4", actionColor: "#5b7fa6", textColor: "#c0c8d4" },
+  { name: "Terracota + Beige",  primaryColor: "#f5ede4", accentColor: "#c27755", actionColor: "#a05c3b", textColor: "#4a3520" },
+  { name: "Negro + Oro",        primaryColor: "#1a1a1a", accentColor: "#d4af37", actionColor: "#8b6914", textColor: "#d4af37" },
+  { name: "Lavanda + Blanco",   primaryColor: "#f8f5ff", accentColor: "#9b7cc8", actionColor: "#7b5aa6", textColor: "#3d2d5c" },
+];
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const emptyForm: EventFormData = {
@@ -961,6 +982,41 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               <p className="text-xs text-muted-foreground">
                 Personaliza los colores y la fuente especial de la invitación. Dejar en blanco usa el valor por defecto.
               </p>
+
+              {/* Paletas predefinidas */}
+              <div className="space-y-2">
+                <Label>Paletas predefinidas</Label>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {COLOR_PALETTES.map(palette => (
+                    <button
+                      key={palette.name}
+                      type="button"
+                      title={palette.name}
+                      onClick={() => setForm(prev => ({
+                        ...prev,
+                        theme: {
+                          ...prev.theme,
+                          primaryColor: palette.primaryColor,
+                          accentColor:  palette.accentColor,
+                          actionColor:  palette.actionColor,
+                          textColor:    palette.textColor,
+                        },
+                      }))}
+                      className="group flex flex-col items-start gap-1.5 rounded-lg border p-2 hover:border-primary hover:shadow-sm transition-all text-left"
+                    >
+                      <div className="flex w-full gap-0.5 rounded overflow-hidden h-5">
+                        <div className="flex-1" style={{ backgroundColor: palette.primaryColor }} />
+                        <div className="flex-1" style={{ backgroundColor: palette.accentColor }} />
+                        <div className="flex-1" style={{ backgroundColor: palette.actionColor }} />
+                        <div className="flex-1" style={{ backgroundColor: palette.textColor }} />
+                      </div>
+                      <span className="text-[11px] text-muted-foreground group-hover:text-foreground leading-tight">{palette.name}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">Haz clic en una paleta para aplicarla. Puedes ajustar los colores individualmente después.</p>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 {(
                   [
@@ -989,6 +1045,84 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                   </div>
                 ))}
               </div>
+              {/* Overlay + card opacity */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Oscuridad del fondo</Label>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      {form.theme.overlayOpacity ?? DEFAULT_THEME.overlayOpacity}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={80}
+                    step={5}
+                    value={form.theme.overlayOpacity ?? DEFAULT_THEME.overlayOpacity}
+                    onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, overlayOpacity: Number(e.target.value) } }))}
+                    className="w-full accent-primary"
+                  />
+                  <p className="text-xs text-muted-foreground">Capa negra sobre la foto de fondo.</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Tarjeta — color y opacidad</Label>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      {form.theme.cardOpacity ?? DEFAULT_THEME.cardOpacity}%
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={form.theme.cardBgColor || DEFAULT_THEME.cardBgColor}
+                      onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, cardBgColor: e.target.value } }))}
+                      className="h-8 w-10 rounded border cursor-pointer flex-shrink-0"
+                      title="Color de fondo de la tarjeta"
+                    />
+                    <input
+                      type="range"
+                      min={10}
+                      max={95}
+                      step={5}
+                      value={form.theme.cardOpacity ?? DEFAULT_THEME.cardOpacity}
+                      onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, cardOpacity: Number(e.target.value) } }))}
+                      className="flex-1 accent-primary"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Color + opacidad de la tarjeta. Sube para más contraste.</p>
+                </div>
+              </div>
+
+              {/* Input color + opacity */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Recuadros interiores (input y cajas)</Label>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {form.theme.inputOpacity ?? DEFAULT_THEME.inputOpacity}%
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={form.theme.inputBgColor || DEFAULT_THEME.inputBgColor}
+                    onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, inputBgColor: e.target.value } }))}
+                    className="h-8 w-10 rounded border cursor-pointer flex-shrink-0"
+                    title="Color de fondo del input"
+                  />
+                  <input
+                    type="range"
+                    min={10}
+                    max={95}
+                    step={5}
+                    value={form.theme.inputOpacity ?? DEFAULT_THEME.inputOpacity}
+                    onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, inputOpacity: Number(e.target.value) } }))}
+                    className="flex-1 accent-primary"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Afecta el input de código y las cajas de info del invitado.</p>
+              </div>
+
               <div className="space-y-1">
                 <Label>Fuente serif (textos principales)</Label>
                 <select
