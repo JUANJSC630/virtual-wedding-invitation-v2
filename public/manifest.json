@@ -1,0 +1,18 @@
+{
+  "name": "Invitación de Boda",
+  "short_name": "Invitación",
+  "description": "Tu invitación de boda digital",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#162b4e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/flower-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

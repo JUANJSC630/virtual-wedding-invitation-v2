@@ -41,6 +41,15 @@ const InvitationSection8 = () => {
 
   const rsvpMode = event?.config?.rsvpMode ?? "whatsapp";
 
+  const [confirmedCount, setConfirmedCount] = useState<number | null>(null);
+  useEffect(() => {
+    if (!event?.slug) return;
+    fetch(`/api/guests/${event.slug}/confirmed-count`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.count != null) setConfirmedCount(d.count); })
+      .catch(() => {});
+  }, [event?.slug]);
+
   const handleShare = async () => {
     const url = `${window.location.origin}/${event?.slug}${code ? `?code=${code}` : ""}`;
     const title = `${event?.brideName} & ${event?.groomName} — Te invitamos a nuestra boda`;
@@ -189,6 +198,17 @@ const InvitationSection8 = () => {
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.8, delay: 1.4 }}
             >
+              {confirmedCount !== null && confirmedCount > 0 && (
+                <motion.p
+                  className="text-sm text-[var(--color-primary)] opacity-70 text-center"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 0.7 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.6, delay: 1.5 }}
+                >
+                  🎉 {confirmedCount} {confirmedCount === 1 ? "persona ya confirmó" : "personas ya confirmaron"} su asistencia
+                </motion.p>
+              )}
               <motion.p
                 className="text-2xl md:text-3xl font-serif font-bold text-center tracking-wide text-[var(--color-accent)]"
                 initial={{ opacity: 0, scale: 0.8 }}

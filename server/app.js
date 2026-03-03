@@ -3,8 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
-import { rateLimit } from "express-rate-limit";
 
+import { authLimiter, guestLimiter } from "./middleware/limiters.js";
 import { authRoutes } from "./routes/auth.js";
 import { adminRoutes } from "./routes/admin.js";
 import { eventRoutes } from "./routes/events.js";
@@ -50,22 +50,7 @@ app.use(
   })
 );
 
-// ─── Rate limiting ───────────────────────────────────────────────────────────
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 10,
-  message: { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." },
-  standardHeaders: "draft-8",
-  legacyHeaders: false,
-});
-
-const guestLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 60,
-  message: { error: "Demasiadas peticiones. Espera unos minutos e intenta de nuevo." },
-  standardHeaders: "draft-8",
-  legacyHeaders: false,
-});
+// ─── Rate limiting — see server/middleware/limiters.js ───────────────────────
 
 // ─── Middlewares base ────────────────────────────────────────────────────────
 app.use(cookieParser());

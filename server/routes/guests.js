@@ -1,6 +1,7 @@
 import express from "express";
 
 import prisma from "../../src/lib/prisma.js";
+import { accessLimiter, rsvpLimiter, validateLimiter } from "../middleware/limiters.js";
 
 export const guestRoutes = express.Router();
 
@@ -26,7 +27,7 @@ const GUEST_PUBLIC_SELECT = {
 };
 
 // POST /api/guests/validate
-guestRoutes.post("/validate", async (req, res) => {
+guestRoutes.post("/validate", validateLimiter, async (req, res) => {
   try {
     const { code, eventSlug } = req.body;
 
@@ -106,7 +107,7 @@ guestRoutes.get("/code/:code", async (req, res) => {
 });
 
 // POST /api/guests/access
-guestRoutes.post("/access", async (req, res) => {
+guestRoutes.post("/access", accessLimiter, async (req, res) => {
   try {
     const { guestCode, eventSlug } = req.body;
     const ipAddress = req.ip || req.connection?.remoteAddress;
@@ -132,7 +133,7 @@ guestRoutes.post("/access", async (req, res) => {
 });
 
 // POST /api/guests/rsvp
-guestRoutes.post("/rsvp", async (req, res) => {
+guestRoutes.post("/rsvp", rsvpLimiter, async (req, res) => {
   try {
     const { guestCode, confirmed, companions, eventSlug } = req.body;
 
@@ -175,6 +176,24 @@ guestRoutes.post("/rsvp", async (req, res) => {
   } catch (error) {
     console.error("Error confirming RSVP:", error);
     res.status(500).json({ error: "Error al confirmar asistencia" });
+  }
+});
+
+// ─── GET /:slug/confirmed-count — social proof counter ───────────────────────
+
+guestRoutes.get("/:slug/confirmed-count", async (req, res) => {
+  try {
+    const event = await resolveEvent(req.params.slug);
+    if (!event || !event.isActive || event.archivedAt) {
+      return res.status(404).json({ error: "Evento no encontrado" });
+    }
+    const count = await prisma.guest.count({
+      where: { eventId: event.id, confirmed: true },
+    });
+    res.json({ count });
+  } catch (error) {
+    console.error("Error getting confirmed count:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
 
