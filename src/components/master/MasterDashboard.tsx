@@ -14,6 +14,7 @@ import {
   Settings,
   Shield,
   Trash2,
+  Upload,
   UserPlus,
   Users,
   Users2,
@@ -221,6 +222,9 @@ interface EventFormModalProps {
 const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onClose, onSaved }) => {
   const [form, setForm] = useState<EventFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
+  const bulkInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setForm(editingEvent ? eventToForm(editingEvent) : emptyForm);
@@ -242,6 +246,43 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
   const set = (field: keyof EventFormData) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm(prev => ({ ...prev, [field]: e.target.value }));
+
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length || !editingEvent?.id) return;
+    if (bulkInputRef.current) bulkInputRef.current.value = "";
+
+    setBulkUploading(true);
+    setBulkProgress({ done: 0, total: files.length });
+
+    const uploaded: { id: string; url: string; caption: string }[] = [];
+    await Promise.all(
+      files.map(async file => {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("eventId", editingEvent.id);
+        fd.append("assetType", "gallery");
+        try {
+          const res = await fetch("/api/master/upload", {
+            method: "POST",
+            credentials: "include",
+            body: fd,
+          });
+          const data = await res.json();
+          if (res.ok && data.url) {
+            uploaded.push({ id: crypto.randomUUID(), url: data.url, caption: "" });
+          }
+        } catch { /* skip failed file */ }
+        setBulkProgress(p => ({ ...p, done: p.done + 1 }));
+      })
+    );
+
+    if (uploaded.length) {
+      setForm(prev => ({ ...prev, gallery: [...prev.gallery, ...uploaded] }));
+    }
+    setBulkUploading(false);
+    setBulkProgress({ done: 0, total: 0 });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -731,6 +772,36 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               <p className="text-xs text-muted-foreground">
                 Fotos de la galería "Nuestra Historia". Se muestran en orden, en 2 columnas masonry.
               </p>
+
+              {/* Bulk upload */}
+              <div className="flex items-center gap-3">
+                <input
+                  ref={bulkInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple
+                  className="hidden"
+                  onChange={handleBulkUpload}
+                  disabled={!editingEvent?.id}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={bulkUploading || !editingEvent?.id}
+                  onClick={() => bulkInputRef.current?.click()}
+                  className="flex items-center gap-1.5"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  {bulkUploading
+                    ? `Subiendo ${bulkProgress.done}/${bulkProgress.total}...`
+                    : "Subir varias fotos"}
+                </Button>
+                {!editingEvent?.id && (
+                  <p className="text-xs text-muted-foreground">Guarda el evento primero para subir fotos.</p>
+                )}
+              </div>
+
               <div className="space-y-3">
                 {form.gallery.map((photo, idx) => (
                   <div key={photo.id} className="border rounded-md p-3 space-y-2">
