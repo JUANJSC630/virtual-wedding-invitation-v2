@@ -295,6 +295,7 @@ export interface Guest {
   createdAt: Date;
   updatedAt: Date;
   companions: Companion[];
+  accessCount?: number;
 }
 
 export interface Companion {

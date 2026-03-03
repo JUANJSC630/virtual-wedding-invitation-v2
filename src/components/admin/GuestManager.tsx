@@ -18,7 +18,8 @@ import GuestList from "./GuestList";
 import GuestQRModal from "./GuestQRModal";
 import GuestStatsPanel from "./GuestStatsPanel";
 
-type StatusFilter = "all" | "confirmed" | "pending" | "companions-pending";
+type StatusFilter = "all" | "confirmed" | "pending" | "companions-pending" | "no-access" | "accessed-not-confirmed" | "groups";
+type SortOrder = "default" | "name" | "code" | "confirmed-date";
 
 interface GuestManagerProps {
   eventSlug: string;
@@ -35,13 +36,14 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
   const [showWAModal, setShowWAModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("default");
 
   const { data: guests = [], isLoading, isFetching } = useAllGuests();
   const deleteMutation = useDeleteGuest();
   const updateMutation = useUpdateGuest();
 
   const filteredGuests = React.useMemo(() => {
-    return guests.filter(guest => {
+    const filtered = guests.filter(guest => {
       if (searchTerm) {
         const lower = searchTerm.toLowerCase();
         const matches =
@@ -52,19 +54,34 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
         if (!matches) return false;
       }
       switch (statusFilter) {
-        case "confirmed":
-          return guest.confirmed;
-        case "pending":
-          return !guest.confirmed;
-        case "companions-pending":
-          return guest.confirmed && guest.companions.some(c => !c.confirmed);
-        default:
-          return true;
+        case "confirmed":             return guest.confirmed;
+        case "pending":               return !guest.confirmed;
+        case "companions-pending":    return guest.confirmed && guest.companions.some(c => !c.confirmed);
+        case "no-access":             return (guest.accessCount ?? 0) === 0;
+        case "accessed-not-confirmed": return (guest.accessCount ?? 0) > 0 && !guest.confirmed;
+        case "groups":                return guest.maxGuests >= 3;
+        default:                      return true;
       }
     });
-  }, [guests, searchTerm, statusFilter]);
 
-  const activeFiltersCount = (searchTerm ? 1 : 0) + (statusFilter !== "all" ? 1 : 0);
+    switch (sortOrder) {
+      case "name":
+        return [...filtered].sort((a, b) => a.name.localeCompare(b.name, "es"));
+      case "code":
+        return [...filtered].sort((a, b) => a.code.localeCompare(b.code));
+      case "confirmed-date":
+        return [...filtered].sort((a, b) => {
+          if (!a.confirmedAt && !b.confirmedAt) return 0;
+          if (!a.confirmedAt) return 1;
+          if (!b.confirmedAt) return -1;
+          return new Date(b.confirmedAt).getTime() - new Date(a.confirmedAt).getTime();
+        });
+      default:
+        return filtered;
+    }
+  }, [guests, searchTerm, statusFilter, sortOrder]);
+
+  const activeFiltersCount = (searchTerm ? 1 : 0) + (statusFilter !== "all" ? 1 : 0) + (sortOrder !== "default" ? 1 : 0);
 
   const handleEdit = (guest: Guest) => {
     setEditingGuest(guest);
@@ -213,12 +230,15 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
         filteredCount={filteredGuests.length}
         searchTerm={searchTerm}
         statusFilter={statusFilter}
+        sortOrder={sortOrder}
         activeFiltersCount={activeFiltersCount}
         onSearch={setSearchTerm}
         onStatusFilter={setStatusFilter}
+        onSort={setSortOrder}
         onClear={() => {
           setSearchTerm("");
           setStatusFilter("all");
+          setSortOrder("default");
         }}
       />
 

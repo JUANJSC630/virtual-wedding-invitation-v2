@@ -23,10 +23,15 @@ adminRoutes.get("/guests", async (req, res) => {
   try {
     const guests = await prisma.guest.findMany({
       where: eventFilter(req.user),
-      include: { companions: true },
+      include: {
+        companions: true,
+        _count: { select: { guestAccesses: true } },
+      },
       orderBy: { createdAt: "desc" },
     });
-    res.json(guests);
+    // Flatten _count into accessCount for the client
+    const result = guests.map(({ _count, ...g }) => ({ ...g, accessCount: _count.guestAccesses }));
+    res.json(result);
   } catch (error) {
     console.error("Error getting guests:", error);
     res.status(500).json({ error: "Error interno del servidor" });
