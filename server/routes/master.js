@@ -21,7 +21,7 @@ function buildConfig(body) {
     heroMessage, giftMessage, announcementText,
     dressCodeLabel, dressCodeLadies, dressCodeGentlemen,
     parentsBride, parentsGroom, godparents, bridesmaids, groomsmen,
-    timeline, gallery,
+    timeline, gallery, sections,
   } = body;
 
   const splitLines = (str) =>
@@ -41,6 +41,16 @@ function buildConfig(body) {
     groomsmen: splitLines(groomsmen),
     timeline: Array.isArray(timeline) ? timeline : [],
     gallery: Array.isArray(gallery) ? gallery : [],
+    sections: {
+      showVerse:    sections?.showVerse    ?? true,
+      showNames:    sections?.showNames    ?? true,
+      showPhotos:   sections?.showPhotos   ?? true,
+      showFamily:   sections?.showFamily   ?? true,
+      showVenues:   sections?.showVenues   ?? true,
+      showTimeline: sections?.showTimeline ?? true,
+      showGifts:    sections?.showGifts    ?? true,
+      showGallery:  sections?.showGallery  ?? true,
+    },
     labels: (typeof body.labels === "object" && body.labels !== null) ? body.labels : {},
   };
 }

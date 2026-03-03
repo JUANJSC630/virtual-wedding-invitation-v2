@@ -127,6 +127,18 @@ export interface AssetMap {
   infoBg?: string;
 }
 
+// Section visibility toggles
+export interface SectionsConfig {
+  showVerse: boolean;       // Section 1 — versículo
+  showNames: boolean;       // Section 3 — nombres & mensaje
+  showPhotos: boolean;      // Sections 2, 4, 9 — fotos decorativas
+  showFamily: boolean;      // Section 5 — familias & padrinos
+  showVenues: boolean;      // Section 6 — lugares & vestimenta
+  showTimeline: boolean;    // Section 7 — itinerario
+  showGifts: boolean;       // Section 8 — regalos & RSVP
+  showGallery: boolean;     // Gallery — Nuestra Historia
+}
+
 // Event Config
 export interface EventConfig {
   verse?: { text: string; reference: string };
@@ -142,6 +154,7 @@ export interface EventConfig {
   announcementText?: string;
   timeline?: TimelineItem[];
   gallery?: GalleryPhoto[];
+  sections?: SectionsConfig;
   labels?: {
     // Section 5
     familyTitle?: string;

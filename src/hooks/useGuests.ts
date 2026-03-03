@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { CreateCompanionInput, CreateGuestInput, RSVPData, UpdateGuestInput } from "@/types";
+import { UpdateGuestInput } from "@/types";
 
 import {
   confirmRSVP,

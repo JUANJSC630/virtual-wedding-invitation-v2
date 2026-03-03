@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Route, Routes, useNavigate, useParams } from "react-router-dom";
 
-import { AdminUser, Event, Guest, ThemeConfig } from "@/types";
+import { AdminUser, Event, Guest, SectionsConfig, ThemeConfig } from "@/types";
 
 import { queryClient } from "@/lib/query-client";
 
@@ -195,22 +195,25 @@ const WeddingInvitation: React.FC = () => {
     ),
   };
 
+  const sec = (event?.config?.sections ?? {}) as Partial<SectionsConfig>;
+  const show = (key: keyof SectionsConfig) => sec[key] ?? true;
+
   return (
     <EventContext.Provider value={{ event, loading: eventLoading }}>
     <ThemeProvider theme={(event?.theme as ThemeConfig) ?? {}}>
     <AssetContext.Provider value={mergedAssets}>
       <main className="w-full flex flex-col justify-center items-center bg-white" role="main">
         <div className="max-w-2xl mx-auto">
-          <InvitationSection1 />
-          <InvitationSection2 />
-          <InvitationSection3 />
-          <InvitationSection4 />
-          <InvitationSectionGallery />
-          <InvitationSection5 />
-          <InvitationSection6 />
-          <InvitationSection9 />
-          <InvitationSection7 />
-          <InvitationSection8 />
+          {show("showVerse")    && <InvitationSection1 />}
+          {show("showPhotos")   && <InvitationSection2 />}
+          {show("showNames")    && <InvitationSection3 />}
+          {show("showPhotos")   && <InvitationSection4 />}
+          {show("showGallery")  && <InvitationSectionGallery />}
+          {show("showFamily")   && <InvitationSection5 />}
+          {show("showVenues")   && <InvitationSection6 />}
+          {show("showPhotos")   && <InvitationSection9 />}
+          {show("showTimeline") && <InvitationSection7 />}
+          {show("showGifts")    && <InvitationSection8 />}
         </div>
       </main>
     </AssetContext.Provider>
