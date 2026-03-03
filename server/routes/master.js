@@ -310,6 +310,30 @@ masterRoutes.delete("/client-admins/:id", async (req, res) => {
   }
 });
 
+// ─── PATCH /api/master/client-admins/:id/password — cambiar contraseña ───────
+
+masterRoutes.patch("/client-admins/:id/password", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 8) {
+      return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres" });
+    }
+
+    const admin = await prisma.clientAdmin.findUnique({ where: { id } });
+    if (!admin) return res.status(404).json({ error: "Admin no encontrado" });
+
+    const hashed = await bcrypt.hash(password, 10);
+    await prisma.clientAdmin.update({ where: { id }, data: { password: hashed } });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error changing client admin password:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // ─── POST /api/master/upload — subir asset a Vercel Blob ─────────────────────
 
 const ALLOWED_MIME = {

@@ -8,6 +8,7 @@ import {
   Edit2,
   Eye,
   EyeOff,
+  KeyRound,
   LogOut,
   Plus,
   Settings,
@@ -1050,6 +1051,10 @@ const ClientAdminModal: React.FC<ClientAdminModalProps> = ({ open, event, onClos
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  // Password reset
+  const [changingPwdFor, setChangingPwdFor] = useState<string | null>(null);
+  const [newPwd, setNewPwd] = useState("");
+  const [savingPwd, setSavingPwd] = useState(false);
 
   const loadAdmins = useCallback(async () => {
     if (!event) return;
@@ -1068,8 +1073,38 @@ const ClientAdminModal: React.FC<ClientAdminModalProps> = ({ open, event, onClos
 
   useEffect(() => {
     if (open && event) loadAdmins();
-    else { setAdmins([]); setEmail(""); setName(""); setPassword(""); }
+    else {
+      setAdmins([]); setEmail(""); setName(""); setPassword("");
+      setChangingPwdFor(null); setNewPwd("");
+    }
   }, [open, event, loadAdmins]);
+
+  const handleChangePassword = async (adminId: string) => {
+    if (newPwd.length < 8) {
+      toast.error("La contraseña debe tener al menos 8 caracteres");
+      return;
+    }
+    setSavingPwd(true);
+    try {
+      const res = await fetch(`/api/master/client-admins/${adminId}/password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ password: newPwd }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Error al cambiar contraseña");
+      }
+      toast.success("Contraseña actualizada");
+      setChangingPwdFor(null);
+      setNewPwd("");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSavingPwd(false);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1129,19 +1164,61 @@ const ClientAdminModal: React.FC<ClientAdminModalProps> = ({ open, event, onClos
             ) : (
               <div className="space-y-2">
                 {admins.map(admin => (
-                  <div key={admin.id} className="flex items-center justify-between p-2 rounded border text-sm">
-                    <div>
-                      <p className="font-medium">{admin.name}</p>
-                      <p className="text-muted-foreground text-xs">{admin.email}</p>
+                  <div key={admin.id} className="rounded border text-sm">
+                    <div className="flex items-center justify-between p-2">
+                      <div>
+                        <p className="font-medium">{admin.name}</p>
+                        <p className="text-muted-foreground text-xs">{admin.email}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setChangingPwdFor(changingPwdFor === admin.id ? null : admin.id);
+                            setNewPwd("");
+                          }}
+                          title="Cambiar contraseña"
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(admin.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(admin.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {changingPwdFor === admin.id && (
+                      <div className="px-2 pb-2 flex gap-2 items-center border-t pt-2">
+                        <Input
+                          type="password"
+                          value={newPwd}
+                          onChange={e => setNewPwd(e.target.value)}
+                          placeholder="Nueva contraseña (mín. 8 caracteres)"
+                          className="flex-1 h-8 text-xs"
+                        />
+                        <Button
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => handleChangePassword(admin.id)}
+                          disabled={savingPwd || newPwd.length < 8}
+                        >
+                          {savingPwd ? "..." : "Guardar"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 text-xs"
+                          onClick={() => { setChangingPwdFor(null); setNewPwd(""); }}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
