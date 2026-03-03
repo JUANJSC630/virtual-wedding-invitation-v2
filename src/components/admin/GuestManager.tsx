@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { Download, Plus, Upload } from "lucide-react";
+import { Download, MessageCircle, Plus, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Guest } from "@/types";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 
 import CompanionsModal from "./CompanionsModal";
 import CSVImportModal from "./CSVImportModal";
+import WALinksModal from "./WALinksModal";
 import GuestFilterBar from "./GuestFilterBar";
 import GuestFormModal from "./GuestFormModal";
 import GuestList from "./GuestList";
@@ -31,6 +32,7 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrGuest, setQrGuest] = useState<Guest | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showWAModal, setShowWAModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -180,6 +182,10 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button onClick={() => setShowWAModal(true)} variant="outline">
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Links WA
+          </Button>
           <Button onClick={handleExportCSV} variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
@@ -257,6 +263,12 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
       <CSVImportModal
         open={showImportModal}
         onOpenChange={setShowImportModal}
+      />
+      <WALinksModal
+        open={showWAModal}
+        onOpenChange={setShowWAModal}
+        guests={guests}
+        eventSlug={eventSlug}
       />
     </div>
   );
