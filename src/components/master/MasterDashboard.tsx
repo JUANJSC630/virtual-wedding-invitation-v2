@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import {
   CalendarDays,
   CheckCircle2,
+  Clock,
   Copy,
   Edit2,
   Eye,
@@ -16,6 +17,7 @@ import {
   Settings,
   Shield,
   Trash2,
+  Trophy,
   Upload,
   UserPlus,
   Users,
@@ -1476,6 +1478,10 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
   const [events, setEvents] = useState<EventWithStats[]>([]);
   const [stats, setStats] = useState<GlobalStats | null>(null);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [recentConfirmations, setRecentConfirmations] = useState<{
+    id: string; name: string; confirmedAt: string;
+    event: { slug: string; groomName: string; brideName: string };
+  }[]>([]);
 
   // Modals
   const [showEventModal, setShowEventModal] = useState(false);
@@ -1489,12 +1495,14 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
   const loadData = useCallback(async () => {
     setLoadingEvents(true);
     try {
-      const [evRes, stRes] = await Promise.all([
+      const [evRes, stRes, rcRes] = await Promise.all([
         fetch(`/api/master/events${showArchived ? "?archived=1" : ""}`, { credentials: "include" }),
         fetch("/api/master/stats", { credentials: "include" }),
+        fetch("/api/master/recent-confirmations", { credentials: "include" }),
       ]);
       if (evRes.ok) setEvents(await evRes.json());
       if (stRes.ok) setStats(await stRes.json());
+      if (rcRes.ok) setRecentConfirmations(await rcRes.json());
     } catch {
       toast.error("Error cargando datos");
     } finally {
@@ -1666,6 +1674,111 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold">{stats.totalAccesses}</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Insights section */}
+        {!showArchived && events.length > 0 && (
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* Próximos eventos */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  Próximos eventos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {(() => {
+                  const now = new Date();
+                  const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+                  const upcoming = events
+                    .filter(ev => { const d = new Date(ev.eventDate); return d >= now && d <= in30; })
+                    .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
+                    .slice(0, 5);
+                  if (upcoming.length === 0)
+                    return <p className="text-sm text-muted-foreground text-center py-2">Sin eventos en los próximos 30 días</p>;
+                  return upcoming.map(ev => {
+                    const daysLeft = Math.ceil((new Date(ev.eventDate).getTime() - now.getTime()) / 86400000);
+                    return (
+                      <div key={ev.id} className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium leading-tight truncate">{ev.brideName} &amp; {ev.groomName}</p>
+                          <p className="text-xs text-muted-foreground">/{ev.slug}</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs shrink-0">
+                          {daysLeft === 0 ? "Hoy" : `${daysLeft}d`}
+                        </Badge>
+                      </div>
+                    );
+                  });
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* Ranking por confirmación */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-muted-foreground" />
+                  Ranking confirmaciones
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {events.filter(ev => ev.stats.totalGuests > 0).length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-2">Sin datos aún</p>
+                ) : (
+                  events
+                    .filter(ev => ev.stats.totalGuests > 0)
+                    .sort((a, b) => (b.stats.confirmedGuests / b.stats.totalGuests) - (a.stats.confirmedGuests / a.stats.totalGuests))
+                    .slice(0, 4)
+                    .map((ev, idx) => {
+                      const rate = Math.round((ev.stats.confirmedGuests / ev.stats.totalGuests) * 100);
+                      return (
+                        <div key={ev.id} className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-1.5 min-w-0">
+                              <span className="text-muted-foreground font-mono shrink-0">#{idx + 1}</span>
+                              <span className="truncate">{ev.brideName} &amp; {ev.groomName}</span>
+                            </span>
+                            <span className="font-semibold shrink-0 ml-2">{rate}%</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${rate}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Últimas confirmaciones */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  Últimas confirmaciones
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {recentConfirmations.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-2">Sin confirmaciones aún</p>
+                ) : (
+                  recentConfirmations.slice(0, 5).map(rc => (
+                    <div key={rc.id} className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium leading-tight truncate">{rc.name}</p>
+                        <p className="text-xs text-muted-foreground">/{rc.event.slug}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {new Date(rc.confirmedAt).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
+                      </span>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
           </div>
