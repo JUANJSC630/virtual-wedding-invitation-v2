@@ -30,16 +30,27 @@ function eventFilter(user) {
 // Obtener todos los invitados
 adminRoutes.get("/guests", async (req, res) => {
   try {
-    const guests = await prisma.guest.findMany({
-      where: eventFilter(req.user),
-      include: {
-        companions: true,
-        _count: { select: { guestAccesses: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-    // Flatten _count into accessCount for the client
-    const result = guests.map(({ _count, ...g }) => ({ ...g, accessCount: _count.guestAccesses }));
+    const { eventId } = req.user;
+
+    // GuestAccess has no FK to Guest — join via guestCode + eventId
+    const [guests, accessCounts] = await Promise.all([
+      prisma.guest.findMany({
+        where: eventFilter(req.user),
+        include: { companions: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.guestAccess.groupBy({
+        by: ["guestCode"],
+        where: { eventId },
+        _count: { id: true },
+      }),
+    ]);
+
+    const countMap = Object.fromEntries(
+      accessCounts.map(({ guestCode, _count }) => [guestCode, _count.id])
+    );
+
+    const result = guests.map(g => ({ ...g, accessCount: countMap[g.code] ?? 0 }));
     res.json(result);
   } catch (error) {
     console.error("Error getting guests:", error);

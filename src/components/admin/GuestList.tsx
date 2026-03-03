@@ -116,19 +116,26 @@ const GuestList: React.FC<GuestListProps> = ({
                 return (
                   <TableRow key={guest.id}>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono">
-                          {guest.code}
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => onCopyCode(guest)}
-                          title="Copiar código"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="font-mono">
+                            {guest.code}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => onCopyCode(guest)}
+                            title="Copiar código"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        {guest.accessCount !== undefined && (
+                          <span className="text-xs text-muted-foreground">
+                            👁 {guest.accessCount} {guest.accessCount === 1 ? "acceso" : "accesos"}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
 
@@ -343,6 +350,16 @@ const GuestList: React.FC<GuestListProps> = ({
                         </span>
                       )}
                     </div>
+                    {guest.accessCount !== undefined && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <span className="text-sm">👁 {guest.accessCount} {guest.accessCount === 1 ? "acceso" : "accesos"}</span>
+                      </div>
+                    )}
+                    {guest.notes && (
+                      <div className="text-xs text-muted-foreground bg-muted rounded px-2 py-1">
+                        📝 {guest.notes}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-2">

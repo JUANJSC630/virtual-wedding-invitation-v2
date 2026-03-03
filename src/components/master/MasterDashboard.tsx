@@ -251,13 +251,16 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
   const [form, setForm] = useState<EventFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const originalSlug = React.useRef<string>("");
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const bulkInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setFormErrors({});
-    setForm(editingEvent ? eventToForm(editingEvent) : emptyForm);
+    const f = editingEvent ? eventToForm(editingEvent) : emptyForm;
+    setForm(f);
+    originalSlug.current = f.slug;
   }, [editingEvent, open]);
 
   // Cargar Google Font para el preview cuando cambia el selector
@@ -333,6 +336,18 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
       return;
     }
     setFormErrors({});
+
+    // Warn if slug changed on an existing active event with accesses
+    if (
+      editingEvent &&
+      form.slug !== originalSlug.current &&
+      editingEvent.stats.totalAccesses > 0
+    ) {
+      const ok = window.confirm(
+        `⚠️ Estás cambiando el slug de "${originalSlug.current}" a "${form.slug}".\n\nEsto romperá todos los enlaces ya enviados a los invitados (${editingEvent.stats.totalAccesses} accesos registrados).\n\n¿Deseas continuar?`
+      );
+      if (!ok) return;
+    }
 
     setSaving(true);
     try {

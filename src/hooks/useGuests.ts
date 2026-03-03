@@ -47,10 +47,11 @@ export const useConfirmRSVP = () => {
 // === HOOKS DE ADMINISTRACIÓN ===
 
 // Hook para obtener todos los invitados
-export const useAllGuests = () => {
+export const useAllGuests = (refetchInterval?: number) => {
   return useQuery({
     queryKey: ["guests", "all"],
     queryFn: getAllGuests,
+    refetchInterval,
   });
 };
 
@@ -139,10 +140,11 @@ export const useDeleteCompanion = () => {
 };
 
 // Hook para obtener estadísticas
-export const useGuestStats = () => {
+export const useGuestStats = (refetchInterval?: number) => {
   return useQuery({
     queryKey: ["admin", "stats"],
     queryFn: getGuestStats,
+    refetchInterval,
   });
 };
 

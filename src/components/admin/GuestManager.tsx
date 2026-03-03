@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { Download, MessageCircle, Plus, Upload } from "lucide-react";
+import { Download, MessageCircle, Plus, Radio, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Guest } from "@/types";
@@ -37,8 +37,15 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("default");
+  const [liveMode, setLiveMode] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const { data: guests = [], isLoading, isFetching } = useAllGuests();
+  const { data: guests = [], isLoading, isFetching } = useAllGuests(liveMode ? 10000 : undefined);
+
+  // Track last successful refresh
+  useEffect(() => {
+    if (!isFetching) setLastUpdated(new Date());
+  }, [isFetching]);
   const deleteMutation = useDeleteGuest();
   const updateMutation = useUpdateGuest();
 
@@ -199,6 +206,15 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => setLiveMode(v => !v)}
+            variant={liveMode ? "default" : "outline"}
+            className={liveMode ? "bg-green-600 hover:bg-green-700" : ""}
+            title="Refresca datos cada 10 segundos"
+          >
+            <Radio className="mr-2 h-4 w-4" />
+            {liveMode ? "En vivo" : "Modo en vivo"}
+          </Button>
           <Button onClick={() => setShowWAModal(true)} variant="outline">
             <MessageCircle className="mr-2 h-4 w-4" />
             Links WA
@@ -223,7 +239,36 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
         </div>
       </div>
 
-      <GuestStatsPanel />
+      {/* Live mode status bar */}
+      {liveMode && (
+        <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
+          <span className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            Modo en vivo activo — actualizando cada 10 segundos
+          </span>
+          {lastUpdated && (
+            <span className="text-xs text-green-600">
+              Última actualización: {lastUpdated.toLocaleTimeString("es-CO")}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* 80% confirmation banner */}
+      {(() => {
+        const confirmed = guests.filter(g => g.confirmed).length;
+        const rate = guests.length > 0 ? confirmed / guests.length : 0;
+        if (rate >= 0.8 && guests.length > 0) {
+          return (
+            <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-900 font-medium flex items-center gap-2">
+              🎉 ¡{Math.round(rate * 100)}% de confirmación! {confirmed} de {guests.length} invitados han confirmado.
+            </div>
+          );
+        }
+        return null;
+      })()}
+
+      <GuestStatsPanel liveMode={liveMode} />
 
       <GuestFilterBar
         guests={guests}

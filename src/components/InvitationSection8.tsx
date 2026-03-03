@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
+import { Share2 } from "lucide-react";
 import { Variants, motion, useInView } from "framer-motion";
+import toast from "react-hot-toast";
 
 import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
+import { useGuestContext } from "@/context/GuestContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +18,7 @@ const InvitationSection8 = () => {
   const [layoutReady, setLayoutReady] = useState(false);
   const [isAfterDeadline, setIsAfterDeadline] = useState(false);
   const { event } = useEventContext();
+  const { guest, code } = useGuestContext();
   const assets = useAssets();
 
   const groomPhone = event?.groomPhone ?? import.meta.env.VITE_GROOM_PHONE;
@@ -36,6 +40,17 @@ const InvitationSection8 = () => {
   const thanksLabel  = labels?.thanks    ?? "Muchas Gracias!";
 
   const rsvpMode = event?.config?.rsvpMode ?? "whatsapp";
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/${event?.slug}${code ? `?code=${code}` : ""}`;
+    const title = `${event?.brideName} & ${event?.groomName} — Te invitamos a nuestra boda`;
+    if (navigator.share) {
+      try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("¡Link copiado al portapapeles!");
+    }
+  };
 
   const rsvpDeadlineDate = event?.rsvpDeadline ? new Date(event.rsvpDeadline) : null;
   const deadlineText = rsvpDeadlineDate
@@ -290,6 +305,20 @@ const InvitationSection8 = () => {
               )}
             </motion.div>
           </div>
+          {/* Compartir invitación */}
+          {guest && (
+            <div className="flex flex-col items-center gap-2 py-4">
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 px-5 py-2 rounded-full border text-sm font-medium transition-colors hover:bg-accent"
+                style={{ color: "var(--color-primary)", borderColor: "var(--color-primary)" }}
+              >
+                <Share2 className="h-4 w-4" />
+                Compartir invitación
+              </button>
+            </div>
+          )}
+
           {/* Mensaje final */}
           <div className="flex flex-col items-center justify-start w-full h-[250px] gap-2">
             <p className="text-lg md:text-xl font-serif text-[var(--color-primary)] text-center tracking-wide mb-2">

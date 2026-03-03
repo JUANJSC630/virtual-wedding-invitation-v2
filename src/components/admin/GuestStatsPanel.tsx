@@ -16,8 +16,8 @@ interface GuestStats {
   pendingCompanions: number;
 }
 
-const GuestStatsPanel: React.FC = () => {
-  const { data: stats, isFetching } = useGuestStats();
+const GuestStatsPanel: React.FC<{ liveMode?: boolean }> = ({ liveMode }) => {
+  const { data: stats, isFetching } = useGuestStats(liveMode ? 10000 : undefined);
 
   if (!stats) return null;
 
