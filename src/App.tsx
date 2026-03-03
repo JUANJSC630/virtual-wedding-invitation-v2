@@ -11,6 +11,7 @@ import { queryClient } from "@/lib/query-client";
 
 import { AssetContext, DEFAULT_ASSETS } from "@/context/AssetContext";
 import { EventContext } from "@/context/EventContext";
+import { GuestContext } from "@/context/GuestContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 import AdminDashboard from "@/components/AdminDashboard";
@@ -202,6 +203,7 @@ const WeddingInvitation: React.FC = () => {
     <EventContext.Provider value={{ event, loading: eventLoading }}>
     <ThemeProvider theme={(event?.theme as ThemeConfig) ?? {}}>
     <AssetContext.Provider value={mergedAssets}>
+    <GuestContext.Provider value={{ guest, setGuest: (g: Guest) => setGuest(g), code: validatedCode, eventSlug }}>
       <main className="w-full flex flex-col justify-center items-center bg-white" role="main">
         <div className="max-w-2xl mx-auto">
           {show("showVerse")    && <InvitationSection1 />}
@@ -216,6 +218,7 @@ const WeddingInvitation: React.FC = () => {
           {show("showGifts")    && <InvitationSection8 />}
         </div>
       </main>
+    </GuestContext.Provider>
     </AssetContext.Provider>
     </ThemeProvider>
     </EventContext.Provider>

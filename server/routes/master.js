@@ -21,7 +21,7 @@ function buildConfig(body) {
     heroMessage, giftMessage, announcementText,
     dressCodeLabel, dressCodeLadies, dressCodeGentlemen,
     parentsBride, parentsGroom, godparents, bridesmaids, groomsmen,
-    timeline, gallery, sections,
+    timeline, gallery, sections, rsvpMode,
   } = body;
 
   const splitLines = (str) =>
@@ -51,6 +51,7 @@ function buildConfig(body) {
       showGifts:    sections?.showGifts    ?? true,
       showGallery:  sections?.showGallery  ?? true,
     },
+    rsvpMode: rsvpMode === "form" ? "form" : "whatsapp",
     labels: (typeof body.labels === "object" && body.labels !== null) ? body.labels : {},
   };
 }

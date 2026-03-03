@@ -7,6 +7,7 @@ import { useEventContext } from "@/context/EventContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
 
 import { Button } from "@/components/ui/button";
+import RSVPForm from "@/components/RSVPForm";
 
 // Definimos el componente de la sección de invitación
 const InvitationSection8 = () => {
@@ -33,6 +34,8 @@ const InvitationSection8 = () => {
   const closedLabel  = labels?.closed    ?? "(Cerrado)";
   const closingLabel = labels?.closing   ?? "ESPERAMOS CONTAR CON SU PRESENCIA";
   const thanksLabel  = labels?.thanks    ?? "Muchas Gracias!";
+
+  const rsvpMode = event?.config?.rsvpMode ?? "whatsapp";
 
   const rsvpDeadlineDate = event?.rsvpDeadline ? new Date(event.rsvpDeadline) : null;
   const deadlineText = rsvpDeadlineDate
@@ -165,7 +168,7 @@ const InvitationSection8 = () => {
 
             {/* Confirmar asistencia */}
             <motion.div
-              className="flex flex-col items-center gap-6"
+              className="flex flex-col items-center gap-6 w-full"
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
@@ -180,104 +183,111 @@ const InvitationSection8 = () => {
               >
                 {confirmLabel}
               </motion.p>
-              <motion.div
-                className="flex flex-row gap-4"
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.6, delay: 1.8 }}
-              >
-                {/* Botón WhatsApp Novio */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.4, delay: 2.0, type: "spring", stiffness: 200 }}
-                >
-                  <Button
-                    className={`!bg-[var(--color-action)] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
-                      isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
-                    }`}
-                    onClick={() => {
-                      if (!isAfterDeadline) {
-                        window.open(
-                          `https://wa.me/${groomPhone}?text=${groomWAMessage}`,
-                          "_blank",
-                          "noopener,noreferrer"
-                        );
-                      }
-                    }}
-                    aria-label="WhatsApp Novio"
-                    disabled={isAfterDeadline}
-                  >
-                    <img
-                      src="/whatsapp.svg"
-                      alt="WhatsApp icon"
-                      loading="lazy"
-                      className="w-8 h-8"
-                      style={{ filter: "invert(1) brightness(2)" }}
-                    />
-                    {groomLabel}
-                  </Button>
-                </motion.div>
-                {/* Botón WhatsApp Novia */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.4, delay: 2.2, type: "spring", stiffness: 200 }}
-                >
-                  <Button
-                    className={`!bg-[var(--color-action)] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
-                      isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
-                    }`}
-                    onClick={() => {
-                      if (!isAfterDeadline) {
-                        window.open(
-                          `https://wa.me/${bridePhone}?text=${brideWAMessage}`,
-                          "_blank",
-                          "noopener,noreferrer"
-                        );
-                      }
-                    }}
-                    aria-label="WhatsApp Novia"
-                    disabled={isAfterDeadline}
-                  >
-                    <img
-                      src="/whatsapp.svg"
-                      alt="WhatsApp icon"
-                      loading="lazy"
-                      className="w-8 h-8"
-                      style={{ filter: "invert(1) brightness(2)" }}
-                    />
-                    {brideLabel}
-                  </Button>
-                </motion.div>
-              </motion.div>
 
-              <motion.div
-                className="flex flex-row gap-4 mt-4"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: 2.4 }}
-              >
-                <p className="text-[var(--color-accent)] font-serif text-center w-full opacity-80">
-                  {deadlineLabel}{" "}
-                  <span className="font-semibold">{deadlineText}</span>
-                </p>
-              </motion.div>
-              <motion.div
-                className="flex flex-row gap-4 mt-4"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: 2.6 }}
-              >
-                <p className="text-sm text-[var(--color-accent)] font-serif text-center w-full opacity-80">
-                  {isAfterDeadline ? closedLabel : ""}
-                </p>
-              </motion.div>
+              {rsvpMode === "form" ? (
+                <RSVPForm />
+              ) : (
+                <>
+                  <motion.div
+                    className="flex flex-row gap-4"
+                    initial={{ opacity: 0, x: -50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.6, delay: 1.8 }}
+                  >
+                    {/* Botón WhatsApp Novio */}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      whileInView={{ scale: 1 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{ duration: 0.4, delay: 2.0, type: "spring", stiffness: 200 }}
+                    >
+                      <Button
+                        className={`!bg-[var(--color-action)] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
+                          isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
+                        }`}
+                        onClick={() => {
+                          if (!isAfterDeadline) {
+                            window.open(
+                              `https://wa.me/${groomPhone}?text=${groomWAMessage}`,
+                              "_blank",
+                              "noopener,noreferrer"
+                            );
+                          }
+                        }}
+                        aria-label="WhatsApp Novio"
+                        disabled={isAfterDeadline}
+                      >
+                        <img
+                          src="/whatsapp.svg"
+                          alt="WhatsApp icon"
+                          loading="lazy"
+                          className="w-8 h-8"
+                          style={{ filter: "invert(1) brightness(2)" }}
+                        />
+                        {groomLabel}
+                      </Button>
+                    </motion.div>
+                    {/* Botón WhatsApp Novia */}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      whileInView={{ scale: 1 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{ duration: 0.4, delay: 2.2, type: "spring", stiffness: 200 }}
+                    >
+                      <Button
+                        className={`!bg-[var(--color-action)] !text-white !flex !items-center !gap-2 !px-4 !py-2 !rounded-full !shadow-md !cursor-pointer ${
+                          isAfterDeadline ? "!opacity-50 !cursor-not-allowed" : ""
+                        }`}
+                        onClick={() => {
+                          if (!isAfterDeadline) {
+                            window.open(
+                              `https://wa.me/${bridePhone}?text=${brideWAMessage}`,
+                              "_blank",
+                              "noopener,noreferrer"
+                            );
+                          }
+                        }}
+                        aria-label="WhatsApp Novia"
+                        disabled={isAfterDeadline}
+                      >
+                        <img
+                          src="/whatsapp.svg"
+                          alt="WhatsApp icon"
+                          loading="lazy"
+                          className="w-8 h-8"
+                          style={{ filter: "invert(1) brightness(2)" }}
+                        />
+                        {brideLabel}
+                      </Button>
+                    </motion.div>
+                  </motion.div>
+
+                  <motion.div
+                    className="flex flex-row gap-4 mt-4"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.5, delay: 2.4 }}
+                  >
+                    <p className="text-[var(--color-accent)] font-serif text-center w-full opacity-80">
+                      {deadlineLabel}{" "}
+                      <span className="font-semibold">{deadlineText}</span>
+                    </p>
+                  </motion.div>
+                  <motion.div
+                    className="flex flex-row gap-4 mt-4"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.5, delay: 2.6 }}
+                  >
+                    <p className="text-sm text-[var(--color-accent)] font-serif text-center w-full opacity-80">
+                      {isAfterDeadline ? closedLabel : ""}
+                    </p>
+                  </motion.div>
+                </>
+              )}
             </motion.div>
           </div>
           {/* Mensaje final */}

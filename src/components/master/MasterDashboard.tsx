@@ -99,6 +99,8 @@ interface EventFormData {
   gallery: GalleryPhoto[];
   // Sections
   sections: SectionsConfig;
+  // RSVP mode
+  rsvpMode: "whatsapp" | "form";
   // Labels
   labels: Record<string, string>;
 }
@@ -123,6 +125,7 @@ const emptyForm: EventFormData = {
   brideWAMessage: "", heroPhotoUrl: "", photo2Url: "", photo3Url: "",
   audioUrl: "", announcementText: "", timeline: [], gallery: [],
   sections: { showVerse: true, showNames: true, showPhotos: true, showFamily: true, showVenues: true, showTimeline: true, showGifts: true, showGallery: true },
+  rsvpMode: "whatsapp",
   assets: {}, theme: {}, labels: {},
 };
 
@@ -178,6 +181,7 @@ function eventToForm(ev: EventWithStats): EventFormData {
       showGifts:    ev.config?.sections?.showGifts    ?? true,
       showGallery:  ev.config?.sections?.showGallery  ?? true,
     },
+    rsvpMode: (ev.config?.rsvpMode === "form" ? "form" : "whatsapp") as "whatsapp" | "form",
     assets: (ev.assets as AssetMap) ?? {},
     theme: (ev.theme as ThemeConfig) ?? {},
     labels: (ev.config?.labels as Record<string, string>) ?? {},
@@ -336,6 +340,29 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                   <Label>Límite RSVP</Label>
                   <Input type="date" value={form.rsvpDeadline} onChange={set("rsvpDeadline")} />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Modo de confirmación de asistencia</Label>
+                <div className="flex gap-6">
+                  {(["whatsapp", "form"] as const).map(mode => (
+                    <label key={mode} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="rsvpMode"
+                        value={mode}
+                        checked={form.rsvpMode === mode}
+                        onChange={() => setForm(f => ({ ...f, rsvpMode: mode }))}
+                        className="accent-primary"
+                      />
+                      <span className="text-sm">
+                        {mode === "whatsapp" ? "WhatsApp (botones)" : "Formulario in-app"}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  «Formulario in-app» permite que el invitado confirme directamente en la invitación sin salir de la app.
+                </p>
               </div>
             </TabsContent>
 

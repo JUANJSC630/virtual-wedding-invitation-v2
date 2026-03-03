@@ -156,6 +156,7 @@ export interface EventConfig {
   timeline?: TimelineItem[];
   gallery?: GalleryPhoto[];
   sections?: SectionsConfig;
+  rsvpMode?: "whatsapp" | "form";
   labels?: {
     // Section 5
     familyTitle?: string;
@@ -186,6 +187,14 @@ export interface EventConfig {
     brideLabel?: string;
     // Gallery
     galleryTitle?: string;
+    // Section 8 RSVP form mode
+    rsvpYes?: string;
+    rsvpNo?: string;
+    rsvpCompanions?: string;
+    rsvpConfirm?: string;
+    rsvpConfirmedMsg?: string;
+    rsvpDeclinedMsg?: string;
+    rsvpThankYou?: string;
     // Entry screen (GuestCodeEntry)
     entryTitle?: string;
     entrySubtitle?: string;
