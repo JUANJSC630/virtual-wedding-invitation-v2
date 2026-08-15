@@ -51,7 +51,7 @@ export const useAllGuests = (refetchInterval?: number) => {
   return useQuery({
     queryKey: ["guests", "all"],
     queryFn: getAllGuests,
-    refetchInterval,
+    refetchInterval: refetchInterval ?? false,
   });
 };
 
@@ -144,7 +144,7 @@ export const useGuestStats = (refetchInterval?: number) => {
   return useQuery({
     queryKey: ["admin", "stats"],
     queryFn: getGuestStats,
-    refetchInterval,
+    refetchInterval: refetchInterval ?? false,
   });
 };
 

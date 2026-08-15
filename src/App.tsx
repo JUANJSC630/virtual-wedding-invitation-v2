@@ -102,10 +102,10 @@ const MasterPanel: React.FC = () => {
 
 const PREVIEW_GUEST: Guest = {
   id: "preview", eventId: "", code: "PREVIEW", name: "Vista Previa",
-  email: null, phone: null, maxGuests: 2, confirmed: true,
-  confirmedAt: new Date().toISOString(), notes: null,
-  createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-  companions: [{ id: "preview-c1", guestId: "preview", name: "Acompañante", confirmed: true, confirmedAt: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }],
+  maxGuests: 2, confirmed: true,
+  confirmedAt: new Date(),
+  createdAt: new Date(), updatedAt: new Date(),
+  companions: [{ id: "preview-c1", guestId: "preview", name: "Acompañante", confirmed: true, createdAt: new Date(), updatedAt: new Date() }],
 };
 
 const WeddingInvitation: React.FC = () => {

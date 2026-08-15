@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import { Shuffle } from "lucide-react";
 import toast from "react-hot-toast";
-import { z } from "zod";
 
 import { extractZodErrors, guestFormSchema } from "@/lib/schemas";
 

@@ -14,17 +14,17 @@ export class SectionErrorBoundary extends React.Component<
   React.PropsWithChildren,
   SectionState
 > {
-  state: SectionState = { hasError: false };
+  override state: SectionState = { hasError: false };
 
   static getDerivedStateFromError(): SectionState {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
+  override componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("[SectionErrorBoundary]", error, info.componentStack);
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) return null;
     return this.props.children;
   }
@@ -39,17 +39,17 @@ export class PanelErrorBoundary extends React.Component<
   React.PropsWithChildren,
   PanelState
 > {
-  state: PanelState = { hasError: false, message: "" };
+  override state: PanelState = { hasError: false, message: "" };
 
   static getDerivedStateFromError(error: Error): PanelState {
     return { hasError: true, message: error.message };
   }
 
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
+  override componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("[PanelErrorBoundary]", error, info.componentStack);
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-background">

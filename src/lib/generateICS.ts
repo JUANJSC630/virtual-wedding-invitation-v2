@@ -15,19 +15,19 @@ interface ICSEvent {
 }
 
 /** Parse "6:00 PM" or "18:00" → { hours, minutes } */
-function parseTime(timeStr: string): { hours: number; minutes: number } {
+export function parseTime(timeStr: string): { hours: number; minutes: number } {
   const clean = (timeStr ?? "").trim();
   const ampm = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if (ampm) {
-    let h = parseInt(ampm[1]);
-    const m = parseInt(ampm[2]);
-    const period = ampm[3].toUpperCase();
+    let h = parseInt(ampm[1]!, 10);
+    const m = parseInt(ampm[2]!, 10);
+    const period = ampm[3]!.toUpperCase();
     if (period === "PM" && h !== 12) h += 12;
     if (period === "AM" && h === 12) h = 0;
     return { hours: h, minutes: m };
   }
   const plain = clean.match(/^(\d{1,2}):(\d{2})$/);
-  if (plain) return { hours: parseInt(plain[1]), minutes: parseInt(plain[2]) };
+  if (plain) return { hours: parseInt(plain[1]!, 10), minutes: parseInt(plain[2]!, 10) };
   return { hours: 18, minutes: 0 }; // fallback 6 PM
 }
 

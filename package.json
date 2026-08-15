@@ -19,6 +19,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "type-check": "tsc --noEmit",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
@@ -119,6 +121,7 @@
     "typescript": "^5.9.2",
     "vaul": "^0.9.9",
     "vite": "^7.1.2",
+    "vitest": "^4.1.10",
     "zod": "3.25.67"
   }
 }

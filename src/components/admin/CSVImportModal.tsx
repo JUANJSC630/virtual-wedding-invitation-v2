@@ -48,7 +48,7 @@ function parseCSV(text: string): CSVRow[] {
   if (lines.length < 2) return [];
 
   // Detect if first line is headers
-  const firstLower = lines[0].toLowerCase().replace(/\s/g, "");
+  const firstLower = lines[0]!.toLowerCase().replace(/\s/g, "");
   const hasHeader = firstLower.startsWith("code") || firstLower.startsWith("código");
   const dataLines = hasHeader ? lines.slice(1) : lines;
 

@@ -216,6 +216,7 @@ export interface EventConfig {
     infoTotal?: string;
     infoContinueButton?: string;
     infoViewButton?: string;
+    addToCalendar?: string;
   };
 }
 

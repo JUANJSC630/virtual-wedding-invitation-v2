@@ -2046,7 +2046,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
       <CSVImportModal
         open={showImportModal}
         onOpenChange={open => { setShowImportModal(open); if (!open) setImportEventId(null); }}
-        eventId={importEventId ?? undefined}
+        {...(importEventId ? { eventId: importEventId } : {})}
         onImported={loadData}
       />
     </div>

@@ -29,23 +29,39 @@ app.use(
 );
 
 // ─── CORS: solo orígenes permitidos ─────────────────────────────────────────
+// En Vercel, frontend y API comparten dominio: las peticiones son same-origin
+// (sin header Origin) y no requieren aprobación CORS. Solo hace falta reflejar
+// orígenes cross-site conocidos. Los dominios de Vercel se detectan por env.
+const vercelOrigins = [
+  process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  process.env.VERCEL_URL,
+]
+  .filter(Boolean)
+  .map(host => `https://${host}`);
+
 const allowedOrigins = [
   "http://localhost:3000",
   process.env.ALLOWED_ORIGIN,
+  ...vercelOrigins,
 ].filter(Boolean);
+
+// Si no hay ningún origen configurado en prod, se mantiene el comportamiento
+// permisivo previo (reflejar) para no romper despliegues sin envs; con envs
+// configuradas, se restringe a la whitelist.
+const hasProdAllowlist = process.env.ALLOWED_ORIGIN || vercelOrigins.length > 0;
 
 app.use(
   cors({
-    // En producción (Vercel), frontend y API comparten dominio — permitir mismo origen.
-    // En dev, restringir a la lista de orígenes conocidos.
-    origin:
-      process.env.NODE_ENV === "production"
-        ? true
-        : (origin, callback) => {
-            if (!origin) return callback(null, true);
-            if (allowedOrigins.includes(origin)) return callback(null, true);
-            callback(new Error(`CORS bloqueado para origin: ${origin}`));
-          },
+    origin: (origin, callback) => {
+      // Same-origin / server-to-server / curl → sin header Origin: permitido.
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Fallback seguro: en prod sin allowlist configurada, reflejar (legacy).
+      if (process.env.NODE_ENV === "production" && !hasProdAllowlist) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS bloqueado para origin: ${origin}`));
+    },
     credentials: true,
   })
 );
