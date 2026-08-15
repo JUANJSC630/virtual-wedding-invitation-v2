@@ -217,15 +217,38 @@ export interface EventConfig {
     infoContinueButton?: string;
     infoViewButton?: string;
     addToCalendar?: string;
+    shareTitle?: string;
   };
 }
 
 // Event Types
+// ─── Multi-ocasión (Fase C) ───────────────────────────────────────────────────
+// Slug del tipo de evento. "other" es el comodín para ocasiones no catalogadas.
+export type EventTypeSlug =
+  | "wedding"
+  | "quinceanera"
+  | "baptism"
+  | "communion"
+  | "birthday"
+  | "corporate"
+  | "other";
+
+// Un protagonista genérico del evento. Reemplaza los campos boda-específicos
+// groomName/brideName por un array flexible que sirve a cualquier ocasión.
+export interface Honoree {
+  role: string;  // "groom" | "bride" | "celebrant" | "baby" | "host" | ...
+  label: string; // "Novio" | "Novia" | "Quinceañera" | "Bautizado/a" | ...
+  name: string;
+}
+
 export interface Event {
   id: string;
   slug: string;
-  groomName: string;
-  brideName: string;
+  eventType?: EventTypeSlug; // Fase C — opcional; ausente ⇒ se trata como "wedding" (legacy)
+  honorees?: Honoree[];      // Fase C — opcional; ausente ⇒ se deriva de groom/brideName
+  eventTitle?: string;       // Fase C — nombre libre del evento (para ocasiones sin protagonistas)
+  groomName: string;         // legacy — conservar hasta migrar todos los eventos
+  brideName: string;         // legacy
   eventDate: string;
   rsvpDeadline?: string;
   venueName?: string;

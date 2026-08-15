@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 import { downloadICS } from "@/lib/generateICS";
+import { getHonoreesNames } from "@/lib/honorees";
 import DressCodeIcons from "@/components/ui/DressCodeIcons";
 import { Button } from "@/components/ui/button";
 
@@ -43,7 +44,7 @@ const InvitationSection6 = () => {
   const handleAddToCalendar = () => {
     if (!event?.eventDate) return;
     downloadICS({
-      title:            `${event.brideName} & ${event.groomName}`,
+      title:            getHonoreesNames(event),
       date:             event.eventDate,
       ceremonyTime:     event.ceremonyTime    ?? "6:00 PM",
       ceremonyName:     ceremony.name,

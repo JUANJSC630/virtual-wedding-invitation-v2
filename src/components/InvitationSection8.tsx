@@ -8,6 +8,7 @@ import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 import { useGuestContext } from "@/context/GuestContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
+import { getHonoreesNames } from "@/lib/honorees";
 
 import { Button } from "@/components/ui/button";
 import RSVPForm from "@/components/RSVPForm";
@@ -52,7 +53,8 @@ const InvitationSection8 = () => {
 
   const handleShare = async () => {
     const url = `${window.location.origin}/${event?.slug}${code ? `?code=${code}` : ""}`;
-    const title = `${event?.brideName} & ${event?.groomName} — Te invitamos a nuestra boda`;
+    const inviteSuffix = event?.config?.labels?.shareTitle ?? " — Te invitamos a nuestra boda";
+    const title = `${getHonoreesNames(event)}${inviteSuffix}`;
     if (navigator.share) {
       try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
     } else {

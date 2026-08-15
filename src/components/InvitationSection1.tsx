@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 
 import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
+import { getHonoreesInitials } from "@/lib/honorees";
 
 const InvitationSection1 = () => {
   const { event } = useEventContext();
@@ -11,8 +12,10 @@ const InvitationSection1 = () => {
   const verseText = verse?.text ?? "El que encontró una esposa encontró la felicidad; Yavé es quien le otorgó ese favor.";
   const verseRef = verse?.reference ?? "Proverbios 18:22";
 
-  const brideInitial = (event?.brideName?.[0] ?? "J").toUpperCase();
-  const groomInitial = (event?.groomName?.[0] ?? "J").toUpperCase();
+  // Multi-ocasión: iniciales de los protagonistas (boda → 2, XV/bautizo → 1).
+  const initials = getHonoreesInitials(event);
+  const firstInitial = initials[0] ?? "J";
+  const secondInitial = initials[1]; // undefined en eventos de un solo protagonista
   const announcementText = event?.config?.announcementText ?? "¡NOS CASAMOS!";
 
   return (
@@ -79,27 +82,31 @@ const InvitationSection1 = () => {
               <motion.span
                 className="font-serif text-[var(--color-primary)] font-bold"
                 style={{ fontSize: "clamp(4rem, 18vw, 6rem)" }}
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: secondInitial ? -50 : 0, scale: secondInitial ? 1 : 0.8 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
-                {brideInitial}
+                {firstInitial}
               </motion.span>
-              <motion.div
-                className="w-px h-16 bg-[var(--color-accent)]"
-                initial={{ opacity: 0, scaleY: 0 }}
-                animate={{ opacity: 1, scaleY: 1 }}
-                transition={{ duration: 0.4, delay: 0.8 }}
-              ></motion.div>
-              <motion.span
-                className="font-serif text-[var(--color-primary)] font-bold"
-                style={{ fontSize: "clamp(4rem, 18vw, 6rem)" }}
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-              >
-                {groomInitial}
-              </motion.span>
+              {secondInitial && (
+                <>
+                  <motion.div
+                    className="w-px h-16 bg-[var(--color-accent)]"
+                    initial={{ opacity: 0, scaleY: 0 }}
+                    animate={{ opacity: 1, scaleY: 1 }}
+                    transition={{ duration: 0.4, delay: 0.8 }}
+                  ></motion.div>
+                  <motion.span
+                    className="font-serif text-[var(--color-primary)] font-bold"
+                    style={{ fontSize: "clamp(4rem, 18vw, 6rem)" }}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.6 }}
+                  >
+                    {secondInitial}
+                  </motion.span>
+                </>
+              )}
             </div>
           </motion.div>
 

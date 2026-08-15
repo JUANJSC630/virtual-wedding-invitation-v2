@@ -5,6 +5,7 @@ import { Variants, motion, useInView } from "framer-motion";
 import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
+import { getHonorees } from "@/lib/honorees";
 
 import AudioPlayer from "@/components/ui/AudioPlayer";
 
@@ -13,8 +14,10 @@ const InvitationSection3 = () => {
   const { event } = useEventContext();
   const assets = useAssets();
 
-  const brideName = (event?.brideName ?? "Jimena").toUpperCase();
-  const groomName = (event?.groomName ?? "Jhon").toUpperCase();
+  // Multi-ocasión: nombres de los protagonistas (boda → 2, XV/bautizo → 1).
+  const honorees = getHonorees(event);
+  const firstName = (honorees[0]?.name ?? "Jimena").toUpperCase();
+  const secondName = honorees[1]?.name?.toUpperCase(); // undefined si un solo protagonista
 
   const getNameFontSize = (name: string): string => {
     const len = name.length;
@@ -101,11 +104,11 @@ const InvitationSection3 = () => {
               ></div>
 
               <motion.p
-                className="text-start font-serif text-[var(--color-primary)] italic font-light tracking-wider"
-                style={{ fontSize: getNameFontSize(brideName) }}
+                className={`${secondName ? "text-start" : "text-center"} font-serif text-[var(--color-primary)] italic font-light tracking-wider`}
+                style={{ fontSize: getNameFontSize(firstName) }}
                 variants={fadeInUp}
               >
-                {brideName}
+                {firstName}
               </motion.p>
               {imagesLoaded && (
                 <motion.div
@@ -135,9 +138,11 @@ const InvitationSection3 = () => {
                   />
                 </motion.div>
               )}
-              <motion.div className="py-1" variants={fadeInUp}>
-                <span className="text-4xl text-[var(--color-accent)]">&</span>
-              </motion.div>
+              {secondName && (
+                <motion.div className="py-1" variants={fadeInUp}>
+                  <span className="text-4xl text-[var(--color-accent)]">&</span>
+                </motion.div>
+              )}
               {imagesLoaded && (
                 <motion.div
                   className="absolute w-80 h-80 opacity-0"
@@ -167,13 +172,15 @@ const InvitationSection3 = () => {
                 </motion.div>
               )}
 
-              <motion.p
-                className="text-end font-serif text-[var(--color-primary)] italic font-light tracking-wider"
-                style={{ fontSize: getNameFontSize(groomName) }}
-                variants={fadeInUp}
-              >
-                {groomName}
-              </motion.p>
+              {secondName && (
+                <motion.p
+                  className="text-end font-serif text-[var(--color-primary)] italic font-light tracking-wider"
+                  style={{ fontSize: getNameFontSize(secondName) }}
+                  variants={fadeInUp}
+                >
+                  {secondName}
+                </motion.p>
+              )}
             </div>
 
             <motion.div variants={fadeInUp}>
