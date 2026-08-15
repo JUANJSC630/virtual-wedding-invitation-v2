@@ -22,8 +22,23 @@ describe("getEventType", () => {
     expect(getEventType(ev({}))).toBe("wedding");
     expect(getEventType(null)).toBe("wedding");
   });
-  it("respeta el tipo cuando está presente", () => {
+  it("respeta el tipo cuando está presente (columna futura)", () => {
     expect(getEventType(ev({ eventType: "quinceanera" }))).toBe("quinceanera");
+  });
+  it("lee el tipo desde config (donde se guarda hoy)", () => {
+    expect(getEventType(ev({ config: { eventType: "baptism" } as Event["config"] }))).toBe("baptism");
+  });
+});
+
+describe("getHonorees — fuente config", () => {
+  it("usa config.honorees cuando no hay columna honorees", () => {
+    const res = getHonorees(
+      ev({
+        brideName: "X", groomName: "Y",
+        config: { honorees: [{ role: "celebrant", label: "Cumpleañero/a", name: "Ana" }] } as Event["config"],
+      })
+    );
+    expect(res).toEqual([{ role: "celebrant", label: "Cumpleañero/a", name: "Ana" }]);
   });
 });
 

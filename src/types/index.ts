@@ -147,6 +147,11 @@ export interface SectionsConfig {
 
 // Event Config
 export interface EventConfig {
+  // Multi-ocasión (Fase C) — se guarda dentro de config para no requerir
+  // migración de schema (la columna config Json ya existe y fluye por las rutas).
+  eventType?: EventTypeSlug;
+  honorees?: Honoree[];
+  eventTitle?: string;
   verse?: { text: string; reference: string };
   ceremony?: { name: string; address: string; mapsUrl: string };
   reception?: { name: string; address: string; mapsUrl: string };

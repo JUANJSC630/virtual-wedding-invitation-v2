@@ -1,4 +1,16 @@
-import { Event, EventTypeSlug, Honoree } from "@/types";
+import { Event, EventConfig, EventTypeSlug, Honoree } from "@/types";
+
+/**
+ * Fuente flexible de datos de evento para los helpers: acepta el `Event`
+ * completo o cualquier subconjunto (incluida la config donde viven los datos
+ * multi-ocasión mientras no se promueva a columnas propias).
+ */
+type EventLike =
+  | (Partial<Pick<Event, "honorees" | "eventType" | "brideName" | "groomName">> & {
+      config?: Partial<EventConfig> | null;
+    })
+  | null
+  | undefined;
 
 /**
  * Fase C — Multi-ocasión.
@@ -49,21 +61,21 @@ export const EVENT_TYPES: Record<
 };
 
 /** Tipo de evento efectivo (default: "wedding" para compatibilidad legacy). */
-export function getEventType(event?: Pick<Event, "eventType"> | null): EventTypeSlug {
-  return event?.eventType ?? "wedding";
+export function getEventType(event?: EventLike): EventTypeSlug {
+  return event?.eventType ?? event?.config?.eventType ?? "wedding";
 }
 
 /**
- * Protagonistas del evento. Usa `event.honorees` si viene poblado; si no,
- * los deriva de los campos legacy `brideName`/`groomName` (orden novia → novio,
- * igual que la UI actual).
+ * Protagonistas del evento. Prioridad: `event.honorees` (columna futura) →
+ * `event.config.honorees` (donde se guardan hoy) → derivados de los campos
+ * legacy `brideName`/`groomName` (orden novia → novio, igual que la UI actual).
  */
-export function getHonorees(
-  event?: Pick<Event, "honorees" | "brideName" | "groomName"> | null
-): Honoree[] {
-  if (event?.honorees && event.honorees.length > 0) {
-    return event.honorees.filter(h => h.name && h.name.trim() !== "");
-  }
+export function getHonorees(event?: EventLike): Honoree[] {
+  const source =
+    (event?.honorees && event.honorees.length > 0 ? event.honorees : event?.config?.honorees) ?? [];
+  const list = source.filter(h => h?.name && h.name.trim() !== "");
+  if (list.length > 0) return list;
+
   const legacy: Honoree[] = [];
   if (event?.brideName?.trim()) legacy.push({ role: "bride", label: "Novia", name: event.brideName });
   if (event?.groomName?.trim()) legacy.push({ role: "groom", label: "Novio", name: event.groomName });
@@ -71,10 +83,7 @@ export function getHonorees(
 }
 
 /** Nombres unidos para títulos, p. ej. "Jimena & Juan" o "Laura Sofía". */
-export function getHonoreesNames(
-  event?: Pick<Event, "honorees" | "brideName" | "groomName"> | null,
-  separator = " & "
-): string {
+export function getHonoreesNames(event?: EventLike, separator = " & "): string {
   return getHonorees(event)
     .map(h => h.name.trim())
     .filter(Boolean)
@@ -82,15 +91,11 @@ export function getHonoreesNames(
 }
 
 /** Iniciales de cada protagonista, p. ej. ["J", "J"]. */
-export function getHonoreesInitials(
-  event?: Pick<Event, "honorees" | "brideName" | "groomName"> | null
-): string[] {
+export function getHonoreesInitials(event?: EventLike): string[] {
   return getHonorees(event).map(h => (h.name.trim()[0] ?? "").toUpperCase());
 }
 
 /** ¿El evento tiene dos protagonistas (formato pareja)? Útil para layouts. */
-export function isCoupleEvent(
-  event?: Pick<Event, "honorees" | "brideName" | "groomName"> | null
-): boolean {
+export function isCoupleEvent(event?: EventLike): boolean {
   return getHonorees(event).length >= 2;
 }

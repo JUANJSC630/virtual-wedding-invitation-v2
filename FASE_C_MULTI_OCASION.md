@@ -49,7 +49,23 @@ Ya implementado en [`src/lib/honorees.ts`](src/lib/honorees.ts) (`EVENT_TYPES`):
 
 ---
 
-## 3. Cambios de schema propuestos (⚠️ NO aplicados aún)
+## 3. Decisión de almacenamiento — SIN migración (actualizado)
+
+> **Cambio de plan (mejor):** en vez de añadir columnas nuevas (`eventType`, `honorees`, `eventTitle`) y arriesgar una migración en Neon, estos datos se guardan dentro de la **columna `config` (Json) que YA existe** y ya fluye por todas las rutas (`select` explícito, lectura y escritura).
+
+**Por qué:**
+- La DB Neon no era alcanzable desde el entorno de desarrollo (P1001) y el proyecto evoluciona el schema con `prisma db push` (solo existe la migración `init`), no con migraciones versionadas. Introducir una migración habría sido frágil.
+- `config` es `Json @default("{}")`: agregar claves no requiere `ALTER TABLE`, no rompe prod, y funciona de inmediato.
+- El helper `getHonorees`/`getEventType` lee en orden: columna futura → `config.honorees`/`config.eventType` → derivación legacy de `bride/groomName`. Retrocompatible al 100%.
+
+Los tipos `Event.honorees`/`eventType`/`eventTitle` (nivel raíz) se conservan como **opción futura** por si algún día se promueven a columnas reales; hoy los datos viven en `config`.
+
+### Ruta de promoción futura (opcional, no requerida)
+Si se quiere indexar/consultar por tipo de evento, más adelante se pueden crear columnas reales con `prisma db push` (aditivo) y un backfill desde `config`. El helper ya prioriza la columna sobre `config`, así que la migración sería transparente.
+
+---
+
+## 3-bis. (Referencia) Migración por columnas — solo si se promueve a futuro
 
 ```prisma
 model Event {
@@ -107,12 +123,12 @@ Resultado: `type-check` y `test` (26) en verde. **Cero cambios visibles** para e
 | Paso | Descripción | Toca DB | Riesgo |
 |---|---|---|---|
 | C.1 ✅ | Fundación: tipos + helper + tests | No | Nulo |
-| C.3 ✅ | Refactor de secciones para usar `getHonorees*` en vez de `groom/brideName` (S1 iniciales, S3 nombres, S6 título .ics, S8 título compartir) — **secciones ya agnósticas**, salida idéntica para bodas, degradan bien con 1 protagonista | No | Bajo |
-| **C.2** | Aplicar migración + backfill en Neon; añadir `honorees`/`eventType` al `select` de las rutas (`events.js`, `master.js`) | **Sí** | Bajo (aditivo) |
-| C.4 | Layouts que se adaptan a 1 vs 2 protagonistas (refinar más allá del degradado básico ya hecho) | No | Medio |
-| C.5 | Panel master: selector "Tipo de evento" + editor de `honorees` dinámico según el tipo | No | Bajo |
+| C.3 ✅ | Refactor de secciones para usar `getHonorees*` en vez de `groom/brideName` — **secciones ya agnósticas** | No | Bajo |
+| C.2 ✅ | **Almacenamiento en `config` (sin migración)** — helper lee de `config.honorees`/`config.eventType` con fallback legacy | No | Nulo |
+| C.5 | Panel master: selector "Tipo de evento" + editor de `honorees` dinámico según el tipo (escribe a `config`) | No | Bajo |
 | C.6 | Labels por ocasión: defaults de `config.labels` según `eventType` (ej. "NOS CASAMOS" vs "MIS XV") | No | Bajo |
-| C.7 | Seeds de ejemplo: 1 evento por ocasión para QA | Sí (datos) | Nulo |
+| C.4 | Layouts que se adaptan a 1 vs 2 protagonistas (refinar más allá del degradado básico) | No | Medio |
+| C.7 | Seed de ejemplo: 1 evento por ocasión para QA | Sí (datos) | Nulo |
 
 **C.2 es el único paso que modifica la base de datos de producción.** Antes de aplicarlo se debe: (a) confirmar acceso a `DATABASE_URL`, (b) idealmente snapshot/branch de Neon, (c) revisar la migración generada por Prisma.
 
