@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 
 import prisma from "../../src/lib/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
+import { authLimiter } from "../middleware/limiters.js";
 
 export const authRoutes = express.Router();
 
@@ -20,7 +21,7 @@ const cookieOptions = {
 
 // POST /api/auth/login
 // Comprueba primero en Admin (master), luego en ClientAdmin
-authRoutes.post("/login", async (req, res) => {
+authRoutes.post("/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 

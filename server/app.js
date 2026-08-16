@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
 
-import { authLimiter, guestLimiter } from "./middleware/limiters.js";
+import { guestLimiter } from "./middleware/limiters.js";
 import { authRoutes } from "./routes/auth.js";
 import { adminRoutes } from "./routes/admin.js";
 import { eventRoutes } from "./routes/events.js";
@@ -73,7 +73,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 // ─── Rutas ───────────────────────────────────────────────────────────────────
-app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/guests", guestLimiter, guestRoutes);
 app.use("/api/admin", adminRoutes);

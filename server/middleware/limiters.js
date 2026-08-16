@@ -1,9 +1,13 @@
 import { rateLimit } from "express-rate-limit";
 
+// Anti fuerza-bruta: se aplica SOLO al POST /login (no a /me ni /logout).
+// skipSuccessfulRequests → un login correcto no descuenta del cupo; solo
+// cuentan los intentos fallidos.
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 10 * 60 * 1000,
   limit: 10,
-  message: { error: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." },
+  skipSuccessfulRequests: true,
+  message: { error: "Demasiados intentos fallidos. Espera 10 minutos e intenta de nuevo." },
   standardHeaders: "draft-8",
   legacyHeaders: false,
 });
