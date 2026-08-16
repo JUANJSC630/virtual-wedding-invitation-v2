@@ -9,17 +9,17 @@ const InvitationSection1 = () => {
   const { event } = useEventContext();
   const assets = useAssets();
 
+  const occ = getOccasionDefaults(getEventType(event));
   const verse = event?.config?.verse;
-  const verseText = verse?.text ?? "El que encontró una esposa encontró la felicidad; Yavé es quien le otorgó ese favor.";
-  const verseRef = verse?.reference ?? "Proverbios 18:22";
+  const verseText = verse?.text ?? occ.verse.text;
+  const verseRef = verse?.reference ?? occ.verse.reference;
 
   // Multi-ocasión: iniciales de los protagonistas (boda → 2, XV/bautizo → 1).
   const initials = getHonoreesInitials(event);
   const firstInitial = initials[0] ?? "J";
   const secondInitial = initials[1]; // undefined en eventos de un solo protagonista
   // Anuncio: config del evento → default de la ocasión (boda → "¡NOS CASAMOS!").
-  const announcementText =
-    event?.config?.announcementText || getOccasionDefaults(getEventType(event)).announcementText;
+  const announcementText = event?.config?.announcementText || occ.announcementText;
 
   return (
     <section
@@ -68,10 +68,14 @@ const InvitationSection1 = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <p className="text-xl font-serif text-[var(--color-primary)] leading-relaxed italic mb-4">
-              "{verseText}"
-            </p>
-            <p className="text-sm text-[var(--color-primary)] opacity-70 font-light">{verseRef}</p>
+            {verseText && (
+              <p className="text-xl font-serif text-[var(--color-primary)] leading-relaxed italic mb-4">
+                "{verseText}"
+              </p>
+            )}
+            {verseRef && (
+              <p className="text-sm text-[var(--color-primary)] opacity-70 font-light">{verseRef}</p>
+            )}
           </motion.div>
 
           {/* Iniciales elegantes */}

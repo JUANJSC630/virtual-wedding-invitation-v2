@@ -5,7 +5,8 @@ import { Variants, motion, useInView } from "framer-motion";
 import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
-import { getHonorees } from "@/lib/honorees";
+import { getEventType, getHonorees } from "@/lib/honorees";
+import { getOccasionDefaults } from "@/lib/occasions";
 
 import AudioPlayer from "@/components/ui/AudioPlayer";
 
@@ -27,8 +28,7 @@ const InvitationSection3 = () => {
     return "clamp(1.4rem, 5vw, 2rem)";
   };
   const audioUrl = event?.audioUrl ?? "/cancion.mp3";
-  const heroMessage = event?.config?.heroMessage ??
-    "Hay momentos en la vida que son especiales por si solos, pero compartirlos con las personas que queremos los hacen inolvidables.\n\nPor eso queremos invitarlos a celebrar nuestra boda y que hagan parte de este día tan especial para nosotros.";
+  const heroMessage = event?.config?.heroMessage || getOccasionDefaults(getEventType(event)).heroMessage;
   const ref = useRef(null);
   const [layoutReady, setLayoutReady] = useState(false);
 

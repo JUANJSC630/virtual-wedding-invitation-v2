@@ -4,6 +4,8 @@ import { Variants, motion, useInView } from "framer-motion";
 
 import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
+import { getEventType } from "@/lib/honorees";
+import { getOccasionDefaults } from "@/lib/occasions";
 
 import Countdown from "@/components/Countdown";
 
@@ -13,6 +15,7 @@ const InvitationSection5 = () => {
 
   const parents       = event?.config?.parents;
   const labels        = event?.config?.labels;
+  const fam           = getOccasionDefaults(getEventType(event)).family;
 
   const brideParents  = parents?.bride    ?? [];
   const groomParents  = parents?.groom    ?? [];
@@ -20,13 +23,13 @@ const InvitationSection5 = () => {
   const bridesmaids   = event?.config?.bridesmaids ?? [];
   const groomsmen     = event?.config?.groomsmen   ?? [];
 
-  const familyTitle    = labels?.familyTitle    ?? "Con la bendición de Dios y de nuestros padres";
-  const companionTitle = labels?.companionTitle ?? "Y en compañía de nuestros padrinos, damas y caballeros de honor";
-  const brideParentsLabel  = labels?.brideParents  ?? "Padres de la novia";
-  const groomParentsLabel  = labels?.groomParents  ?? "Padres del novio";
-  const godparentsLabel    = labels?.godparents    ?? "Padrinos";
-  const bridesmaidsLabel   = labels?.bridesmaids   ?? "Damas de honor";
-  const groomsmenLabel     = labels?.groomsmen     ?? "Caballeros de honor";
+  const familyTitle    = labels?.familyTitle    ?? fam.title;
+  const companionTitle = labels?.companionTitle ?? fam.companionTitle;
+  const brideParentsLabel  = labels?.brideParents  ?? fam.parentsPrimary;
+  const groomParentsLabel  = labels?.groomParents  ?? fam.parentsSecondary;
+  const godparentsLabel    = labels?.godparents    ?? fam.godparents;
+  const bridesmaidsLabel   = labels?.bridesmaids   ?? fam.attendants1;
+  const groomsmenLabel     = labels?.groomsmen     ?? fam.attendants2;
 
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px", amount: 0.3 });

@@ -27,7 +27,7 @@ import {
 import { DEFAULT_ASSETS } from "@/context/AssetContext";
 import { DEFAULT_THEME, SERIF_PRESETS } from "@/context/ThemeContext";
 import { compressImage } from "@/lib/compressImage";
-import { EVENT_TYPES } from "@/lib/honorees";
+import { EVENT_TYPES, getHonoreesNames } from "@/lib/honorees";
 import { eventBasicSchema, extractZodErrors } from "@/lib/schemas";
 import CSVImportModal from "@/components/admin/CSVImportModal";
 import { AdminUser, AssetMap, EventTypeSlug, EventWithStats, GalleryPhoto, Honoree, SectionsConfig, ThemeConfig, TimelineItem } from "@/types";
@@ -1846,7 +1846,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                     return (
                       <div key={ev.id} className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium leading-tight truncate">{ev.brideName} &amp; {ev.groomName}</p>
+                          <p className="text-sm font-medium leading-tight truncate">{getHonoreesNames(ev)}</p>
                           <p className="text-xs text-muted-foreground">/{ev.slug}</p>
                         </div>
                         <Badge variant="outline" className="text-xs shrink-0">
@@ -1882,7 +1882,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                           <div className="flex items-center justify-between text-xs">
                             <span className="flex items-center gap-1.5 min-w-0">
                               <span className="text-muted-foreground font-mono shrink-0">#{idx + 1}</span>
-                              <span className="truncate">{ev.brideName} &amp; {ev.groomName}</span>
+                              <span className="truncate">{getHonoreesNames(ev)}</span>
                             </span>
                             <span className="font-semibold shrink-0 ml-2">{rate}%</span>
                           </div>
@@ -1968,7 +1968,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-semibold text-base">{ev.brideName} &amp; {ev.groomName}</p>
+                        <p className="font-semibold text-base">{getHonoreesNames(ev)}</p>
                         <p className="text-xs text-muted-foreground font-mono">/{ev.slug}</p>
                       </div>
                       {ev.archivedAt

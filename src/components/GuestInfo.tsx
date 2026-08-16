@@ -5,6 +5,9 @@ import { CheckCircle, Users } from "lucide-react";
 
 import { Companion, Event, Guest } from "@/types";
 
+import { getEventType } from "@/lib/honorees";
+import { getOccasionDefaults } from "@/lib/occasions";
+
 import { Button } from "@/components/ui/button";
 
 interface GuestInfoProps {
@@ -42,7 +45,7 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ eventSlug, guest: initialGuest, e
   // ── Labels ────────────────────────────────────────────────────────────────
   const labels          = event?.config?.labels;
   const confirmedBadge  = labels?.infoConfirmed        ?? "Asistencia Confirmada";
-  const confirmedMsg    = labels?.infoConfirmedMessage  ?? "¡Gracias por confirmar tu asistencia!\nTe esperamos en nuestra boda.";
+  const confirmedMsg    = labels?.infoConfirmedMessage  ?? getOccasionDefaults(getEventType(event)).confirmedMessage;
   const pendingMsg      = labels?.infoPendingMessage    ?? "¡Esperamos que puedan compartir esta fiesta junto a nosotros!";
   const guestsLabel     = labels?.infoGuestsLabel       ?? "N° de Invitados:";
   const statusTitle     = labels?.infoStatusTitle       ?? "Estado de Confirmaciones";
