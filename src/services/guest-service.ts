@@ -42,15 +42,20 @@ export const confirmRSVP = async (rsvpData: RSVPData): Promise<Guest> => {
 };
 
 // ─── RUTAS DE ADMINISTRACIÓN (con cookie de sesión) ──────────────────────────
+// `base` permite reusar el mismo data-layer desde el panel cliente
+// (`/api/admin`) y desde el panel master por-evento (`/api/master/events/:id`),
+// que exponen las mismas sub-rutas (/guests, /companions, /stats, /analytics).
 
-export const getAllGuests = async (): Promise<Guest[]> => {
-  const response = await fetch(`${API_BASE}/admin/guests`, { credentials: "include" });
+export const ADMIN_BASE = "/api/admin";
+
+export const getAllGuests = async (base: string = ADMIN_BASE): Promise<Guest[]> => {
+  const response = await fetch(`${base}/guests`, { credentials: "include" });
   if (!response.ok) throw new Error("Error al obtener invitados");
   return await response.json();
 };
 
-export const createGuest = async (guest: CreateGuestInput): Promise<Guest> => {
-  const response = await fetch(`${API_BASE}/admin/guests`, {
+export const createGuest = async (base: string, guest: CreateGuestInput): Promise<Guest> => {
+  const response = await fetch(`${base}/guests`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -64,8 +69,8 @@ export const createGuest = async (guest: CreateGuestInput): Promise<Guest> => {
   return await response.json();
 };
 
-export const updateGuest = async (id: string, updates: UpdateGuestInput): Promise<Guest> => {
-  const response = await fetch(`${API_BASE}/admin/guests/${id}`, {
+export const updateGuest = async (base: string, id: string, updates: UpdateGuestInput): Promise<Guest> => {
+  const response = await fetch(`${base}/guests/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -76,8 +81,8 @@ export const updateGuest = async (id: string, updates: UpdateGuestInput): Promis
   return await response.json();
 };
 
-export const deleteGuest = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_BASE}/admin/guests/${id}`, {
+export const deleteGuest = async (base: string, id: string): Promise<void> => {
+  const response = await fetch(`${base}/guests/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -85,8 +90,8 @@ export const deleteGuest = async (id: string): Promise<void> => {
   if (!response.ok) throw new Error("Error al eliminar invitado");
 };
 
-export const createCompanion = async (companion: CreateCompanionInput) => {
-  const response = await fetch(`${API_BASE}/admin/companions`, {
+export const createCompanion = async (base: string, companion: CreateCompanionInput) => {
+  const response = await fetch(`${base}/companions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -97,8 +102,8 @@ export const createCompanion = async (companion: CreateCompanionInput) => {
   return await response.json();
 };
 
-export const updateCompanion = async (id: string, updates: { confirmed: boolean }) => {
-  const response = await fetch(`${API_BASE}/admin/companions/${id}`, {
+export const updateCompanion = async (base: string, id: string, updates: { confirmed: boolean }) => {
+  const response = await fetch(`${base}/companions/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -109,8 +114,8 @@ export const updateCompanion = async (id: string, updates: { confirmed: boolean 
   return await response.json();
 };
 
-export const deleteCompanion = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_BASE}/admin/companions/${id}`, {
+export const deleteCompanion = async (base: string, id: string): Promise<void> => {
+  const response = await fetch(`${base}/companions/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
@@ -118,14 +123,14 @@ export const deleteCompanion = async (id: string): Promise<void> => {
   if (!response.ok) throw new Error("Error al eliminar acompañante");
 };
 
-export const getGuestStats = async () => {
-  const response = await fetch(`${API_BASE}/admin/stats`, { credentials: "include" });
+export const getGuestStats = async (base: string = ADMIN_BASE) => {
+  const response = await fetch(`${base}/stats`, { credentials: "include" });
   if (!response.ok) throw new Error("Error al obtener estadísticas");
   return await response.json();
 };
 
-export const getAnalytics = async () => {
-  const response = await fetch(`${API_BASE}/admin/analytics`, { credentials: "include" });
+export const getAnalytics = async (base: string = ADMIN_BASE) => {
+  const response = await fetch(`${base}/analytics`, { credentials: "include" });
   if (!response.ok) throw new Error("Error al obtener analytics");
   return await response.json();
 };

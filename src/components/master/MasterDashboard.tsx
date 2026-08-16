@@ -1781,7 +1781,6 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
             onBack={() => setSelectedEvent(null)}
             onEdit={() => handleEditEvent(selectedEvent)}
             onManageAdmins={() => handleManageAdmins(selectedEvent)}
-            onImport={() => { setImportEventId(selectedEvent.id); setShowImportModal(true); }}
           />
         ) : (
         <>

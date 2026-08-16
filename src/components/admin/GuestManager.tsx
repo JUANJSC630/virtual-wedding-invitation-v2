@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Download, MessageCircle, Plus, Radio, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -23,9 +24,12 @@ type SortOrder = "default" | "name" | "code" | "confirmed-date";
 
 interface GuestManagerProps {
   eventSlug: string;
+  /** Presente en modo master por-evento: habilita el import CSV por evento. */
+  eventId?: string;
 }
 
-const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
+const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId }) => {
+  const queryClient = useQueryClient();
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [showCompanions, setShowCompanions] = useState(false);
@@ -328,6 +332,8 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug }) => {
       <CSVImportModal
         open={showImportModal}
         onOpenChange={setShowImportModal}
+        {...(eventId ? { eventId } : {})}
+        onImported={() => queryClient.invalidateQueries({ queryKey: ["guests", "all"] })}
       />
       <WALinksModal
         open={showWAModal}

@@ -3,9 +3,19 @@ import express from "express";
 import multer from "multer";
 import { put } from "@vercel/blob";
 import { nanoid } from "nanoid";
+import { z } from "zod";
 
 import prisma from "../../src/lib/prisma.js";
 import { requireMaster } from "../middleware/auth.js";
+
+// Mismo esquema que admin (crear invitado)
+const createGuestSchema = z.object({
+  code: z.string().min(2).max(20).regex(/^[A-Z0-9_-]+$/, "Código inválido"),
+  name: z.string().min(2).max(100),
+  email: z.string().email().or(z.literal("")).optional(),
+  phone: z.string().regex(/^[+\d\s()-]{7,20}$/).or(z.literal("")).optional(),
+  maxGuests: z.coerce.number().int().min(1).max(20).default(1),
+});
 
 export const masterRoutes = express.Router();
 
@@ -411,6 +421,201 @@ masterRoutes.get("/events/:id/guests", async (req, res) => {
     res.json(guests.map(g => ({ ...g, accessCount: countMap[g.code] ?? 0 })));
   } catch (error) {
     console.error("Error getting event guests (master):", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ─── CRUD de invitados/acompañantes de un evento (panel master por-evento) ────
+// Espeja la lógica de /api/admin/* pero scoped por :id (params). requireMaster
+// ya garantiza el acceso. Las sub-rutas coinciden con las de admin para que el
+// frontend reuse el mismo GuestManager cambiando solo el basePath.
+
+masterRoutes.post("/events/:id/guests", async (req, res) => {
+  const parsed = createGuestSchema.safeParse({ ...req.body, code: req.body.code?.toUpperCase() });
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" });
+  }
+  try {
+    const eventId = req.params.id;
+    const { code, name, email, phone, maxGuests } = parsed.data;
+
+    const existing = await prisma.guest.findUnique({
+      where: { eventId_code: { eventId, code: code.toUpperCase() } },
+    });
+    if (existing) {
+      return res.status(400).json({ message: "Ya existe un invitado con ese código en este evento" });
+    }
+
+    const guest = await prisma.guest.create({
+      data: { eventId, code: code.toUpperCase(), name, email: email || undefined, phone: phone || undefined, maxGuests },
+      include: { companions: true },
+    });
+    return res.status(201).json(guest);
+  } catch (error) {
+    console.error("Error creating guest (master):", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.patch("/events/:id/guests/:guestId", async (req, res) => {
+  try {
+    const { id: eventId, guestId } = req.params;
+    const { name, email, phone, maxGuests, confirmed, notes } = req.body;
+
+    const owned = await prisma.guest.findFirst({ where: { id: guestId, eventId } });
+    if (!owned) return res.status(404).json({ error: "Invitado no encontrado en este evento" });
+
+    const guest = await prisma.guest.update({
+      where: { id: guestId },
+      data: {
+        name, email: email || undefined, phone: phone || undefined, maxGuests, confirmed,
+        confirmedAt: confirmed ? new Date() : null,
+        notes: notes !== undefined ? notes : undefined,
+      },
+      include: { companions: true },
+    });
+    res.json(guest);
+  } catch (error) {
+    console.error("Error updating guest (master):", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.delete("/events/:id/guests/:guestId", async (req, res) => {
+  try {
+    const { id: eventId, guestId } = req.params;
+    const owned = await prisma.guest.findFirst({ where: { id: guestId, eventId } });
+    if (!owned) return res.status(404).json({ error: "Invitado no encontrado en este evento" });
+    await prisma.guest.delete({ where: { id: guestId } });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting guest (master):", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.post("/events/:id/companions", async (req, res) => {
+  try {
+    const { id: eventId } = req.params;
+    const { guestId, name } = req.body;
+    const owned = await prisma.guest.findFirst({ where: { id: guestId, eventId } });
+    if (!owned) return res.status(404).json({ error: "Invitado no encontrado en este evento" });
+    const companion = await prisma.companion.create({ data: { guestId, name } });
+    res.status(201).json(companion);
+  } catch (error) {
+    console.error("Error creating companion (master):", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.patch("/events/:id/companions/:companionId", async (req, res) => {
+  try {
+    const { id: eventId, companionId } = req.params;
+    const { confirmed } = req.body;
+    const owned = await prisma.companion.findFirst({ where: { id: companionId, guest: { eventId } } });
+    if (!owned) return res.status(404).json({ error: "Acompañante no encontrado en este evento" });
+    const companion = await prisma.companion.update({
+      where: { id: companionId },
+      data: { confirmed, confirmedAt: confirmed ? new Date() : null },
+    });
+    res.json(companion);
+  } catch (error) {
+    console.error("Error updating companion (master):", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.delete("/events/:id/companions/:companionId", async (req, res) => {
+  try {
+    const { id: eventId, companionId } = req.params;
+    const owned = await prisma.companion.findFirst({ where: { id: companionId, guest: { eventId } } });
+    if (!owned) return res.status(404).json({ error: "Acompañante no encontrado en este evento" });
+    await prisma.companion.delete({ where: { id: companionId } });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting companion (master):", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.get("/events/:id/stats", async (req, res) => {
+  try {
+    const filter = { eventId: req.params.id };
+    const [totalGuests, confirmedGuests, totalCompanions, confirmedCompanions, guestsWithSlots] =
+      await Promise.all([
+        prisma.guest.count({ where: filter }),
+        prisma.guest.count({ where: { ...filter, confirmed: true } }),
+        prisma.companion.count({ where: { guest: filter } }),
+        prisma.companion.count({ where: { confirmed: true, guest: filter } }),
+        prisma.guest.findMany({ where: filter, select: { maxGuests: true } }),
+      ]);
+    const totalSlots = guestsWithSlots.reduce((s, g) => s + g.maxGuests, 0);
+    res.json({
+      totalGuests,
+      confirmedGuests,
+      pendingGuests: totalGuests - confirmedGuests,
+      totalCompanions,
+      confirmedCompanions,
+      pendingCompanions: totalCompanions - confirmedCompanions,
+      totalSlots,
+      totalConfirmedAttendees: confirmedGuests + confirmedCompanions,
+      availableSlots: totalSlots - (confirmedGuests + confirmedCompanions),
+    });
+  } catch (error) {
+    console.error("Error getting event stats (master):", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.get("/events/:id/analytics", async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const filter = { eventId };
+    const accessFilter = { eventId };
+
+    const recentAccesses = await prisma.guestAccess.findMany({
+      where: accessFilter, take: 10, orderBy: { accessedAt: "desc" },
+    });
+    const accessedCodes = await prisma.guestAccess.findMany({
+      where: accessFilter, select: { guestCode: true }, distinct: ["guestCode"],
+    });
+    const accessedCodesSet = new Set(accessedCodes.map(a => a.guestCode));
+    const accessedButNotConfirmed = await prisma.guest.findMany({
+      where: { ...filter, confirmed: false, code: { in: [...accessedCodesSet] } },
+      include: { companions: true },
+    });
+    const allGuests = await prisma.guest.findMany({
+      where: filter, select: { code: true, name: true, createdAt: true },
+    });
+    const neverAccessed = allGuests.filter(g => !accessedCodesSet.has(g.code));
+    const accessStats = await prisma.guestAccess.groupBy({
+      by: ["guestCode"], where: accessFilter, _count: { guestCode: true },
+      orderBy: { _count: { guestCode: "desc" } }, take: 10,
+    });
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const accessesByDay = await prisma.guestAccess.findMany({
+      where: { ...accessFilter, accessedAt: { gte: sevenDaysAgo } },
+      select: { accessedAt: true, guestCode: true },
+    });
+    const accessesByDayGrouped = accessesByDay.reduce((acc, a) => {
+      const day = a.accessedAt.toISOString().split("T")[0];
+      acc[day] = (acc[day] || 0) + 1;
+      return acc;
+    }, {});
+
+    res.json({
+      recentAccesses, accessedButNotConfirmed, neverAccessed, accessStats,
+      accessesByDay: accessesByDayGrouped,
+      summary: {
+        totalAccesses: await prisma.guestAccess.count({ where: accessFilter }),
+        uniqueAccessedCodes: accessedCodes.length,
+        neverAccessedCount: neverAccessed.length,
+        accessedButNotConfirmedCount: accessedButNotConfirmed.length,
+      },
+    });
+  } catch (error) {
+    console.error("Error in event analytics (master):", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

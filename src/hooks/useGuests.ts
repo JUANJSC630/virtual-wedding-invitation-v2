@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { UpdateGuestInput } from "@/types";
 
+import { useGuestScope } from "@/context/GuestScopeContext";
+
 import {
   confirmRSVP,
   createCompanion,
@@ -23,9 +25,6 @@ export const useValidateGuestCode = (eventSlug: string) => {
   });
 };
 
-// Hook eliminado: useGuestByCode - ya no es necesario
-// Hook eliminado: useRegisterGuestAccess - endpoint no existe
-
 // Hook para confirmar RSVP
 export const useConfirmRSVP = () => {
   const queryClient = useQueryClient();
@@ -33,10 +32,8 @@ export const useConfirmRSVP = () => {
   return useMutation({
     mutationFn: confirmRSVP,
     onSuccess: updatedGuest => {
-      // Actualizar cache del invitado
       queryClient.setQueryData(["guest", "code", updatedGuest.code], updatedGuest);
       queryClient.setQueryData(["guest", "byCode", updatedGuest.code], updatedGuest);
-      // Invalidar lista de invitados (si existe en cache)
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
       queryClient.invalidateQueries({ queryKey: ["guest", "byCode", updatedGuest.code] });
@@ -44,23 +41,25 @@ export const useConfirmRSVP = () => {
   });
 };
 
-// === HOOKS DE ADMINISTRACIÓN ===
+// === HOOKS DE ADMINISTRACIÓN (scoped por GuestScopeContext) ===
 
 // Hook para obtener todos los invitados
 export const useAllGuests = (refetchInterval?: number) => {
+  const base = useGuestScope();
   return useQuery({
-    queryKey: ["guests", "all"],
-    queryFn: getAllGuests,
+    queryKey: ["guests", "all", base],
+    queryFn: () => getAllGuests(base),
     refetchInterval: refetchInterval ?? false,
   });
 };
 
 // Hook para crear invitado
 export const useCreateGuest = () => {
+  const base = useGuestScope();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createGuest,
+    mutationFn: (input: Parameters<typeof createGuest>[1]) => createGuest(base, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
@@ -70,11 +69,12 @@ export const useCreateGuest = () => {
 
 // Hook para actualizar invitado
 export const useUpdateGuest = () => {
+  const base = useGuestScope();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: UpdateGuestInput }) =>
-      updateGuest(id, updates),
+      updateGuest(base, id, updates),
     onSuccess: updatedGuest => {
       queryClient.setQueryData(["guest", "code", updatedGuest.code], updatedGuest);
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
@@ -85,10 +85,11 @@ export const useUpdateGuest = () => {
 
 // Hook para eliminar invitado
 export const useDeleteGuest = () => {
+  const base = useGuestScope();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteGuest,
+    mutationFn: (id: string) => deleteGuest(base, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
@@ -98,10 +99,11 @@ export const useDeleteGuest = () => {
 
 // Hook para crear acompañante
 export const useCreateCompanion = () => {
+  const base = useGuestScope();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createCompanion,
+    mutationFn: (input: Parameters<typeof createCompanion>[1]) => createCompanion(base, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
@@ -112,11 +114,12 @@ export const useCreateCompanion = () => {
 
 // Hook para actualizar acompañante
 export const useUpdateCompanion = () => {
+  const base = useGuestScope();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: { confirmed: boolean } }) =>
-      updateCompanion(id, updates),
+      updateCompanion(base, id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
@@ -127,10 +130,11 @@ export const useUpdateCompanion = () => {
 
 // Hook para eliminar acompañante
 export const useDeleteCompanion = () => {
+  const base = useGuestScope();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteCompanion,
+    mutationFn: (id: string) => deleteCompanion(base, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
@@ -141,17 +145,19 @@ export const useDeleteCompanion = () => {
 
 // Hook para obtener estadísticas
 export const useGuestStats = (refetchInterval?: number) => {
+  const base = useGuestScope();
   return useQuery({
-    queryKey: ["admin", "stats"],
-    queryFn: getGuestStats,
+    queryKey: ["admin", "stats", base],
+    queryFn: () => getGuestStats(base),
     refetchInterval: refetchInterval ?? false,
   });
 };
 
 // Hook para obtener analytics de accesos
 export const useAnalytics = () => {
+  const base = useGuestScope();
   return useQuery({
-    queryKey: ["admin", "analytics"],
-    queryFn: getAnalytics,
+    queryKey: ["admin", "analytics", base],
+    queryFn: () => getAnalytics(base),
   });
 };
