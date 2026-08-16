@@ -5,9 +5,12 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Route, Routes, useNavigate, useParams } from "react-router-dom";
 
-import { AdminUser, Event, Guest, SectionsConfig, ThemeConfig } from "@/types";
+import { AdminUser, Event, Guest, ThemeConfig } from "@/types";
 
 import { queryClient } from "@/lib/query-client";
+
+import { BlockRenderer } from "@/blocks/BlockRenderer";
+import { resolveLayout } from "@/blocks/legacyLayout";
 
 import { AssetContext, DEFAULT_ASSETS } from "@/context/AssetContext";
 import { EventContext } from "@/context/EventContext";
@@ -15,21 +18,11 @@ import { GuestContext } from "@/context/GuestContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 import AdminDashboard from "@/components/AdminDashboard";
-import { PanelErrorBoundary, SectionErrorBoundary } from "@/components/ErrorBoundary";
+import { PanelErrorBoundary } from "@/components/ErrorBoundary";
 import GuestCodeEntry from "@/components/GuestCodeEntry";
 import GuestInfo from "@/components/GuestInfo";
 import LandingPage from "@/components/LandingPage";
 import LoginPage from "@/components/LoginPage";
-import InvitationSection1 from "@/components/InvitationSection1";
-import InvitationSection2 from "@/components/InvitationSection2";
-import InvitationSection3 from "@/components/InvitationSection3";
-import InvitationSection4 from "@/components/InvitationSection4";
-import InvitationSection5 from "@/components/InvitationSection5";
-import InvitationSection6 from "@/components/InvitationSection6";
-import InvitationSection7 from "@/components/InvitationSection7";
-import InvitationSection8 from "@/components/InvitationSection8";
-import InvitationSection9 from "@/components/InvitationSection9";
-import InvitationSectionGallery from "@/components/InvitationSectionGallery";
 import MasterDashboard from "@/components/master/MasterDashboard";
 
 // ─── Panel de admin (client) ──────────────────────────────────────────────────
@@ -215,8 +208,7 @@ const WeddingInvitation: React.FC = () => {
     ),
   };
 
-  const sec = (event?.config?.sections ?? {}) as Partial<SectionsConfig>;
-  const show = (key: keyof SectionsConfig) => sec[key] ?? true;
+  const layout = resolveLayout(event?.config?.layout, event?.config?.sections);
 
   return (
     <EventContext.Provider value={{ event, loading: eventLoading }}>
@@ -233,16 +225,7 @@ const WeddingInvitation: React.FC = () => {
       )}
       <main className="w-full flex flex-col justify-center items-center bg-white" role="main" style={isPreview ? { paddingTop: "2.5rem" } : undefined}>
         <div className="max-w-2xl mx-auto">
-          {show("showVerse")    && <SectionErrorBoundary><InvitationSection1 /></SectionErrorBoundary>}
-          {show("showPhotos")   && <SectionErrorBoundary><InvitationSection2 /></SectionErrorBoundary>}
-          {show("showNames")    && <SectionErrorBoundary><InvitationSection3 /></SectionErrorBoundary>}
-          {show("showPhotos")   && <SectionErrorBoundary><InvitationSection4 /></SectionErrorBoundary>}
-          {show("showGallery")  && <SectionErrorBoundary><InvitationSectionGallery /></SectionErrorBoundary>}
-          {show("showFamily")   && <SectionErrorBoundary><InvitationSection5 /></SectionErrorBoundary>}
-          {show("showVenues")   && <SectionErrorBoundary><InvitationSection6 /></SectionErrorBoundary>}
-          {show("showPhotos")   && <SectionErrorBoundary><InvitationSection9 /></SectionErrorBoundary>}
-          {show("showTimeline") && <SectionErrorBoundary><InvitationSection7 /></SectionErrorBoundary>}
-          {show("showGifts")    && <SectionErrorBoundary><InvitationSection8 /></SectionErrorBoundary>}
+          <BlockRenderer blocks={layout} />
         </div>
       </main>
     </GuestContext.Provider>

@@ -1,3 +1,5 @@
+import type { BlockInstance } from "@/blocks/types";
+
 // Audio Player Types
 export interface AudioPlayerProps {
   src: string;
@@ -152,6 +154,8 @@ export interface EventConfig {
   eventType?: EventTypeSlug;
   honorees?: Honoree[];
   eventTitle?: string;
+  // Secciones dinámicas (Fase B) — array ordenado de bloques. Ausente ⇒ legacy.
+  layout?: BlockInstance[];
   verse?: { text: string; reference: string };
   ceremony?: { name: string; address: string; mapsUrl: string };
   reception?: { name: string; address: string; mapsUrl: string };
