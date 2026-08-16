@@ -439,7 +439,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-1.5rem)] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>
             {editingEvent ? `Editar: ${editingEvent.slug}` : "Crear nuevo evento"}
@@ -448,26 +448,30 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic">
-            <TabsList className="grid w-full grid-cols-6 mb-1">
-              <TabsTrigger value="basic">Básico</TabsTrigger>
-              <TabsTrigger value="venues">Locales</TabsTrigger>
-              <TabsTrigger value="texts">Textos</TabsTrigger>
-              <TabsTrigger value="families">Familias</TabsTrigger>
-              <TabsTrigger value="timeline">Itinerario</TabsTrigger>
-              <TabsTrigger value="design">Diseño</TabsTrigger>
-            </TabsList>
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="labels">Etiquetas</TabsTrigger>
-              <TabsTrigger value="gallery">Galería</TabsTrigger>
-              <TabsTrigger value="photos">Fotos</TabsTrigger>
-              <TabsTrigger value="decor">Decoración</TabsTrigger>
-              <TabsTrigger value="tema">Tema</TabsTrigger>
-              <TabsTrigger value="contact">Contacto</TabsTrigger>
+            <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
+              {[
+                { v: "basic",    l: "Básico" },
+                { v: "design",   l: "Diseño" },
+                { v: "venues",   l: "Locales" },
+                { v: "texts",    l: "Textos" },
+                { v: "families", l: "Familias" },
+                { v: "timeline", l: "Itinerario" },
+                { v: "labels",   l: "Etiquetas" },
+                { v: "gallery",  l: "Galería" },
+                { v: "photos",   l: "Fotos" },
+                { v: "decor",    l: "Decoración" },
+                { v: "tema",     l: "Tema" },
+                { v: "contact",  l: "Contacto" },
+              ].map(t => (
+                <TabsTrigger key={t.v} value={t.v} className="flex-none px-2.5 py-1.5 text-xs sm:text-sm">
+                  {t.l}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
             {/* ── Tab: Básico ─────────────────────────────── */}
             <TabsContent value="basic" className="space-y-4 pt-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Slug *</Label>
                   <Input
@@ -508,7 +512,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               </div>
 
               {form.eventType === "wedding" ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label>Nombre del novio *</Label>
                     <Input
@@ -546,7 +550,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                   {formErrors.honorees && <p className="text-xs text-destructive">{formErrors.honorees}</p>}
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Fecha del evento *</Label>
                   <Input
@@ -592,7 +596,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               <div>
                 <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Ceremonia</h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <Label>Hora</Label>
                       <Input value={form.ceremonyTime} onChange={set("ceremonyTime")} placeholder="6:00 PM" />
@@ -616,7 +620,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               <div>
                 <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Recepción</h3>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <Label>Hora</Label>
                       <Input value={form.receptionTime} onChange={set("receptionTime")} placeholder="8:00 PM" />
@@ -667,7 +671,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               </div>
               <div>
                 <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Código de vestimenta</h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <Label>Etiqueta</Label>
                     <Input value={form.dressCodeLabel} onChange={set("dressCodeLabel")} placeholder="Formal" />
@@ -687,7 +691,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
             {/* ── Tab: Familias ───────────────────────────── */}
             <TabsContent value="families" className="space-y-4 pt-4">
               <p className="text-xs text-muted-foreground">Escribe un nombre por línea en cada campo.</p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Padres de la novia</Label>
                   <Textarea value={form.parentsBride} onChange={set("parentsBride")} rows={4} placeholder={"Sr. Padre de la Novia\nSra. Madre de la Novia"} />
@@ -701,7 +705,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                 <Label>Padrinos</Label>
                 <Textarea value={form.godparents} onChange={set("godparents")} rows={4} placeholder={"Padrino 1\nPadrino 2"} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Damas de honor</Label>
                   <Textarea value={form.bridesmaids} onChange={set("bridesmaids")} rows={4} placeholder={"Dama 1\nDama 2"} />
@@ -721,7 +725,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               <div className="space-y-3">
                 {form.timeline.map((item, idx) => (
                   <div key={item.id} className="border rounded-md p-3 space-y-2">
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div className="space-y-1">
                         <Label className="text-xs">Hora</Label>
                         <Input
@@ -1146,7 +1150,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                 <p className="text-xs text-muted-foreground">Haz clic en una paleta para aplicarla. Puedes ajustar los colores individualmente después.</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(
                   [
                     { field: "primaryColor", label: "Color primario", hint: `default: ${DEFAULT_THEME.primaryColor}` },
@@ -1175,7 +1179,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                 ))}
               </div>
               {/* Overlay + card opacity */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm">Oscuridad del fondo</Label>
@@ -1336,7 +1340,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
             <TabsContent value="contact" className="space-y-4 pt-4">
               <div>
                 <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Teléfonos & WhatsApp</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label>Teléfono del novio</Label>
                     <Input value={form.groomPhone} onChange={set("groomPhone")} placeholder="+57 300 0000000" />
@@ -1346,7 +1350,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                     <Input value={form.bridePhone} onChange={set("bridePhone")} placeholder="+57 300 0000000" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
                   <div className="space-y-1">
                     <Label>Mensaje WA – Novio</Label>
                     <Textarea value={form.groomWAMessage} onChange={set("groomWAMessage")} rows={3} />

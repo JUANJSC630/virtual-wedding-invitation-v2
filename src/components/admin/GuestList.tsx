@@ -100,11 +100,11 @@ const GuestList: React.FC<GuestListProps> = ({
               <TableRow>
                 <TableHead>Código</TableHead>
                 <TableHead>Nombre</TableHead>
-                <TableHead>Contacto</TableHead>
-                <TableHead>Cupos</TableHead>
-                <TableHead>Acompañantes</TableHead>
+                <TableHead className="hidden md:table-cell">Contacto</TableHead>
+                <TableHead className="hidden sm:table-cell">Cupos</TableHead>
+                <TableHead className="hidden lg:table-cell">Acompañantes</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Confirmación</TableHead>
+                <TableHead className="hidden lg:table-cell">Confirmación</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -142,6 +142,10 @@ const GuestList: React.FC<GuestListProps> = ({
                     <TableCell className={`font-medium ${!guest.confirmed ? "text-yellow-400" : ""}`}>
                       <div>
                         {guest.name}
+                        {/* En móvil, cupos van bajo el nombre (columna oculta) */}
+                        <span className="sm:hidden ml-2 text-xs text-muted-foreground whitespace-nowrap">
+                          · {confirmedCount}/{guest.maxGuests} cupos
+                        </span>
                         {guest.notes && (
                           <p
                             className="text-xs text-muted-foreground mt-0.5 truncate max-w-[200px]"
@@ -153,7 +157,7 @@ const GuestList: React.FC<GuestListProps> = ({
                       </div>
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="space-y-1 text-sm">
                         {guest.email && <div>📧 {guest.email}</div>}
                         {guest.phone && <div>📱 {guest.phone}</div>}
@@ -163,14 +167,14 @@ const GuestList: React.FC<GuestListProps> = ({
                       </div>
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4 text-muted-foreground" />
                         <span>{confirmedCount}/{guest.maxGuests}</span>
                       </div>
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <div className="flex items-center gap-1">
                         <UserCheck className="h-4 w-4 text-muted-foreground" />
                         <span>
@@ -185,7 +189,7 @@ const GuestList: React.FC<GuestListProps> = ({
                       </div>
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       {guest.confirmed ? (
                         <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
                           <CheckCircle className="mr-1 h-3 w-3" />
