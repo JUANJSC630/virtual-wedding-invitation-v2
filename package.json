@@ -26,6 +26,7 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:seed": "node --loader ts-node/esm prisma/seed.ts",
+    "seed:occasions": "node --loader ts-node/esm scripts/seed-occasions-demo.ts",
     "setup-admin": "node --loader ts-node/esm scripts/setup-admin.ts",
     "migrate-to-multitenant": "node --loader ts-node/esm scripts/migrate-to-multitenant.ts",
     "update-event-config": "node --loader ts-node/esm scripts/update-event-config.ts"

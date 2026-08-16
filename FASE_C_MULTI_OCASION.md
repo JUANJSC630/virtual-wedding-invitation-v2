@@ -123,12 +123,19 @@ Resultado: `type-check` y `test` (26) en verde. **Cero cambios visibles** para e
 | Paso | Descripción | Toca DB | Riesgo |
 |---|---|---|---|
 | C.1 ✅ | Fundación: tipos + helper + tests | No | Nulo |
-| C.3 ✅ | Refactor de secciones para usar `getHonorees*` en vez de `groom/brideName` — **secciones ya agnósticas** | No | Bajo |
-| C.2 ✅ | **Almacenamiento en `config` (sin migración)** — helper lee de `config.honorees`/`config.eventType` con fallback legacy | No | Nulo |
-| C.5 | Panel master: selector "Tipo de evento" + editor de `honorees` dinámico según el tipo (escribe a `config`) | No | Bajo |
-| C.6 | Labels por ocasión: defaults de `config.labels` según `eventType` (ej. "NOS CASAMOS" vs "MIS XV") | No | Bajo |
-| C.4 | Layouts que se adaptan a 1 vs 2 protagonistas (refinar más allá del degradado básico) | No | Medio |
-| C.7 | Seed de ejemplo: 1 evento por ocasión para QA | Sí (datos) | Nulo |
+| C.3 ✅ | Refactor de secciones para usar `getHonorees*` — **secciones ya agnósticas** | No | Bajo |
+| C.2 ✅ | **Almacenamiento en `config` (sin migración)** — helper lee de `config` con fallback legacy | No | Nulo |
+| C.5 ✅ | Panel master: selector "Tipo de evento" + editor de `honorees` dinámico; server persiste en `config` | No | Bajo |
+| C.6 ✅ | Textos por ocasión (`src/lib/occasions.ts`): `announcementText` (S1) y `shareTitle` (S8) por `eventType` | No | Bajo |
+| C.7 ✅ | Seed demo opt-in (`pnpm seed:occasions`): XV, bautizo, cumpleaños. Idempotente. **Requiere DB para correr** | Sí (datos) | Nulo |
+| C.4 ⏳ | Degradado básico a 1 protagonista **hecho** (S1/S3). Refinamiento visual fino pendiente de QA en la app corriendo | No | Medio |
+
+### Estado final de Fase C (Ago 2026)
+**Núcleo COMPLETADO.** La plataforma ya es multi-ocasión: se puede crear una boda, XV, bautizo, comunión, cumpleaños o corporativo desde el panel, con protagonistas y textos propios, sin migración de DB y sin romper los eventos boda existentes. 42 archivos de tests (31 pruebas) en verde.
+
+**Pendiente no bloqueante:**
+- **C.4** refinamiento visual de layouts de 1 protagonista — requiere ver la app corriendo (Neon estaba inalcanzable en dev). El degradado funcional ya está.
+- **QA end-to-end** con `pnpm seed:occasions` cuando la DB esté disponible: crear los eventos demo y revisar `/laura-xv`, `/mateo-bautizo`, `/ana-cumple`.
 
 **C.2 es el único paso que modifica la base de datos de producción.** Antes de aplicarlo se debe: (a) confirmar acceso a `DATABASE_URL`, (b) idealmente snapshot/branch de Neon, (c) revisar la migración generada por Prisma.
 
