@@ -26,8 +26,11 @@ import {
 
 import { DEFAULT_ASSETS } from "@/context/AssetContext";
 import { DEFAULT_THEME, SERIF_PRESETS } from "@/context/ThemeContext";
+import { buildLegacyLayout } from "@/blocks/legacyLayout";
+import { BlockInstance } from "@/blocks/types";
 import { compressImage } from "@/lib/compressImage";
 import { EVENT_TYPES, getHonoreesNames } from "@/lib/honorees";
+import { LayoutBuilder } from "@/components/master/LayoutBuilder";
 import { eventBasicSchema, extractZodErrors } from "@/lib/schemas";
 import CSVImportModal from "@/components/admin/CSVImportModal";
 import { AdminUser, AssetMap, EventTypeSlug, EventWithStats, GalleryPhoto, Honoree, SectionsConfig, ThemeConfig, TimelineItem } from "@/types";
@@ -118,6 +121,8 @@ interface EventFormData {
   rsvpMode: "whatsapp" | "form";
   // Labels
   labels: Record<string, string>;
+  // Secciones dinámicas (Fase B)
+  layout: BlockInstance[];
 }
 
 interface ClientAdminRow {
@@ -164,6 +169,7 @@ const emptyForm: EventFormData = {
   sections: { showVerse: true, showNames: true, showPhotos: true, showFamily: true, showVenues: true, showTimeline: true, showGifts: true, showGallery: true },
   rsvpMode: "whatsapp",
   assets: {}, theme: {}, labels: {},
+  layout: buildLegacyLayout(undefined),
 };
 
 function eventToForm(ev: EventWithStats): EventFormData {
@@ -225,6 +231,9 @@ function eventToForm(ev: EventWithStats): EventFormData {
     assets: (ev.assets as AssetMap) ?? {},
     theme: (ev.theme as ThemeConfig) ?? {},
     labels: (ev.config?.labels as Record<string, string>) ?? {},
+    // Materializa el layout desde el legacy si el evento aún no tiene uno,
+    // para que el constructor de Diseño muestre las secciones actuales.
+    layout: ev.config?.layout?.length ? ev.config.layout : buildLegacyLayout(ev.config?.sections),
   };
 }
 
@@ -445,7 +454,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
               <TabsTrigger value="texts">Textos</TabsTrigger>
               <TabsTrigger value="families">Familias</TabsTrigger>
               <TabsTrigger value="timeline">Itinerario</TabsTrigger>
-              <TabsTrigger value="sections">Secciones</TabsTrigger>
+              <TabsTrigger value="design">Diseño</TabsTrigger>
             </TabsList>
             <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="labels">Etiquetas</TabsTrigger>
@@ -793,39 +802,15 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
             </TabsContent>
 
             {/* ── Tab: Secciones ──────────────────────────── */}
-            <TabsContent value="sections" className="space-y-3 pt-4">
+            <TabsContent value="design" className="space-y-3 pt-4">
               <p className="text-xs text-muted-foreground">
-                Activa o desactiva secciones de la invitación. Por defecto todas están activas.
+                Reordena, muestra/oculta, elimina y añade secciones de la invitación.
+                El orden aquí es el orden en que se ven.
               </p>
-              {(
-                [
-                  { key: "showVerse",    label: "Versículo",               desc: "Sección 1 — versículo bíblico y anuncio" },
-                  { key: "showNames",    label: "Nombres & mensaje",        desc: "Sección 3 — nombres de los novios y mensaje heroico" },
-                  { key: "showPhotos",   label: "Fotos decorativas",        desc: "Secciones 2, 4 y foto principal full-bleed" },
-                  { key: "showGallery",  label: "Galería",                  desc: "Nuestra Historia — galería de fotos" },
-                  { key: "showFamily",   label: "Familias & padrinos",      desc: "Sección 5 — padres, padrinos, damas y caballeros" },
-                  { key: "showVenues",   label: "Lugares & vestimenta",     desc: "Sección 6 — ceremonia, recepción y dress code" },
-                  { key: "showTimeline", label: "Itinerario",               desc: "Sección 7 — cronograma del día" },
-                  { key: "showGifts",    label: "Regalos & confirmación",   desc: "Sección 8 — sugerencia de regalos y RSVP" },
-                ] as { key: keyof SectionsConfig; label: string; desc: string }[]
-              ).map(({ key, label, desc }) => (
-                <div key={key} className="flex items-start gap-3 p-3 border rounded-lg">
-                  <input
-                    type="checkbox"
-                    id={`section-${key}`}
-                    checked={form.sections[key]}
-                    onChange={e => setForm(prev => ({
-                      ...prev,
-                      sections: { ...prev.sections, [key]: e.target.checked },
-                    }))}
-                    className="h-4 w-4 mt-0.5 cursor-pointer"
-                  />
-                  <label htmlFor={`section-${key}`} className="cursor-pointer flex-1">
-                    <div className="text-sm font-medium">{label}</div>
-                    <div className="text-xs text-muted-foreground">{desc}</div>
-                  </label>
-                </div>
-              ))}
+              <LayoutBuilder
+                blocks={form.layout}
+                onChange={layout => setForm(prev => ({ ...prev, layout }))}
+              />
             </TabsContent>
 
             {/* ── Tab: Etiquetas ──────────────────────────── */}

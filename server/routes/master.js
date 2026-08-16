@@ -15,7 +15,7 @@ masterRoutes.use(requireMaster);
 
 function buildConfig(body) {
   const {
-    eventType, honorees, eventTitle,
+    eventType, honorees, eventTitle, layout,
     verseText, verseReference,
     ceremonyName, ceremonyAddress, ceremonyMapsUrl,
     receptionName, receptionAddress, receptionMapsUrl,
@@ -37,6 +37,17 @@ function buildConfig(body) {
           .map(h => ({ role: String(h.role || "host"), label: String(h.label || ""), name: h.name.trim() }))
       : [],
     eventTitle: eventTitle || "",
+    // Secciones dinámicas (Fase B) — array ordenado de bloques, saneado.
+    layout: Array.isArray(layout)
+      ? layout
+          .filter(b => b && typeof b.type === "string" && b.id)
+          .map(b => ({
+            id: String(b.id),
+            type: String(b.type),
+            enabled: b.enabled !== false,
+            config: b.config && typeof b.config === "object" ? b.config : {},
+          }))
+      : [],
     verse: { text: verseText || "", reference: verseReference || "" },
     ceremony: { name: ceremonyName || "", address: ceremonyAddress || "", mapsUrl: ceremonyMapsUrl || "" },
     reception: { name: receptionName || "", address: receptionAddress || "", mapsUrl: receptionMapsUrl || "" },
