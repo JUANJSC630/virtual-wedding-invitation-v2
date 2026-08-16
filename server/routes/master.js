@@ -385,6 +385,36 @@ masterRoutes.post("/events/:id/import-guests", async (req, res) => {
   }
 });
 
+// ─── GET /api/master/events/:id/guests — invitados de un evento (panel) ──────
+
+masterRoutes.get("/events/:id/guests", async (req, res) => {
+  try {
+    const { id: eventId } = req.params;
+
+    const [guests, accessCounts] = await Promise.all([
+      prisma.guest.findMany({
+        where: { eventId },
+        include: { companions: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.guestAccess.groupBy({
+        by: ["guestCode"],
+        where: { eventId },
+        _count: { id: true },
+      }),
+    ]);
+
+    const countMap = Object.fromEntries(
+      accessCounts.map(({ guestCode, _count }) => [guestCode, _count.id])
+    );
+
+    res.json(guests.map(g => ({ ...g, accessCount: countMap[g.code] ?? 0 })));
+  } catch (error) {
+    console.error("Error getting event guests (master):", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // ─── POST /api/master/events/:id/client-admins — crear client admin ──────────
 
 masterRoutes.post("/events/:id/client-admins", async (req, res) => {

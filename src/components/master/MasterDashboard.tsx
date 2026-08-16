@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 
 import toast from "react-hot-toast";
 import {
+  BarChart3,
   CalendarDays,
   CheckCircle2,
   Clock,
@@ -31,6 +32,7 @@ import { buildLegacyLayout } from "@/blocks/legacyLayout";
 import { BlockInstance } from "@/blocks/types";
 import { compressImage } from "@/lib/compressImage";
 import { EVENT_TYPES, getHonoreesNames } from "@/lib/honorees";
+import { EventDetail } from "@/components/master/EventDetail";
 import { LayoutBuilder } from "@/components/master/LayoutBuilder";
 import { eventBasicSchema, extractZodErrors } from "@/lib/schemas";
 import CSVImportModal from "@/components/admin/CSVImportModal";
@@ -1626,6 +1628,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
   const [editingEvent, setEditingEvent] = useState<EventWithStats | null>(null);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [selectedEventForAdmin, setSelectedEventForAdmin] = useState<EventWithStats | null>(null);
+  // Ventana por evento (rediseño): al seleccionar, se muestra su panel dedicado.
+  const [selectedEvent, setSelectedEvent] = useState<EventWithStats | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importEventId, setImportEventId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -1771,7 +1775,17 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
 
       {/* Main */}
       <main className="container py-6 space-y-6">
-        {/* Global KPIs */}
+        {selectedEvent ? (
+          <EventDetail
+            event={selectedEvent}
+            onBack={() => setSelectedEvent(null)}
+            onEdit={() => handleEditEvent(selectedEvent)}
+            onManageAdmins={() => handleManageAdmins(selectedEvent)}
+            onImport={() => { setImportEventId(selectedEvent.id); setShowImportModal(true); }}
+          />
+        ) : (
+        <>
+        {/* Global KPIs — pulso general (secundario). El detalle real está en cada evento. */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Card>
@@ -2011,11 +2025,11 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                       <Button
                         size="sm"
                         variant="default"
-                        onClick={() => handleEditEvent(ev)}
+                        onClick={() => setSelectedEvent(ev)}
                         className="flex flex-1 items-center justify-center gap-1.5 sm:flex-none"
                       >
-                        <Edit2 className="h-3.5 w-3.5" />
-                        Editar
+                        <BarChart3 className="h-3.5 w-3.5" />
+                        Abrir panel
                       </Button>
 
                       <Button
@@ -2036,6 +2050,9 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => handleEditEvent(ev)}>
+                            <Edit2 className="mr-2 h-4 w-4" /> Editar invitación
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleManageAdmins(ev)}>
                             <Settings className="mr-2 h-4 w-4" /> Admins del evento
                           </DropdownMenuItem>
@@ -2075,6 +2092,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
             </div>
           )}
         </div>
+        </>
+        )}
       </main>
 
       {/* Modals */}
