@@ -11,6 +11,7 @@ import InvitationSection8 from "@/components/InvitationSection8";
 import InvitationSection9 from "@/components/InvitationSection9";
 import InvitationSectionGallery from "@/components/InvitationSectionGallery";
 import DividerBlock from "./DividerBlock";
+import FaqBlock from "./FaqBlock";
 import TextBlock from "./TextBlock";
 
 interface RegistryEntry {
@@ -37,6 +38,7 @@ export const SECTION_REGISTRY: Record<BlockType, RegistryEntry> = {
   timeline:     { component: InvitationSection7,       label: "Itinerario",       icon: "🕒", canDuplicate: false },
   rsvp:         { component: InvitationSection8,       label: "Confirmación",     icon: "✅", canDuplicate: false },
   text:         { component: TextBlock,                label: "Texto libre",      icon: "📝", canDuplicate: true },
+  faq:          { component: FaqBlock,                 label: "Preguntas frecuentes", icon: "❓", canDuplicate: true },
   divider:      { component: DividerBlock,             label: "Separador",        icon: "➖", canDuplicate: true },
 };
 

@@ -18,6 +18,7 @@ export type BlockType =
   | "timeline"     // itinerario (ex-S7)
   | "rsvp"         // confirmación + regalos + contacto (ex-S8)
   | "text"         // NUEVO: bloque de texto libre
+  | "faq"          // NUEVO: preguntas frecuentes
   | "divider";     // NUEVO: separador decorativo
 
 export interface BlockInstance {

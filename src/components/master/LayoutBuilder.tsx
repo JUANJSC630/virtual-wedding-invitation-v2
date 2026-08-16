@@ -42,6 +42,10 @@ const EDITABLE_FIELDS: Partial<Record<BlockType, FieldSpec[]>> = {
     { key: "title", label: "Título", type: "text" },
     { key: "text", label: "Texto", type: "textarea" },
   ],
+  faq: [
+    { key: "title", label: "Título", type: "text" },
+    { key: "items", label: "Preguntas (una por línea: Pregunta | Respuesta)", type: "textarea" },
+  ],
   divider: [{ key: "symbol", label: "Símbolo (ej. ✦, ❀, ♥)", type: "text" }],
 };
 

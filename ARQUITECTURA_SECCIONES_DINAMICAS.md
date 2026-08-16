@@ -183,17 +183,23 @@ Dejar **Puck como evaluación para la fase "editor visual WYSIWYG"** (arrastrar 
 
 ## 5. Plan de implementación por pasos (no-destructivo)
 
-| Paso | Descripción | Riesgo |
+| Paso | Descripción | Estado |
 |------|-------------|--------|
-| **B.1** | Definir tipos `BlockInstance`/`BlockType` + `SECTION_REGISTRY` (mapea a los componentes actuales) | Nulo |
-| **B.2** | `BlockRenderer` + `LEGACY_LAYOUT` (orden actual) como fallback. Sustituir el JSX fijo de `App.tsx`. Sin cambio visible. | Bajo |
-| **B.3** | Refactor de cada sección para aceptar `config` por props (manteniendo fallback a EventContext) | Medio |
-| **B.4** | Separar `countdown` de `family`; unificar `photo` (torn/flowers/hero) | Medio |
-| **B.5** | Migrar eventos existentes: generar `config.layout` desde su estado actual (script idempotente) | Bajo |
-| **B.6** | Panel "Diseño": lista drag-and-drop (`@dnd-kit/sortable`) + toggle + eliminar + añadir | Medio |
-| **B.7** | Form de edición por tipo de bloque (cada bloque declara sus campos) | Medio |
-| **B.8** | Preview en vivo (iframe modo preview que refresca al guardar) | Bajo |
-| **B.9** | Nuevos bloques del catálogo: `story`, `faq`, `registry`, `map`, `text`, `divider` | Bajo (aditivo) |
+| **B.1** | Tipos `BlockInstance`/`BlockType` + `SECTION_REGISTRY` | ✅ `src/blocks/` |
+| **B.2** | `BlockRenderer` + `buildLegacyLayout`/`resolveLayout` como fallback. `App.tsx` usa el renderer. Sin cambio visible. | ✅ |
+| **B.6** | Panel "Diseño": drag-and-drop (`@dnd-kit`) + mostrar/ocultar + eliminar + añadir. Persiste `config.layout`. | ✅ verificado E2E |
+| **B.7** | Edición inline de config por bloque (texto, faq, separador) | ✅ |
+| **B.9** | Bloques nuevos config-driven: `text`, `faq`, `divider` | ✅ (parcial) |
+| **B.3** | Refactor de secciones **heredadas** para aceptar `config` por instancia (hoy leen EventContext global) | ⏳ pendiente |
+| **B.4** | Separar `countdown` de `family`; unificar `photo` (torn/flowers/hero) en un bloque con `config.frame` | ⏳ pendiente |
+| **B.5** | Script de migración masiva de `config.layout` (hoy se materializa al abrir+guardar en el panel; el renderer cae a legacy si falta) | ⏳ opcional |
+| **B.8** | Preview en vivo lado-a-lado (existe modo `?preview=1` + botón "Vista previa"; falta el iframe embebido en el editor) | ⏳ pendiente |
+| **B.9+** | Más bloques del catálogo: `story`, `registry`, `map`, `video` | ⏳ aditivo |
+
+### Estado de Fase B (Ago 2026)
+**Núcleo COMPLETADO y verificado end-to-end.** Ya se puede **reordenar, mostrar/ocultar, eliminar, añadir y editar** secciones desde la pestaña "Diseño" del panel; el orden y los bloques nuevos se guardan en `config.layout` (sin migración de DB) y la invitación los renderiza dinámicamente. Retrocompatible: eventos sin `layout` usan el orden legacy.
+
+**Limitación conocida (B.3/B.4):** los bloques heredados (portada, foto, familia…) aún leen su contenido de la config global del evento, no por-instancia. Por eso **duplicar** un bloque de foto muestra la misma foto en ambas copias. Los bloques nuevos (texto, faq, separador) sí son 100% por-instancia. Resolver B.3/B.4 quita esa limitación.
 
 **Prerrequisito ya cumplido:** la estabilización (Fase A) y la config-en-JSON (Fase C) dejan el terreno listo — `config.layout` se guarda igual que `config.honorees`, sin migración.
 
