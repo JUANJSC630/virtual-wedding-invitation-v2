@@ -13,6 +13,7 @@ import {
   KeyRound,
   LogOut,
   MonitorSmartphone,
+  MoreHorizontal,
   Plus,
   Settings,
   Shield,
@@ -38,6 +39,13 @@ import { AdminUser, AssetMap, EventTypeSlug, EventWithStats, GalleryPhoto, Honor
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -1998,12 +2006,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                     )}
 
                     {/* Actions */}
-                    <div className="flex flex-wrap gap-1 pt-1">
+                    {/* Acciones: primarias visibles + resto en menú "Más" */}
+                    <div className="flex items-center gap-2 pt-3">
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="default"
                         onClick={() => handleEditEvent(ev)}
-                        className="flex items-center gap-1"
+                        className="flex flex-1 items-center justify-center gap-1.5 sm:flex-none"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                         Editar
@@ -2012,87 +2021,53 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleManageAdmins(ev)}
-                        className="flex items-center gap-1"
-                      >
-                        <Settings className="h-3.5 w-3.5" />
-                        Admins
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleToggleActive(ev)}
-                        className="flex items-center gap-1"
-                      >
-                        {ev.isActive
-                          ? <EyeOff className="h-3.5 w-3.5" />
-                          : <Eye className="h-3.5 w-3.5" />}
-                        {ev.isActive ? "Desactivar" : "Activar"}
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
                         onClick={() => window.open(`/${ev.slug}?preview=1`, "_blank")}
-                        className="flex items-center gap-1"
+                        className="flex flex-1 items-center justify-center gap-1.5 sm:flex-none"
                         title="Abrir vista previa de la invitación"
                       >
                         <MonitorSmartphone className="h-3.5 w-3.5" />
                         Vista previa
                       </Button>
 
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDuplicateEvent(ev)}
-                        className="flex items-center gap-1"
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                        Duplicar
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => { setImportEventId(ev.id); setShowImportModal(true); }}
-                        className="flex items-center gap-1"
-                      >
-                        <FileUp className="h-3.5 w-3.5" />
-                        Importar CSV
-                      </Button>
-
-                      {showArchived ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleUnarchiveEvent(ev)}
-                          className="flex items-center gap-1"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          Restaurar
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleArchiveEvent(ev)}
-                          className="flex items-center gap-1 text-amber-600 hover:text-amber-700 border-amber-300 hover:border-amber-400"
-                        >
-                          <EyeOff className="h-3.5 w-3.5" />
-                          Archivar
-                        </Button>
-                      )}
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteEvent(ev)}
-                        className="flex items-center gap-1 text-destructive hover:text-destructive border-destructive/30 hover:border-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Eliminar
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="outline" className="px-2" aria-label="Más acciones">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => handleManageAdmins(ev)}>
+                            <Settings className="mr-2 h-4 w-4" /> Admins del evento
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleActive(ev)}>
+                            {ev.isActive
+                              ? <><EyeOff className="mr-2 h-4 w-4" /> Desactivar</>
+                              : <><Eye className="mr-2 h-4 w-4" /> Activar</>}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDuplicateEvent(ev)}>
+                            <Copy className="mr-2 h-4 w-4" /> Duplicar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setImportEventId(ev.id); setShowImportModal(true); }}>
+                            <FileUp className="mr-2 h-4 w-4" /> Importar CSV
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {showArchived ? (
+                            <DropdownMenuItem onClick={() => handleUnarchiveEvent(ev)}>
+                              <Eye className="mr-2 h-4 w-4" /> Restaurar
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => handleArchiveEvent(ev)} className="text-amber-600 focus:text-amber-700">
+                              <EyeOff className="mr-2 h-4 w-4" /> Archivar
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteEvent(ev)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </CardContent>
                 </Card>
