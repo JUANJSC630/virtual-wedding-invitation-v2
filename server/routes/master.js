@@ -15,6 +15,7 @@ masterRoutes.use(requireMaster);
 
 function buildConfig(body) {
   const {
+    eventType, honorees, eventTitle,
     verseText, verseReference,
     ceremonyName, ceremonyAddress, ceremonyMapsUrl,
     receptionName, receptionAddress, receptionMapsUrl,
@@ -28,6 +29,14 @@ function buildConfig(body) {
     (str || "").split("\n").map(s => s.trim()).filter(Boolean);
 
   return {
+    // Multi-ocasión (Fase C) — guardado en config, sin columnas nuevas.
+    eventType: typeof eventType === "string" && eventType ? eventType : "wedding",
+    honorees: Array.isArray(honorees)
+      ? honorees
+          .filter(h => h && typeof h.name === "string")
+          .map(h => ({ role: String(h.role || "host"), label: String(h.label || ""), name: h.name.trim() }))
+      : [],
+    eventTitle: eventTitle || "",
     verse: { text: verseText || "", reference: verseReference || "" },
     ceremony: { name: ceremonyName || "", address: ceremonyAddress || "", mapsUrl: ceremonyMapsUrl || "" },
     reception: { name: receptionName || "", address: receptionAddress || "", mapsUrl: receptionMapsUrl || "" },

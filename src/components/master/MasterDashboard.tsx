@@ -27,9 +27,10 @@ import {
 import { DEFAULT_ASSETS } from "@/context/AssetContext";
 import { DEFAULT_THEME, SERIF_PRESETS } from "@/context/ThemeContext";
 import { compressImage } from "@/lib/compressImage";
+import { EVENT_TYPES } from "@/lib/honorees";
 import { eventBasicSchema, extractZodErrors } from "@/lib/schemas";
 import CSVImportModal from "@/components/admin/CSVImportModal";
-import { AdminUser, AssetMap, EventWithStats, GalleryPhoto, SectionsConfig, ThemeConfig, TimelineItem } from "@/types";
+import { AdminUser, AssetMap, EventTypeSlug, EventWithStats, GalleryPhoto, Honoree, SectionsConfig, ThemeConfig, TimelineItem } from "@/types";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,10 @@ interface GlobalStats {
 
 interface EventFormData {
   slug: string;
+  // Multi-ocasión (Fase C)
+  eventType: EventTypeSlug;
+  honorees: Honoree[];
+  eventTitle: string;
   groomName: string;
   brideName: string;
   eventDate: string;
@@ -145,7 +150,8 @@ const COLOR_PALETTES: ColorPalette[] = [
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const emptyForm: EventFormData = {
-  slug: "", groomName: "", brideName: "", eventDate: "", rsvpDeadline: "",
+  slug: "", eventType: "wedding", honorees: [], eventTitle: "",
+  groomName: "", brideName: "", eventDate: "", rsvpDeadline: "",
   isActive: true, ceremonyTime: "", ceremonyName: "", ceremonyAddress: "",
   ceremonyMapsUrl: "", receptionTime: "", receptionName: "", receptionAddress: "",
   receptionMapsUrl: "", venueName: "", venueAddress: "", verseText: "",
@@ -163,6 +169,9 @@ const emptyForm: EventFormData = {
 function eventToForm(ev: EventWithStats): EventFormData {
   return {
     slug: ev.slug,
+    eventType: ev.config?.eventType ?? "wedding",
+    honorees: ev.config?.honorees ?? [],
+    eventTitle: ev.config?.eventTitle ?? "",
     groomName: ev.groomName,
     brideName: ev.brideName,
     eventDate: ev.eventDate ? ev.eventDate.slice(0, 10) : "",
@@ -321,12 +330,27 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Multi-ocasión: para eventos que no son boda, las columnas requeridas
+    // groomName/brideName se rellenan con el primer protagonista, y se valida
+    // que haya al menos un protagonista con nombre.
+    let submission: EventFormData = form;
+    if (form.eventType !== "wedding") {
+      const names = form.honorees.map(h => h.name.trim()).filter(Boolean);
+      if (names.length === 0) {
+        setFormErrors({ honorees: "Agrega al menos un protagonista con nombre" });
+        toast.error("Falta el nombre del protagonista en la pestaña Básico");
+        return;
+      }
+      const filler = names[0]!;
+      submission = { ...form, groomName: filler, brideName: filler };
+    }
+
     // Validate basic fields before sending
     const parsed = eventBasicSchema.safeParse({
-      slug: form.slug,
-      groomName: form.groomName,
-      brideName: form.brideName,
-      eventDate: form.eventDate,
+      slug: submission.slug,
+      groomName: submission.groomName,
+      brideName: submission.brideName,
+      eventDate: submission.eventDate,
     });
     if (!parsed.success) {
       const errs = extractZodErrors(parsed.error);
@@ -360,7 +384,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
         method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify(submission),
       });
 
       if (!res.ok) {
@@ -376,6 +400,32 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
     } finally {
       setSaving(false);
     }
+  };
+
+  // Multi-ocasión: cambiar el tipo reconstruye los protagonistas según los
+  // roles de esa ocasión, preservando nombres ya escritos del mismo rol.
+  const handleEventTypeChange = (type: EventTypeSlug) => {
+    setForm(prev => {
+      const roles = EVENT_TYPES[type].honoreeRoles;
+      const honorees: Honoree[] =
+        type === "wedding"
+          ? []
+          : roles.map(r => ({
+              role: r.role,
+              label: r.label,
+              name: prev.honorees.find(h => h.role === r.role)?.name ?? "",
+            }));
+      return { ...prev, eventType: type, honorees };
+    });
+    setFormErrors(p => { const n = { ...p }; delete n.honorees; return n; });
+  };
+
+  const setHonoreeName = (index: number, name: string) => {
+    setForm(prev => ({
+      ...prev,
+      honorees: prev.honorees.map((h, i) => (i === index ? { ...h, name } : h)),
+    }));
+    setFormErrors(p => { const n = { ...p }; delete n.honorees; return n; });
   };
 
   return (
@@ -433,28 +483,60 @@ const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onC
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label>Nombre del novio *</Label>
-                  <Input
-                    value={form.groomName}
-                    onChange={e => { set("groomName")(e); setFormErrors(p => { const n = {...p}; delete n.groomName; return n; }); }}
-                    placeholder="Juan"
-                    className={formErrors.groomName ? "border-destructive" : ""}
-                  />
-                  {formErrors.groomName && <p className="text-xs text-destructive">{formErrors.groomName}</p>}
-                </div>
-                <div className="space-y-1">
-                  <Label>Nombre de la novia *</Label>
-                  <Input
-                    value={form.brideName}
-                    onChange={e => { set("brideName")(e); setFormErrors(p => { const n = {...p}; delete n.brideName; return n; }); }}
-                    placeholder="Jimena"
-                    className={formErrors.brideName ? "border-destructive" : ""}
-                  />
-                  {formErrors.brideName && <p className="text-xs text-destructive">{formErrors.brideName}</p>}
-                </div>
+              {/* Tipo de evento (multi-ocasión) */}
+              <div className="space-y-1">
+                <Label>Tipo de evento</Label>
+                <select
+                  value={form.eventType}
+                  onChange={e => handleEventTypeChange(e.target.value as EventTypeSlug)}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  {Object.entries(EVENT_TYPES).map(([slug, t]) => (
+                    <option key={slug} value={slug}>{t.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground">Define los protagonistas y los textos por defecto de la invitación.</p>
               </div>
+
+              {form.eventType === "wedding" ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label>Nombre del novio *</Label>
+                    <Input
+                      value={form.groomName}
+                      onChange={e => { set("groomName")(e); setFormErrors(p => { const n = {...p}; delete n.groomName; return n; }); }}
+                      placeholder="Juan"
+                      className={formErrors.groomName ? "border-destructive" : ""}
+                    />
+                    {formErrors.groomName && <p className="text-xs text-destructive">{formErrors.groomName}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Nombre de la novia *</Label>
+                    <Input
+                      value={form.brideName}
+                      onChange={e => { set("brideName")(e); setFormErrors(p => { const n = {...p}; delete n.brideName; return n; }); }}
+                      placeholder="Jimena"
+                      className={formErrors.brideName ? "border-destructive" : ""}
+                    />
+                    {formErrors.brideName && <p className="text-xs text-destructive">{formErrors.brideName}</p>}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Protagonistas *</Label>
+                  {form.honorees.map((h, i) => (
+                    <div key={`${h.role}-${i}`} className="grid grid-cols-[1fr_auto] items-center gap-3">
+                      <Input
+                        value={h.name}
+                        onChange={e => setHonoreeName(i, e.target.value)}
+                        placeholder={h.label}
+                      />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{h.label}</span>
+                    </div>
+                  ))}
+                  {formErrors.honorees && <p className="text-xs text-destructive">{formErrors.honorees}</p>}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label>Fecha del evento *</Label>

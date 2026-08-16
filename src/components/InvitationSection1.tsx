@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 
 import { useAssets } from "@/context/AssetContext";
 import { useEventContext } from "@/context/EventContext";
-import { getHonoreesInitials } from "@/lib/honorees";
+import { getEventType, getHonoreesInitials } from "@/lib/honorees";
+import { getOccasionDefaults } from "@/lib/occasions";
 
 const InvitationSection1 = () => {
   const { event } = useEventContext();
@@ -16,7 +17,9 @@ const InvitationSection1 = () => {
   const initials = getHonoreesInitials(event);
   const firstInitial = initials[0] ?? "J";
   const secondInitial = initials[1]; // undefined en eventos de un solo protagonista
-  const announcementText = event?.config?.announcementText ?? "¡NOS CASAMOS!";
+  // Anuncio: config del evento → default de la ocasión (boda → "¡NOS CASAMOS!").
+  const announcementText =
+    event?.config?.announcementText || getOccasionDefaults(getEventType(event)).announcementText;
 
   return (
     <section
