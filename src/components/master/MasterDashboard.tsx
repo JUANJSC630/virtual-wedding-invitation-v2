@@ -5,7 +5,6 @@ import {
   BarChart3,
   CalendarDays,
   CheckCircle2,
-  Clock,
   Copy,
   Edit2,
   Eye,
@@ -16,10 +15,10 @@ import {
   MonitorSmartphone,
   MoreHorizontal,
   Plus,
+  Search,
   Settings,
   Shield,
   Trash2,
-  Trophy,
   Upload,
   UserPlus,
   Users,
@@ -40,7 +39,7 @@ import { AdminUser, AssetMap, EventTypeSlug, EventWithStats, GalleryPhoto, Honor
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,14 +60,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface GlobalStats {
-  totalEvents: number;
-  activeEvents: number;
-  totalGuests: number;
-  confirmedGuests: number;
-  totalAccesses: number;
-}
 
 interface EventFormData {
   slug: string;
@@ -1616,12 +1607,8 @@ interface MasterDashboardProps {
 
 const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => {
   const [events, setEvents] = useState<EventWithStats[]>([]);
-  const [stats, setStats] = useState<GlobalStats | null>(null);
   const [loadingEvents, setLoadingEvents] = useState(true);
-  const [recentConfirmations, setRecentConfirmations] = useState<{
-    id: string; name: string; confirmedAt: string;
-    event: { slug: string; groomName: string; brideName: string };
-  }[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Modals
   const [showEventModal, setShowEventModal] = useState(false);
@@ -1637,22 +1624,26 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
   const loadData = useCallback(async () => {
     setLoadingEvents(true);
     try {
-      const [evRes, stRes, rcRes] = await Promise.all([
-        fetch(`/api/master/events${showArchived ? "?archived=1" : ""}`, { credentials: "include" }),
-        fetch("/api/master/stats", { credentials: "include" }),
-        fetch("/api/master/recent-confirmations", { credentials: "include" }),
-      ]);
+      const evRes = await fetch(`/api/master/events${showArchived ? "?archived=1" : ""}`, {
+        credentials: "include",
+      });
       if (evRes.ok) setEvents(await evRes.json());
-      if (stRes.ok) setStats(await stRes.json());
-      if (rcRes.ok) setRecentConfirmations(await rcRes.json());
     } catch {
-      toast.error("Error cargando datos");
+      toast.error("Error cargando eventos");
     } finally {
       setLoadingEvents(false);
     }
   }, [showArchived]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Eventos mostrados según la búsqueda (por nombre de protagonistas o slug).
+  const shownEvents = searchTerm.trim()
+    ? events.filter(ev => {
+        const q = searchTerm.trim().toLowerCase();
+        return getHonoreesNames(ev).toLowerCase().includes(q) || ev.slug.toLowerCase().includes(q);
+      })
+    : events;
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
@@ -1784,196 +1775,73 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
           />
         ) : (
         <>
-        {/* Global KPIs — pulso general (secundario). El detalle real está en cada evento. */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Eventos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{stats.totalEvents}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Activos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-green-600">{stats.activeEvents}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Invitados</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{stats.totalGuests}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Confirmados</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-blue-600">{stats.confirmedGuests}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Accesos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{stats.totalAccesses}</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Insights section */}
-        {!showArchived && events.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-3">
-            {/* Próximos eventos */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  Próximos eventos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {(() => {
-                  const now = new Date();
-                  const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-                  const upcoming = events
-                    .filter(ev => { const d = new Date(ev.eventDate); return d >= now && d <= in30; })
-                    .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
-                    .slice(0, 5);
-                  if (upcoming.length === 0)
-                    return <p className="text-sm text-muted-foreground text-center py-2">Sin eventos en los próximos 30 días</p>;
-                  return upcoming.map(ev => {
-                    const daysLeft = Math.ceil((new Date(ev.eventDate).getTime() - now.getTime()) / 86400000);
-                    return (
-                      <div key={ev.id} className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium leading-tight truncate">{getHonoreesNames(ev)}</p>
-                          <p className="text-xs text-muted-foreground">/{ev.slug}</p>
-                        </div>
-                        <Badge variant="outline" className="text-xs shrink-0">
-                          {daysLeft === 0 ? "Hoy" : `${daysLeft}d`}
-                        </Badge>
-                      </div>
-                    );
-                  });
-                })()}
-              </CardContent>
-            </Card>
-
-            {/* Ranking por confirmación */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-muted-foreground" />
-                  Ranking confirmaciones
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {events.filter(ev => ev.stats.totalGuests > 0).length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-2">Sin datos aún</p>
-                ) : (
-                  events
-                    .filter(ev => ev.stats.totalGuests > 0)
-                    .sort((a, b) => (b.stats.confirmedGuests / b.stats.totalGuests) - (a.stats.confirmedGuests / a.stats.totalGuests))
-                    .slice(0, 4)
-                    .map((ev, idx) => {
-                      const rate = Math.round((ev.stats.confirmedGuests / ev.stats.totalGuests) * 100);
-                      return (
-                        <div key={ev.id} className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-1.5 min-w-0">
-                              <span className="text-muted-foreground font-mono shrink-0">#{idx + 1}</span>
-                              <span className="truncate">{getHonoreesNames(ev)}</span>
-                            </span>
-                            <span className="font-semibold shrink-0 ml-2">{rate}%</span>
-                          </div>
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${rate}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Últimas confirmaciones */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  Últimas confirmaciones
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {recentConfirmations.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-2">Sin confirmaciones aún</p>
-                ) : (
-                  recentConfirmations.slice(0, 5).map(rc => (
-                    <div key={rc.id} className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium leading-tight truncate">{rc.name}</p>
-                        <p className="text-xs text-muted-foreground">/{rc.event.slug}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        {new Date(rc.confirmedAt).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Events section */}
+        {/* Hub de eventos — la lista ES el dashboard. El detalle vive en cada panel. */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold">Eventos</h2>
-              <div className="flex rounded-lg border overflow-hidden text-xs">
-                <button
-                  onClick={() => setShowArchived(false)}
-                  className={`px-3 py-1.5 transition-colors ${!showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                >
-                  Activos
-                </button>
-                <button
-                  onClick={() => setShowArchived(true)}
-                  className={`px-3 py-1.5 transition-colors ${showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                >
-                  Archivados
-                </button>
-              </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Eventos</h2>
+              <p className="text-sm text-muted-foreground">
+                {events.length} {events.length === 1 ? "evento" : "eventos"}
+                {!showArchived && events.length > 0 && (
+                  <>
+                    {" · "}
+                    {events.reduce((n, e) => n + e.stats.totalGuests, 0)} invitados
+                    {" · "}
+                    {events.reduce((n, e) => n + e.stats.confirmedGuests, 0)} confirmados
+                  </>
+                )}
+              </p>
             </div>
-            {!showArchived && (
-              <Button onClick={handleCreateEvent} size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Nuevo evento
-              </Button>
-            )}
+            <Button onClick={handleCreateEvent} size="sm" className="gap-1.5 self-start sm:self-auto">
+              <Plus className="h-4 w-4" /> Nuevo evento
+            </Button>
+          </div>
+
+          {/* Toolbar: búsqueda + filtro */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="Buscar por nombre o enlace…"
+                className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+            <div className="flex self-start overflow-hidden rounded-md border text-sm">
+              <button
+                onClick={() => setShowArchived(false)}
+                className={`px-3 py-1.5 transition-colors ${!showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              >
+                Activos
+              </button>
+              <button
+                onClick={() => setShowArchived(true)}
+                className={`px-3 py-1.5 transition-colors ${showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              >
+                Archivados
+              </button>
+            </div>
           </div>
 
           {loadingEvents ? (
             <p className="text-sm text-muted-foreground">Cargando eventos...</p>
           ) : events.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No hay eventos creados. Crea el primero.
+              <CardContent className="py-12 text-center text-muted-foreground">
+                {showArchived ? "No hay eventos archivados." : "No hay eventos creados. Crea el primero con “Nuevo evento”."}
+              </CardContent>
+            </Card>
+          ) : shownEvents.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Sin resultados para «{searchTerm}».
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {events.map(ev => (
+              {shownEvents.map(ev => (
                 <Card key={ev.id} className={!ev.isActive ? "opacity-60" : ""}>
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
@@ -2000,6 +1868,22 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                         {ev.stats.confirmedGuests} confirmados
                       </span>
                     </div>
+
+                    {/* Progreso de confirmación (at-a-glance por evento) */}
+                    {ev.stats.totalGuests > 0 && (() => {
+                      const rate = Math.round((ev.stats.confirmedGuests / ev.stats.totalGuests) * 100);
+                      return (
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>Confirmación</span>
+                            <span className="font-semibold text-foreground">{rate}%</span>
+                          </div>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                            <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${rate}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <CalendarDays className="h-3.5 w-3.5" />
