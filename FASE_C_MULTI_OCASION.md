@@ -147,10 +147,12 @@ Resultado: `type-check` y `test` (26) en verde. **Cero cambios visibles** para e
 
 ---
 
-## 7. Decisión pendiente para el usuario
+## 7. Decisión tomada (resuelto — ya no pendiente)
 
-Para avanzar a **C.2** necesito luz verde para **aplicar la migración en tu DB Neon** (aditiva, con backfill idempotente y reversible). Alternativa: seguir con **C.3** (refactor de secciones usando el helper con fallback legacy) que **no toca la DB** y ya deja las secciones agnósticas — dejando la migración para cuando prefieras.
+**Se descartó la migración de schema.** En vez de `ALTER TABLE`, `eventType`/`honorees`/`eventTitle` se guardan dentro de `config` (Json), que ya existía y fluye por todas las rutas (commit `e7dca9f`). Cero riesgo en prod, funciona hoy. Ver §3 de este documento y §3 de `ESTADO_Y_ROADMAP_2026.md`.
+
+Fase C quedó con su **núcleo completo**: C.1, C.2 (vía config), C.3, C.5, C.6, C.7 hechos. Pendiente real: **C.4** (refinamiento visual de layouts con 1 protagonista).
 
 ---
 
-*Documento vivo — actualizar al cerrar cada paso C.x.*
+*Documento vivo — actualizar al retomar C.4 o al promover honorees/layout a columnas reales.*

@@ -1,293 +1,148 @@
-# Estado del Proyecto, Review Completo y Roadmap Adaptativo
-> Consolidado — Agosto 2026 · Autor del análisis: revisión técnica integral
-> Reemplaza como "fuente única de verdad" a `PLAN_PLATAFORMA.md` e `INVITATION_IMPROVEMENT_PLAN.md` (que quedan como referencia histórica).
+# Estado del Proyecto y Roadmap — Fuente Única de Verdad
+> Última actualización: 17 de agosto de 2026 (cierre de sesión)
+> Reemplaza a `PLAN_PLATAFORMA.md` e `INVITATION_IMPROVEMENT_PLAN.md` (quedan como referencia histórica).
+> Complementado por: `INVESTIGACION_MERCADO_2026.md`, `CATALOGO_FEATURES_2026.md`, `FASE_C_MULTI_OCASION.md`, `ARQUITECTURA_SECCIONES_DINAMICAS.md`.
 
 ---
 
-## 0. TL;DR (para leer en 30 segundos)
+## 0. TL;DR — dónde quedamos hoy
 
-- **Dónde vamos:** los dos planes escritos (`PLAN_PLATAFORMA` fases 0–7 e `INVITATION_IMPROVEMENT_PLAN` fases 1–6) están **~85% implementados**. Multi-tenant, auth JWT, panel master, panel cliente, RSVP nativo, temas/assets configurables, PWA, CSV, QR, WhatsApp masivo: **hecho**.
-- **Lo que falta de esos planes:** sistema de **plantillas (`Template`)**, **secciones dinámicas reordenables** (drag-and-drop / `SECTION_REGISTRY`), **preview en tiempo real** completo y **tests**.
-- **Lo nuevo que pediste (multi-ocasión / "toda ocasión"):** hoy **no existe**. Todo el modelo está *cableado a boda* (`groomName`, `brideName`, ceremonia, novios, padrinos…). Convertirlo en adaptativo es una **nueva fase mayor** — es el corazón de este documento (§5).
-- **Salud del código:** funciona y despliega, pero **`type-check` falla**, el **lint tiene 743 errores** (config no cubre `server/`) y **0% de tests**. Deuda controlable pero real (§3).
-
----
-
-## 1. ¿Dónde vamos en el roadmap?
-
-Reconstruido desde los 99 commits + estado real del código.
-
-### ✅ Completado
-
-| Área | Estado | Evidencia |
-|------|--------|-----------|
-| **Fase 0 — Seguridad** | ✅ | JWT httpOnly, `helmet`, `express-rate-limit`, CORS con whitelist, bcrypt |
-| **Fase 1 — Multi-tenancy DB** | ✅ | `Event`, `ClientAdmin`, `Guest.eventId`, `@@unique([eventId, code])` |
-| **Fase 2 — Invitación dinámica** | ✅ | `/:slug` carga de DB, `?code=` precarga invitado, `EventContext` |
-| **Fase 3 — Panel cliente** | ✅ | `AdminDashboard`, CSV import (A1), filtros (A7), QR (G3), notas |
-| **Fase 4+5 — Panel master + routing** | ✅ | `MasterDashboard`, wizard, CRUD eventos, duplicar (M1), archivar (M7) |
-| **Fase 6 — Storage de assets** | ✅ | Vercel Blob, upload, compresión cliente (T3), bulk upload (M4) |
-| **Deploy Vercel** | ✅ | `export default app`, sin `serverless-http`, binary targets |
-| **Invitación: assets configurables** | ✅ | `AssetContext` + fallback chain (`INVITATION_IMPROVEMENT` Fase 2) |
-| **Invitación: temas por evento** | ✅ | `ThemeContext` + CSS custom props, paletas, fuente serif Google (Fase 3, Fase 8) |
-| **Invitación: labels/textos configurables** | ✅ | `config.sections`, labels dinámicos |
-| **Toggles de visibilidad de sección** | ✅ | `show("showVerse")…` en `App.tsx` |
-| **RSVP nativo in-app** | ✅ | G1 + M9 (`RSVPForm`), auto-decline acompañantes |
-| **Extras** | ✅ | PWA (G5), .ics/calendario (G2), recordatorios WhatsApp (A5), insights globales (M8) |
-
-### 🔲 Pendiente de los planes escritos
-
-| Ítem | Plan origen | Por qué importa |
-|------|-------------|-----------------|
-| Modelo **`Template`** + herencia | INVITATION Fase 5 | Sin él, cada evento se configura desde cero. No hay "elegir plantilla". |
-| **Secciones dinámicas** (`SECTION_REGISTRY`, drag-and-drop, reordenar/agregar) | INVITATION Fase 4 | Hoy las secciones están **hardcodeadas** en `App.tsx` (`InvitationSection1..9`). Solo se pueden **ocultar**, no reordenar ni añadir nuevas. |
-| **Preview en tiempo real** (iframe + postMessage) | INVITATION Fase 6 | Existe `?preview=1` (M2) pero no el editor live lado-a-lado. |
-| **Tests** (Vitest) | PLATAFORMA Fase 7 | 0% de cobertura. No hay red de seguridad para refactors. |
-| **Fix overflow de nombres con `clamp()`** | INVITATION Fase 1.1 | Verificar si se aplicó; nombres largos aún pueden romper. |
-
-### 🆕 No estaba en ningún plan (tu pedido de hoy)
-
-- **Adaptar la plataforma a "toda ocasión"** (bodas, XV años, bautizos, baby shower, cumpleaños, corporativo…). Requiere abstraer el vocabulario boda-específico. → **§5, la fase nueva prioritaria.**
-
-**Veredicto:** el proyecto pasó de "invitación única" a "plataforma multi-tenant de bodas" con éxito. El siguiente salto natural es de "plataforma de bodas" a **"plataforma de invitaciones para cualquier evento"**.
+- **Gate del proyecto: verde.** `type-check` 0 errores · `lint` 0 errores · **35 tests** pasando · `build` OK. Esto es cierto en cada commit de la sesión de hoy.
+- **Fase A (estabilización):** ✅ completa. Ver §1.
+- **Fase B (secciones dinámicas):** ✅ núcleo completo — reordenar/mostrar/ocultar/eliminar/añadir/editar bloques desde el panel. Ver §2.
+- **Fase C (multi-ocasión):** ✅ núcleo completo — la plataforma soporta boda/XV/bautizo/comunión/cumpleaños/corporativo. Ver §3.
+- **Panel maestro rediseñado:** ✅ ventana dedicada por evento con gestión completa (CRUD invitados + analítica) + dashboard principal simplificado a hub de eventos. Ver §4.
+- **Herramientas de diseño de Claude Code:** instaladas globalmente (frontend-design, ui-ux-pro-max, taste-skill, Playwright MCP, shadcn MCP). Ver §5.
+- **Siguiente prioridad recomendada:** ver §6.
 
 ---
 
-## 2. Review de arquitectura (lo bueno)
+## 1. Fase A — Estabilización ✅ COMPLETA
 
-- **Separación limpia backend:** `server/app.js` (setup) → `index.js` (dev listen) / `api/server.js` (Vercel). Rutas por dominio (`auth`, `events`, `guests`, `admin`, `master`).
-- **Multi-tenancy correcta:** todo filtra por `eventId`; `adminRoutes` fuerza `role === "client"` + `eventFilter(user)`; `masterRoutes` fuerza `requireMaster`. El aislamiento entre eventos está bien.
-- **Auth sólida para el tamaño del proyecto:** JWT en cookie `httpOnly` + `secure` en prod + `sameSite: "lax"`, bcrypt, rate limit en `/api/auth`. Correcto.
-- **Contextos React bien pensados:** `EventContext`, `ThemeContext`, `AssetContext`, `GuestContext` desacoplan datos de presentación. El fallback chain de assets (evento → default) es un buen patrón.
-- **Config flexible sin romper schema:** `config`/`assets`/`theme` como `Json` permite evolucionar sin migraciones constantes.
-- **Zod** en formularios y backend (T1), **error boundaries** por sección y panel (T2).
+Commit: `2365e42` (+ ajustes puntuales en commits posteriores).
 
----
+- `pnpm type-check`: 0 errores (se arreglaron 19 errores reales que `vite build` ocultaba).
+- `pnpm lint`: 0 errores (antes 743 — el config no cubría `server/`; ahora ignora `generated/` y da globals de Node al backend).
+- `pnpm test`: Vitest montado, **35 tests** (`src/lib/*.test.ts`) cubriendo schemas Zod, parseo de horas `.ics`, y toda la lógica de `honorees.ts`/`occasions.ts`.
+- CORS endurecido con whitelist env-driven (`ALLOWED_ORIGIN` + dominios Vercel).
+- Rate limiter de login arreglado (commit `d6bb06a`): antes cubría **toda** `/api/auth` (incluido `/me`, llamado en cada carga de página) y se agotaba con uso normal. Ahora solo cubre `POST /login`, con `skipSuccessfulRequests`.
+- `.env` verificado no trackeado en git. `prisma.js.map` sacado del repo.
 
-## 3. Review de calidad — deuda técnica (lo que hay que arreglar)
-
-Ordenado por impacto.
-
-### 🔴 P0 — Bloqueantes de mantenibilidad
-
-1. **`pnpm type-check` FALLA.** Errores reales en `src/lib/generateICS.ts` (varios `string | undefined` no chequeados) y en `useGuests.ts` (`refetchInterval: number | undefined` incompatible con `exactOptionalPropertyTypes`). El build de prod es `vite build` (sin `tsc`), así que **estos errores no bloquean el deploy pero sí esconden bugs**. Un dato malo en un evento (sin fecha de ceremonia) puede reventar el `.ics` en runtime.
-   - *Fix:* corregir los guardas de tipo y añadir `pnpm type-check` como paso obligatorio (pre-commit / CI).
-
-2. **Lint roto: 743 errores.** La config de ESLint no declara el entorno Node para `server/**` → `'process' is not defined`, `no-unused-vars` en middlewares. Es ruido que **oculta problemas reales** y hace inútil el linter.
-   - *Fix:* añadir bloque `files: ["server/**", "scripts/**", "api/**"]` con `globals.node` en `eslint.config.js`.
-
-3. **0% de tests.** Ningún test unitario ni de integración. Con multi-tenancy y auth, un test que verifique "el evento A no ve invitados del evento B" vale oro.
-   - *Fix:* Vitest + Supertest. Empezar por: aislamiento multi-tenant, `POST /auth/login` (roles), validación de código de invitado.
-
-### 🟠 P1 — Seguridad / robustez
-
-4. **CORS `origin: true` en producción.** Refleja *cualquier* origen con `credentials: true`. En Vercel front y API comparten dominio, así que en la práctica funciona, pero es más permisivo de lo necesario. Como las cookies son `sameSite: "lax"`, el riesgo real de CSRF es bajo — aun así conviene fijar el dominio explícito (`ALLOWED_ORIGIN`) también en prod. **Baja probabilidad, fácil de endurecer.**
-
-5. **Sin CSRF token explícito.** Mitigado por `sameSite: "lax"` (protege POST cross-site), pero acciones destructivas del master (borrar evento) se benefician de doble verificación. Opcional según apetito de riesgo.
-
-6. **Enumeración de login.** `/auth/login` responde igual para email inexistente y password incorrecto ("Credenciales incorrectas") — bien. Verificar que el tiempo de respuesta no filtre existencia (bcrypt.compare solo corre si hay user → timing diferencial menor). Aceptable.
-
-### 🟡 P2 — Arquitectura / escala
-
-7. **Secciones hardcodeadas en `App.tsx`.** El bloque `show("showPhotos") && <InvitationSection2 />` repite `showPhotos` para 3 secciones distintas (2, 4 y 9) — acoplamiento raro. El orden es fijo. Esto **bloquea** el objetivo de plantillas y reordenamiento (§ INVITATION Fase 4).
-
-8. **`config` como `Json` sin tipado fuerte end-to-end.** Flexible, pero el backend arma `config` en `buildConfig(body)` a mano; un cambio de forma no da error de compilación. Un esquema Zod compartido cliente/servidor cerraría el hueco.
-
-9. **`GuestManager` ya se dividió** (bien), pero `MasterDashboard.tsx` es ahora el componente monolítico grande. Vigilar.
-
-10. **`generateICS.ts`, `compressImage.ts`, etc. sin tests** → funciones puras ideales para cubrir primero.
-
-### 🟢 P3 — Housekeeping
-
-- `@prisma/adapter-neon` sigue en deps sin usarse (según memoria) — remover.
-- `src/lib/prisma.js.map` versionado — no debería estar en git.
-- `.env` existe en el root pero **NO está trackeado** en git (está en `.gitignore`) — ✅ verificado, sin secretos expuestos.
-- `font-serif` hardcodeado en ~30-40 usos (pendiente conocido en memoria).
+**Pendiente no bloqueante:** tests de integración con DB de prueba (aislamiento multi-tenant, login por rol) — requieren fixture de Postgres.
 
 ---
 
-## 4. Investigación: mejores prácticas de invitaciones digitales (2025–2026)
+## 2. Fase B — Secciones Dinámicas ✅ NÚCLEO COMPLETO
 
-Síntesis de la investigación en fuentes del sector (Greenvelope, RSVPify, Paperless Post, Evite, mercado LATAM). Fuentes al final.
+Doc de diseño: `ARQUITECTURA_SECCIONES_DINAMICAS.md`. Commits: `6ace774`, `ffbaf90`, `554c7ea`, `300ee29`.
 
-### 4.1 El principio rector: RSVP sin fricción
-> El flujo ideal es **link → ver invitación → tap RSVP → listo**, sin crear cuenta. **+70% de las invitaciones se abren primero en el móvil.**
+### Qué existe
+- **`src/blocks/`**: `types.ts` (`BlockInstance`/`BlockType`), `registry.ts` (`SECTION_REGISTRY` — 10 secciones heredadas + 3 bloques nuevos: `text`, `faq`, `divider`), `BlockRenderer.tsx`, `legacyLayout.ts` (`buildLegacyLayout`/`resolveLayout`).
+- La invitación se guarda en `event.config.layout` (`BlockInstance[]`) — **sin migración de DB**, dentro de la columna `config` (Json) que ya existía. Si un evento no tiene `layout`, el renderer usa el orden legacy → **cero cambios visibles en eventos existentes**.
+- `App.tsx` renderiza con `<BlockRenderer blocks={layout} />` en vez del JSX fijo de 10 componentes.
+- **Panel — pestaña "Diseño"** (`src/components/master/LayoutBuilder.tsx`, con `@dnd-kit`): arrastrar para reordenar, botón de ojo para mostrar/ocultar, papelera para eliminar, menú "+ Añadir bloque", lápiz para editar contenido inline (bloques `text`/`faq`/`divider`).
+- Backend: `buildConfig` en `server/routes/master.js` persiste `config.layout` saneado.
+- **Verificado E2E** contra la DB real: crear evento con layout reordenado + bloque oculto + bloque de texto nuevo → el endpoint público lo devuelve intacto.
 
-**Ya lo cumples** con `?code=` (salta pantalla de código) y RSVP nativo. ✅ Mantener y proteger este flujo en cualquier refactor.
+### Limitación conocida (siguiente paso natural si se retoma)
+Los bloques **heredados** (portada, foto, familia, etc.) todavía leen su contenido de la config **global** del evento (vía `EventContext`), no de su `config` por-instancia. Por eso **duplicar** un bloque de foto muestra la misma foto en ambas copias. Los bloques nuevos (`text`, `faq`, `divider`) sí son 100% por-instancia. Arreglar esto es el paso **B.3/B.4** documentado en `ARQUITECTURA_SECCIONES_DINAMICAS.md` §5.
 
-### 4.2 Mobile-first + tap targets grandes
-Botones de RSVP grandes, formularios cortos, todo tocable con el pulgar. → Cruzar con un **audit de accesibilidad** (tamaños mínimos 44×44px, contraste WCAG AA).
-
-### 4.3 QR como estándar (no opcional)
-**49% de las parejas usaron QR en 2024** (era 20% en 2022). Ya tienes `GuestQRModal` (G3). Buenas prácticas confirmadas:
-- QR → URL con código precargado (`/:slug?code=XXX`) que salta directo al RSVP. ✅ Ya lo soportas.
-- Instrucción clara junto al QR ("Escanea para confirmar").
-- No esconderlo al reverso.
-
-### 4.4 WhatsApp-first es **crítico en LATAM**
-En Colombia/México/LATAM la invitación **viaja por WhatsApp** y la confirmación se espera por ese canal. Tu integración WhatsApp (mensajes predefinidos, links masivos A5) está **perfectamente alineada** con el mercado. Es una ventaja competitiva; profundizarla (plantillas por evento, deep links `wa.me`) rinde más que features occidentales.
-
-### 4.5 "Después del RSVP" es lo que diferencia (tendencia 2026)
-La tendencia es pasar de *herramienta de invitación* a **plataforma de evento completa**: invitación + RSVP + engagement + contenido post-evento. Ideas con demanda probada:
-- **Preguntas personalizadas en el RSVP:** restricciones alimentarias, selección de menú, transporte, canción sugerida, +1.
-- **Galería colaborativa post-evento** (invitados suben fotos).
-- **Estadísticas en vivo** para coordinar con catering/organizador. ✅ (ya tienes analytics).
-- **Countdown, mapa interactivo, música** — ya presentes.
-
-### 4.6 Multi-ocasión es la norma del mercado
-Las plataformas líderes (Paperless Post, Evite, RSVPify, y las LATAM: invitas.co, eventobonito, invitameok) **no son de bodas: son de eventos**. Cubren boda, XV años, baby shower, bautizo, cumpleaños, corporativo, graduación, con **campos personalizados por tipo de evento**. Aquí es donde tu producto tiene el mayor upside sin explorar (→ §5).
-
-### 4.7 Diseño 2025–2026
-Envelope/opening animations (Paperless Post), paletas suaves (blush, lavanda, marfil) y también dark/lujo (tu estética navy+oro ya es diferenciadora), respuestas con emoji, plantillas por ocasión.
+**Pendiente:** B.8 preview en vivo lado-a-lado (hoy existe `?preview=1` + botón, pero no un iframe embebido en el editor que refresque al vuelo).
 
 ---
 
-## 5. 🎯 Propuesta de arquitectura ADAPTATIVA (multi-ocasión)
+## 3. Fase C — Multi-Ocasión ✅ NÚCLEO COMPLETO
 
-**Objetivo:** que la misma plataforma sirva para boda, XV años, bautizo, baby shower, cumpleaños, aniversario y evento corporativo — sin duplicar código y sin que "novio/novia" aparezca en un bautizo.
+Doc de diseño: `FASE_C_MULTI_OCASION.md`. Commits: `40b5f4a`, `e7dca9f`, `9ae6a76`, `8ca761e`, `e4c821e`.
 
-### 5.1 El problema hoy
-El dominio está **cableado a boda** en 3 capas:
-- **DB:** `Event.groomName`, `Event.brideName`, `ceremonyTime`, `receptionTime`.
-- **Config:** `parentsBride`, `parentsGroom`, `godparents`, `bridesmaids`, `groomsmen`, `ceremony`/`reception`.
-- **UI:** labels "¡NOS CASAMOS!", "CEREMONIA", "Padres de la novia", secciones `family`/`venues`/`rsvp` pensadas para boda.
+### Qué existe
+- **`src/lib/honorees.ts`**: tipos `Honoree`/`EventTypeSlug`, catálogo `EVENT_TYPES` (wedding, quinceanera, baptism, communion, birthday, corporate, other) con sus roles de protagonista, y helpers `getHonorees`/`getHonoreesNames`/`getHonoreesInitials`/`getEventType`/`isCoupleEvent`. **Derivan de `groomName`/`brideName` legacy** cuando no hay datos nuevos → retrocompatible al 100%.
+- **`src/lib/occasions.ts`**: defaults de texto por ocasión (versículo, `heroMessage`, `confirmedMessage`, labels de familia) para que un evento de XV/bautizo/cumpleaños no muestre wording de boda. `wedding` = exactamente los textos originales.
+- **Almacenamiento: `eventType`/`honorees`/`eventTitle` viven en `config` (Json), sin migración de schema** — misma decisión de diseño que el layout de Fase B. Prisma no tiene columnas nuevas para esto.
+- **Panel master**: selector "Tipo de evento" (7 ocasiones) + editor dinámico de protagonistas según el tipo, en la pestaña Básico.
+- **Secciones agnósticas**: S1 (iniciales), S3 (nombres), S5 (familia), S6 (título calendario), S8 (compartir) ya usan los helpers — cero referencias directas a `groom/brideName` en las `InvitationSection*`.
+- **Seed demo opt-in**: `pnpm seed:occasions` crea `/laura-xv`, `/mateo-bautizo`, `/ana-cumple` para QA visual (idempotente, no se corre solo).
 
-### 5.2 Idea central: **`EventType` + protagonistas genéricos**
+### Bug real encontrado y arreglado en esta sesión
+El primer pase de Fase C dejó "leaks" de wording de boda en eventos no-boda (ej. dashboard mostraba "Laura Valencia & Laura Valencia" para un XV, S1 mostraba el versículo de boda). Se hizo un **review completo de defaults** (commit `e4c821e`) que corrigió 6 puntos. Ver ese commit para el detalle si aparece un caso similar en una sección no revisada aún.
 
-Introducir un modelo `EventType` (o enum + config) que define, por ocasión:
-1. **Vocabulario / roles de protagonista** (`honorees`): boda = 2 (novio, novia); XV = 1 (quinceañera); bautizo = 1 (bebé) + padres/padrinos; corporativo = 0 protagonistas, 1 organizador.
-2. **Secciones por defecto** que aplican a esa ocasión.
-3. **Labels por defecto** (i18n-friendly).
-4. **Campos de RSVP** relevantes (menú, transporte, etc.).
-
-```prisma
-model EventType {
-  id             String  @id @default(cuid())
-  slug           String  @unique   // "wedding" | "quinceanera" | "baptism" | "birthday" | "corporate"
-  name           String            // "Boda", "XV Años", "Bautizo"...
-  honoreeSchema  Json    // define cuántos protagonistas y sus roles/labels
-  defaultConfig  Json    // labels + secciones por defecto de la ocasión
-  defaultTheme   Json
-  isActive       Boolean @default(true)
-  events         Event[]
-}
-```
-
-### 5.3 Reemplazar `groomName/brideName` por `honorees: Json`
-
-En vez de dos columnas boda-específicas, un array genérico:
-
-```jsonc
-// Event.honorees  (boda)
-[
-  { "role": "groom", "label": "Novio", "name": "Juan" },
-  { "role": "bride", "label": "Novia", "name": "Jimena" }
-]
-
-// Event.honorees  (XV años)
-[ { "role": "celebrant", "label": "Quinceañera", "name": "Laura Sofía" } ]
-
-// Event.honorees  (bautizo)
-[ { "role": "baby", "label": "Bautizado/a", "name": "Mateo" } ]
-
-// Event.honorees  (corporativo)
-[ { "role": "host", "label": "Organiza", "name": "Acme Corp" } ]
-```
-
-> **Migración segura:** mantener `groomName`/`brideName` como columnas legacy y poblar `honorees` desde ellas. Un helper `getHonorees(event)` da compatibilidad hacia atrás (eventos viejos siguen funcionando). Deprecar las columnas después.
-
-### 5.4 Secciones como catálogo por ocasión (une esto con INVITATION Fase 4)
-
-El `SECTION_REGISTRY` pendiente se vuelve **la palanca** de la multi-ocasión. Cada tipo de sección es agnóstico y recibe `config`; cada `EventType` define qué secciones trae por defecto:
-
-| Sección (type) | Boda | XV | Bautizo | Cumpleaños | Corporativo |
-|---|:--:|:--:|:--:|:--:|:--:|
-| `hero` (título + frase) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `honorees` (protagonistas) | ✅ | ✅ | ✅ | ✅ | – |
-| `countdown` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `venues` (lugares) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `timeline` (itinerario) | ✅ | ✅ | opt | opt | ✅ |
-| `family` (padres/padrinos) | ✅ | ✅ | ✅ | – | – |
-| `court` (damas/chambelanes) | – | ✅ | – | – | – |
-| `rsvp` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `gifts` (mesa de regalos/sobres) | ✅ | ✅ | ✅ | ✅ | – |
-| `agenda`/`speakers` | – | – | – | – | ✅ |
-| `gallery` | ✅ | ✅ | ✅ | ✅ | ✅ |
-
-Con esto, "agregar una ocasión nueva" = crear un `EventType` con su combinación de secciones + labels. **Cero código nuevo de UI** para la ocasión N+1.
-
-### 5.5 Labels 100% desde config (ya casi lo tienes)
-Ya migraste muchos labels a `config`. El paso final: que **ningún** string de dominio ("NOS CASAMOS", "CEREMONIA", "Padrinos") esté hardcodeado — todos vienen de `EventType.defaultConfig` + override del evento. Esto además te deja **i18n** casi gratis (es/en/pt) — otra tendencia del mercado.
-
-### 5.6 Plantillas (Template) ortogonales a la ocasión
-- `EventType` = **qué** se muestra (semántica: secciones, roles, labels).
-- `Template` = **cómo** se ve (estética: colores, fuentes, assets, decoraciones).
-- Un evento = `EventType` (boda) × `Template` (floral clásico / dark lujo / minimalista).
-
-Esto multiplica el catálogo sin multiplicar el trabajo: 5 ocasiones × 4 plantillas = 20 combinaciones con ~9 componentes de sección.
+**Pendiente:** C.4 (refinamiento visual fino de layouts con 1 protagonista — el degradado funcional ya existe, falta pulir visualmente viendo la app corriendo).
 
 ---
 
-## 6. Roadmap propuesto (próximos pasos, ordenados)
+## 4. Panel Maestro — Rediseño de Arquitectura de Información ✅
 
-### 🥇 Fase A — Estabilización (1 semana) — *hacer antes que nada*
-Baratísima y desbloquea todo lo demás con red de seguridad.
-- [x] **`pnpm type-check` en verde** — arreglados 19 errores reales (generateICS, useGuests, ErrorBoundary `override`, PREVIEW_GUEST, CSVImportModal, GuestFormModal, MasterDashboard, labels).
-- [x] **ESLint en verde** — ignora `generated/`/`lib/`, y `server/`·`scripts/`·`api/` reciben globals de Node (de 743 errores → 0).
-- [x] `.env` no trackeado (verificado — está en `.gitignore`).
-- [x] **Vitest montado + 15 tests** — validación Zod (`guestFormSchema`, `eventBasicSchema`, `extractZodErrors`) y parseo de horas del `.ics` (`parseTime`). Scripts: `pnpm test` / `pnpm test:watch`.
-- [x] **CORS endurecido** — whitelist env-driven (`ALLOWED_ORIGIN` + `VERCEL_PROJECT_PRODUCTION_URL`/`VERCEL_URL`), con fallback permisivo solo si no hay allowlist configurada (no rompe prod).
-- [x] **Limpieza** — `@prisma/adapter-neon` ya no estaba; `prisma.js.map` sacado de git + `*.js.map` en `.gitignore`; overflow de nombres **ya resuelto** con `clamp()` en Secciones 1 y 3.
-- [ ] Tests de integración con DB de prueba: aislamiento multi-tenant, login por rol, validación de código (requieren fixture de Postgres — siguiente iteración).
+Motivado por feedback directo del usuario: *"si no tengo claridad de qué pasa con cada evento, ¿para qué sirven las estadísticas globales?"*. Commits: `d5c7af2`, `15a4c71`, `03da27b`, más pulido responsive en `405fd77`, `aee966e`.
 
-> **Estado Fase A (Ago 2026): ✅ COMPLETADA.** `type-check`, `lint`, `build` y `test` todos en verde; CORS endurecido; limpieza hecha. Único pendiente no bloqueante: tests de integración con DB de prueba.
+### Ventana por evento (`EventDetail.tsx`)
+Cada evento tiene ahora su propio panel accesible con el botón **"Abrir panel"** de su tarjeta:
+- Pestaña **Invitados**: el `GuestManager` completo (CRUD de invitados/acompañantes, filtros, CSV, QR, WhatsApp, modo en vivo) — el mismo componente que usa el admin cliente, reapuntado.
+- Pestaña **Analítica**: el `AnalyticsDashboard` del evento (accesos, no confirmados, etc.).
+- Header con nombre, badge de estado, Editar/Vista previa/Admins.
 
-### 🥈 Fase B — Secciones dinámicas (2 semanas) — *INVITATION Fase 4*
-Prerrequisito técnico de la multi-ocasión y de las plantillas.
-- [ ] `SECTION_REGISTRY` (type → componente). Refactor `InvitationSection1..9` para recibir `config` como prop.
-- [ ] Renderer que itera `event.sections` (con fallback al orden legacy si está vacío).
-- [ ] Panel: drag-and-drop (`@dnd-kit`), toggle, agregar sección.
+**Cómo se logró sin duplicar código:** el data-layer (`guest-service.ts`, `useGuests.ts`) se parametrizó con un `base` de API (`/api/admin` para el cliente, `/api/master/events/:id` para el master — las sub-rutas coinciden). `GuestScopeContext` provee ese `base` a los hooks. Backend: se espejaron los endpoints admin en `server/routes/master.js` (`POST/PATCH/DELETE /events/:id/guests`, `.../companions`, `GET .../stats`, `.../analytics`), scoped y protegidos por `requireMaster`.
 
-### 🥉 Fase C — Multi-ocasión (2–3 semanas) — *§5, tu pedido*
-- [ ] Modelo `EventType` + `Event.honorees` (Json) + helper de compatibilidad legacy.
-- [ ] Migrar labels de dominio restantes a config.
-- [ ] Nuevas secciones: `honorees` (genérica), `court` (XV), `agenda`/`speakers` (corporativo).
-- [ ] Seeds de 3–4 ocasiones (boda, XV, bautizo, cumpleaños) con sus secciones/labels.
-- [ ] Wizard master: paso 0 = "¿Qué tipo de evento?" → precarga todo.
+**Verificado E2E** contra la DB real: crear → confirmar → añadir acompañante → confirmar acompañante → stats → analytics → borrar (cascade) — sin dejar residuo.
 
-### Fase D — Plantillas (`Template`) (2 semanas) — *INVITATION Fase 5*
-- [ ] Modelo `Template` + herencia (spread `{...template, ...event}`).
-- [ ] 2–3 plantillas: "Dark Lujo" (actual), "Floral Clásico", "Minimalista".
-- [ ] Selector visual con thumbnail al crear evento.
+### Dashboard principal simplificado (hub de eventos)
+Se **eliminaron** los 5 KPIs globales y las 3 tarjetas de insights (Próximos eventos, Ranking, Últimas confirmaciones) — esos datos ahora viven en cada ventana de evento y eran redundantes. El dashboard quedó como:
+- Toolbar: título + resumen de una línea (derivado, sin requests extra) + búsqueda por nombre/slug + filtro Activos/Archivados + Nuevo evento.
+- Tarjetas de evento con **barra de progreso de confirmación** inline.
+- Acciones de tarjeta con jerarquía: **Abrir panel** + **Vista previa** visibles, resto (Admins, Activar, Duplicar, Importar, Archivar, Eliminar) en menú `⋯`.
 
-### Fase E — Engagement & mercado (continuo)
-- [ ] RSVP con preguntas personalizadas (menú, transporte, canción) — alta demanda LATAM.
-- [ ] Preview live lado-a-lado (iframe + postMessage) — INVITATION Fase 6.
-- [ ] i18n es/en/pt (casi gratis tras Fase C).
-- [ ] Galería colaborativa post-evento.
-- [ ] Deep links WhatsApp por evento / mesa de regalos.
-
-**Ruta crítica:** A → B → C → D. E se intercala en paralelo. La Fase A es el mejor ROI: 1 semana que evita bugs de producción y da tests antes de refactorizar todo.
+### Responsive
+Modal de edición de evento: 12 tabs en grid fijo → barra flex-wrap; todos los `grid-cols-2/3` fijos → `sm:grid-cols-*` (apilan en móvil). Tabla de invitados: columnas de baja prioridad ocultas por breakpoint.
 
 ---
 
-## 7. Fuentes de la investigación
+## 5. Herramientas de diseño de Claude Code (config global, todos los proyectos)
 
-- [10 Best Digital Invitation Platforms 2026 — Greenvelope](https://www.greenvelope.com/resources/best-digital-invitation-platforms)
-- [12 Best Online Invitation Makers 2026 — RSVPify](https://rsvpify.com/best-online-invitation-makers-2026/)
-- [Digital Invitation Design Tips 2026 — InviteDrop](https://www.invitedrop.com/blog/digital-invitation-design-tips)
-- [Best Digital Invitation Apps 2026 — Fotify](https://fotify.app/blog/best-digital-invitation-apps-2026/)
-- [Best Free Invitations with RSVP Tracking 2026 — Fotify](https://fotify.app/blog/best-free-online-invitations-with-rsvp-2026/)
-- [Paperless Post vs Greenvelope — Lemonvite](https://www.lemonvite.com/blog/paperless-post-vs-greenvelope)
-- [Compare Digital Invitation Platforms — Greenvelope](https://www.greenvelope.com/compare)
-- [QR Codes for Wedding RSVP — Uniqode](https://www.uniqode.com/blog/qr-codes-for-occasions/qr-codes-for-wedding-rsvp)
-- [How to Use QR Codes for RSVPs 2026 — Bitly](https://bitly.com/blog/qr-code-rsvp/)
-- [Adiós a las invitaciones impresas: gestión digital en LATAM — APTIE](https://aptie.org/noticias-sobre-tendencias/adios-a-las-invitaciones-impresas-la-gestion-digital-revoluciona-las-bodas-en-america-latina/)
-- [Invitación digital boda WhatsApp 2026 — VeamosLasFotos](https://www.veamoslasfotos.com/post/invitacion-digital-boda-whatsapp-link)
-- [Invitaciones digitales con confirmación WhatsApp — invitas.co](https://invitas.co/)
-- [Quinceañera Invitations & RSVP — RSVPify](https://rsvpify.com/quinceanera/)
-- [Event Types — EventCreate](https://www.eventcreate.com/types)
+En `~/.claude/settings.json` y `~/.claude.json` (no específico de este repo, pero relevante para retomar trabajo de diseño):
+
+| Herramienta | Tipo | Para qué |
+|---|---|---|
+| `frontend-design@claude-plugins-official` | Plugin/skills | Suite oficial: adapt, layout, polish, audit, critique… |
+| `ui-ux-pro-max@ui-ux-pro-max-skill` | Plugin/skill | 161 paletas, 99 guías UX, fuerte en dashboards/responsive |
+| `taste-skill@taste-skill` | Plugin/skills | Perillas de variedad/motion/densidad, presets de estilo |
+| Playwright MCP | MCP (user scope) | Screenshots/ver la UI real para iterar diseño con feedback visual |
+| shadcn MCP | MCP (user scope) | Leer el registro de componentes shadcn real del proyecto |
+
+**Nota:** los plugins/MCP se cargan al **inicio de sesión** — si se instalaron a mitad de una sesión, hace falta reiniciar Claude Code para que su skill/tool aparezca activo. Detalle completo en memoria: `claude-code-design-plugins.md`.
 
 ---
 
-*Documento vivo. Actualizar al cerrar cada fase.*
+## 6. Qué sigue (recomendado, en orden de impacto)
+
+1. **Pulido visual profundo con las herramientas activas.** Con Playwright MCP se puede *ver* la UI real e iterar con `ui-ux-pro-max`/`taste-skill` aportando la inteligencia de diseño — quedó pendiente de esta sesión por no tener las tools cargadas.
+2. **B.3/B.4** — hacer los bloques heredados (foto, familia…) 100% por-instancia, para que duplicar un bloque de foto no repita la misma imagen.
+3. **RSVP con preguntas personalizadas** (menú, dieta, canción, transporte) — es la demanda #1 del mercado según `CATALOGO_FEATURES_2026.md` y hoy es ❌.
+4. **Fase D — Plantillas** (`Template`): selector visual de estética al crear evento, ortogonal a `EventType`. Diseño esbozado en `ARQUITECTURA_SECCIONES_DINAMICAS.md` §6.
+5. **Tests de integración con DB real** (aislamiento multi-tenant, roles) — pendiente desde Fase A.
+6. Mapa embebido, mesa de regalos estructurada, galería colaborativa — ver checklist accionable en `CATALOGO_FEATURES_2026.md` §9.
+
+---
+
+## 7. Cómo levantar el entorno de desarrollo (para la próxima sesión)
+
+- **Node:** el proyecto pide 20.x (`.nvmrc: 20.19.6`). El shell por defecto de esta máquina trae Node 18 — usar `nvm use 20.19.6` antes de correr el server (Vite 7 y algunos loaders fallan en Node 18).
+- **Cliente:** `pnpm dev:client` (puerto 3000, proxy `/api` → 3002).
+- **Servidor:** `pnpm dev:server` o `node server/index.js` con Node 20 (puerto 3002, conecta a Neon).
+- **Credenciales master:** `juansc0630@gmail.com` — password por defecto del seed original (`admin123`); **cambiarla en producción**, es débil para la cuenta que controla todos los eventos.
+- **Neon puede estar dormido** al primer intento (arranque en frío) — un segundo intento tras unos segundos suele conectar.
+
+---
+
+## 8. Documentos del proyecto — mapa
+
+| Archivo | Contenido |
+|---|---|
+| `ESTADO_Y_ROADMAP_2026.md` | **Este archivo.** Fuente única de verdad, punto de entrada. |
+| `INVESTIGACION_MERCADO_2026.md` | Investigación de mercado detallada (RSVP, QR, WhatsApp/LATAM, plataformas). |
+| `CATALOGO_FEATURES_2026.md` | Catálogo exhaustivo de features invitado/admin/plataforma con estado ✅/⚠️/❌. |
+| `FASE_C_MULTI_OCASION.md` | Diseño detallado de la abstracción multi-ocasión (honorees, EventType). |
+| `ARQUITECTURA_SECCIONES_DINAMICAS.md` | Diseño detallado del sistema de bloques (SECTION_REGISTRY, layout). |
+| `PLAN_PLATAFORMA.md`, `INVITATION_IMPROVEMENT_PLAN.md` | Históricos — superados por este documento, se conservan como referencia. |
+
+---
+
+*Documento vivo. Actualizar al cerrar cada sesión de trabajo relevante.*
