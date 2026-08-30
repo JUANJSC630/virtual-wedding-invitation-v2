@@ -2,6 +2,11 @@ import express from "express";
 
 import prisma from "../../src/lib/prisma.js";
 import { accessLimiter, rsvpLimiter, validateLimiter } from "../middleware/limiters.js";
+import {
+  missingRequiredRsvp,
+  normalizeRsvpAnswers,
+  sanitizeRsvpQuestions,
+} from "../lib/rsvp-questions.js";
 
 export const guestRoutes = express.Router();
 
@@ -22,6 +27,7 @@ const GUEST_PUBLIC_SELECT = {
   id: true, eventId: true, code: true, name: true,
   email: true, phone: true, maxGuests: true,
   confirmed: true, confirmedAt: true,
+  rsvpAnswers: true,
   createdAt: true, updatedAt: true,
   companions: true,
 };
@@ -135,7 +141,7 @@ guestRoutes.post("/access", accessLimiter, async (req, res) => {
 // POST /api/guests/rsvp
 guestRoutes.post("/rsvp", rsvpLimiter, async (req, res) => {
   try {
-    const { guestCode, confirmed, companions, eventSlug } = req.body;
+    const { guestCode, confirmed, companions, eventSlug, answers } = req.body;
 
     // `confirmed` es la respuesta del invitado: sin ella la petición está
     // malformada. Dejarla pasar escribía confirmedAt: null silenciosamente.
@@ -146,9 +152,34 @@ guestRoutes.post("/rsvp", rsvpLimiter, async (req, res) => {
     const event = await resolveEvent(eventSlug);
     if (!event) return res.status(404).json({ error: "Evento no encontrado" });
 
+    // Preguntas personalizadas: se validan contra la definición del evento, no
+    // contra lo que mande el cliente. Solo tienen sentido si asiste; al declinar
+    // se limpian junto con los acompañantes.
+    const questions = sanitizeRsvpQuestions(event.config?.rsvpQuestions);
+    let rsvpAnswers = null;
+
+    if (confirmed && questions.length > 0) {
+      rsvpAnswers = normalizeRsvpAnswers(questions, answers);
+      const faltan = missingRequiredRsvp(questions, rsvpAnswers);
+      if (faltan.length > 0) {
+        const etiquetas = questions
+          .filter(q => faltan.includes(q.id))
+          .map(q => q.label)
+          .join(", ");
+        return res.status(400).json({
+          error: `Faltan respuestas obligatorias: ${etiquetas}`,
+          missing: faltan,
+        });
+      }
+    }
+
     const guest = await prisma.guest.update({
       where: { eventId_code: { eventId: event.id, code: guestCode.toUpperCase() } },
-      data: { confirmed, confirmedAt: confirmed ? new Date() : null },
+      data: {
+        confirmed,
+        confirmedAt: confirmed ? new Date() : null,
+        rsvpAnswers,
+      },
       include: { companions: true },
     });
 

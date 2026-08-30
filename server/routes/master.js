@@ -8,6 +8,7 @@ import { z } from "zod";
 import prisma from "../../src/lib/prisma.js";
 import { confirmationFields } from "../lib/confirmation.js";
 import { importGuestRows } from "../lib/guest-import.js";
+import { sanitizeRsvpQuestions } from "../lib/rsvp-questions.js";
 import { requireMaster } from "../middleware/auth.js";
 
 // Mismo esquema que admin (crear invitado)
@@ -123,6 +124,11 @@ function buildConfig(body, existing = {}) {
     rsvpMode: sent("rsvpMode")
       ? (body.rsvpMode === "form" ? "form" : "whatsapp")
       : (base.rsvpMode ?? "whatsapp"),
+    // Preguntas personalizadas del RSVP. Igual que el resto: si el body no las
+    // trae, se conservan las guardadas.
+    rsvpQuestions: sent("rsvpQuestions")
+      ? sanitizeRsvpQuestions(body.rsvpQuestions)
+      : sanitizeRsvpQuestions(base.rsvpQuestions),
     labels: (typeof body.labels === "object" && body.labels !== null)
       ? { ...(base.labels ?? {}), ...body.labels }
       : (base.labels ?? {}),

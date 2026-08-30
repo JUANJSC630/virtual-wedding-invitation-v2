@@ -84,6 +84,7 @@ model Guest {
   confirmed   Boolean   @default(false)
   confirmedAt DateTime?
   notes       String?                        // notas internas del admin
+  rsvpAnswers Json?                          // respuestas a las preguntas de config.rsvpQuestions
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
