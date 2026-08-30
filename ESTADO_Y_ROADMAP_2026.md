@@ -1,17 +1,20 @@
 # Estado del Proyecto y Roadmap — Fuente Única de Verdad
-> Última actualización: 17 de agosto de 2026 (cierre de sesión)
+> Última actualización: 30 de agosto de 2026 (sesión de saneamiento)
 > Reemplaza a `PLAN_PLATAFORMA.md` e `INVITATION_IMPROVEMENT_PLAN.md` (quedan como referencia histórica).
-> Complementado por: `INVESTIGACION_MERCADO_2026.md`, `CATALOGO_FEATURES_2026.md`, `FASE_C_MULTI_OCASION.md`, `ARQUITECTURA_SECCIONES_DINAMICAS.md`.
+> Complementado por: `CLAUDE.md` (**estándares de código — leer antes de tocar nada**),
+> `INVESTIGACION_MERCADO_2026.md`, `CATALOGO_FEATURES_2026.md`, `FASE_C_MULTI_OCASION.md`, `ARQUITECTURA_SECCIONES_DINAMICAS.md`.
 
 ---
 
 ## 0. TL;DR — dónde quedamos hoy
 
-- **Gate del proyecto: verde.** `type-check` 0 errores · `lint` 0 errores · **35 tests** pasando · `build` OK. Esto es cierto en cada commit de la sesión de hoy.
+- **Gate del proyecto: verde y ahora de verdad.** `type-check` 0 errores (tests incluidos) · `lint` 0 errores sobre **100 archivos** · **43 tests** · `build` OK.
+  Hasta el 30 ago el lint solo analizaba 15 archivos —ninguno del frontend— así que su verde no significaba gran cosa. Ver §4bis.
 - **Fase A (estabilización):** ✅ completa. Ver §1.
 - **Fase B (secciones dinámicas):** ✅ núcleo completo — reordenar/mostrar/ocultar/eliminar/añadir/editar bloques desde el panel. Ver §2.
 - **Fase C (multi-ocasión):** ✅ núcleo completo — la plataforma soporta boda/XV/bautizo/comunión/cumpleaños/corporativo. Ver §3.
 - **Panel maestro rediseñado:** ✅ ventana dedicada por evento con gestión completa (CRUD invitados + analítica) + dashboard principal simplificado a hub de eventos. Ver §4.
+- **Saneamiento (30 ago):** ✅ dos bugs de pérdida de datos corregidos, lint extendido al frontend, código muerto fuera, dos N+1 eliminados (uno superaba el timeout de Vercel). Ver §4bis.
 - **Herramientas de diseño de Claude Code:** instaladas globalmente (frontend-design, ui-ux-pro-max, taste-skill, Playwright MCP, shadcn MCP). Ver §5.
 - **Siguiente prioridad recomendada:** ver §6.
 
@@ -95,6 +98,71 @@ Modal de edición de evento: 12 tabs en grid fijo → barra flex-wrap; todos los
 
 ---
 
+## 4bis. Saneamiento — 30 de agosto de 2026
+
+Sesión dedicada a auditar el código y dejar la base sana antes de seguir con producto.
+Commits `5165f2e`, `e6799d3`, `62ea18e`, `5ea048e`, `5b29d4d`, `c94e188`, `0019ade`, `7a02a5d`.
+
+### Dos bugs de pérdida de datos, reproducidos y corregidos
+
+**1. Un PATCH parcial borraba la config entera del evento** (`5165f2e`).
+`buildConfig(req.body)` reconstruía la config desde cero y el PATCH la escribía sin
+fusionar. El toggle Activar/Desactivar del panel manda solo `{isActive}`: con un clic
+se perdían el layout de Fase B, el `eventType`/`honorees` de Fase C, versículo, lugares,
+familias, itinerario, galería y labels. Una quinceañera volvía a ser "wedding" vacía.
+Reproducido contra la DB antes de tocar nada. `buildConfig` ahora fusiona sobre lo
+guardado; verificado que las ediciones reales y los vaciados intencionales siguen
+funcionando.
+
+**2. Editar un invitado le borraba la fecha de confirmación** (`e6799d3`).
+`confirmedAt: confirmed ? new Date() : null` se escribía siempre. Prisma ignora
+`confirmed: undefined` pero sí aplica `confirmedAt: null`, así que renombrar a un
+invitado confirmado lo dejaba con `confirmed: true` y sin fecha — corrompiendo la
+analítica y el listado de últimas confirmaciones, que filtra por `confirmedAt`.
+Nuevo helper `server/lib/confirmation.js` aplicado a los 4 caminos afectados
+(invitado y acompañante × master y cliente). El RSVP público tenía el mismo patrón
+latente: ahora exige `confirmed` booleano y responde 400.
+
+### El gate no era lo que parecía
+
+`eslint.config.js` solo declaraba `files: ["src/**/*.{js,jsx}"]`, pero `src/` son 79
+archivos `.ts/.tsx` y 1 `.js`: ESLint procesaba 15 archivos en total, ninguno del
+frontend (`62ea18e`). Y `tsconfig.json` excluía los tests, así que tampoco se
+type-checkeaban (`5b29d4d`). Ambas cosas corregidas; el frontend limpio destapó solo
+3 avisos reales, arreglados de verdad y no silenciados.
+
+### Rendimiento — un fallo de producción encubierto
+
+El import de CSV hacía 2 consultas por fila (`0019ade`). Medido contra la DB real con
+200 filas: **46.087 ms**. `vercel.json` fija `maxDuration: 30` para `api/server.js`, así
+que en producción una importación de ese tamaño **fallaba por timeout**, no iba lenta.
+Ahora son 2 consultas en total: **874 ms**, 53× más rápido. El listado de eventos tenía
+otro N+1 (un `count` por evento), resuelto con un `groupBy`.
+
+### Limpieza
+
+128 líneas de código muerto fuera (`c94e188`): `AdminLogin.tsx` sin importadores desde
+que existe `LoginPage`, `src/lib/prisma.ts` que nadie usa (el backend importa
+`prisma.js`), `prisma.js.map` obsoleto, `tsconfig.node.json` vacío, y el script
+`build:server` que estaba **roto** (apuntaba a un `server/tsconfig.json` inexistente).
+
+### Estándares de código
+
+`CLAUDE.md` nuevo en la raíz (`5ea048e`, `7a02a5d`): arranque del entorno, arquitectura,
+convenciones observadas, los invariantes que costaron estos bugs, deuda técnica viva y
+definition of done. **Es el documento a leer antes de escribir código**; este archivo
+sigue siendo el de *qué* está hecho.
+
+### Método de verificación
+
+Todo se verificó E2E contra la DB real con eventos desechables `zz-*` creados y
+borrados, nunca sobre `xv-laura` ni `jimena-juan` — que resultó estar **vivo recibiendo
+RSVPs reales** durante la sesión (los confirmados subieron de 90 a 91 mientras se
+trabajaba). Para el import se capturó la salida del código anterior sobre un CSV con
+todos los casos borde y se comprobó que la nueva es byte a byte idéntica.
+
+---
+
 ## 5. Herramientas de diseño de Claude Code (config global, todos los proyectos)
 
 En `~/.claude/settings.json` y `~/.claude.json` (no específico de este repo, pero relevante para retomar trabajo de diseño):
@@ -113,22 +181,49 @@ En `~/.claude/settings.json` y `~/.claude.json` (no específico de este repo, pe
 
 ## 6. Qué sigue (recomendado, en orden de impacto)
 
-1. **Pulido visual profundo con las herramientas activas.** Con Playwright MCP se puede *ver* la UI real e iterar con `ui-ux-pro-max`/`taste-skill` aportando la inteligencia de diseño — quedó pendiente de esta sesión por no tener las tools cargadas.
-2. **B.3/B.4** — hacer los bloques heredados (foto, familia…) 100% por-instancia, para que duplicar un bloque de foto no repita la misma imagen.
-3. **RSVP con preguntas personalizadas** (menú, dieta, canción, transporte) — es la demanda #1 del mercado según `CATALOGO_FEATURES_2026.md` y hoy es ❌.
-4. **Fase D — Plantillas** (`Template`): selector visual de estética al crear evento, ortogonal a `EventType`. Diseño esbozado en `ARQUITECTURA_SECCIONES_DINAMICAS.md` §6.
-5. **Tests de integración con DB real** (aislamiento multi-tenant, roles) — pendiente desde Fase A.
-6. Mapa embebido, mesa de regalos estructurada, galería colaborativa — ver checklist accionable en `CATALOGO_FEATURES_2026.md` §9.
+La base técnica quedó sana el 30 de agosto (§4bis), así que lo que sigue puede ser
+producto sin arrastrar deuda.
+
+**Producto — lo que mueve la aguja comercial**
+1. **RSVP con preguntas personalizadas** (menú, dieta, canción, transporte). Demanda
+   **#1 del mercado** según `CATALOGO_FEATURES_2026.md` y hoy sigue ❌. Encaja en el
+   patrón de `config` sin migración.
+2. **B.3/B.4** — bloques heredados por-instancia, para que duplicar un bloque de foto
+   no repita la misma imagen (`ARQUITECTURA_SECCIONES_DINAMICAS.md` §5).
+3. **Fase D — Plantillas** (`Template`): selector visual de estética al crear evento,
+   ortogonal a `EventType`.
+4. Mapa embebido, mesa de regalos estructurada, galería colaborativa — checklist en
+   `CATALOGO_FEATURES_2026.md` §9.
+5. **Pulido visual** con Playwright MCP + `ui-ux-pro-max`/`taste-skill`. Ojo: el MCP no
+   estaba cargado ni el 17 ni el 30 de agosto; hace falta reiniciar la sesión.
+
+**Técnico — lo que queda de deuda (detalle en `CLAUDE.md` §5)**
+6. **Split de `MasterDashboard.tsx`** (2004 líneas, 3 componentes; `EventFormModal` son
+   1113 con 12 tabs). Es el archivo que más fricción añade a cualquier cambio de panel.
+7. **Tests de integración con DB real** — el aislamiento multi-tenant no tiene ninguna
+   red hoy; los 43 tests son de lógica pura.
+8. Índices en `GuestAccess` (`eventId`, `guestCode`), code-splitting del bundle
+   (692 kB), `font-serif` configurable por tema.
 
 ---
 
 ## 7. Cómo levantar el entorno de desarrollo (para la próxima sesión)
 
-- **Node:** el proyecto pide 20.x (`.nvmrc: 20.19.6`). El shell por defecto de esta máquina trae Node 18 — usar `nvm use 20.19.6` antes de correr el server (Vite 7 y algunos loaders fallan en Node 18).
-- **Cliente:** `pnpm dev:client` (puerto 3000, proxy `/api` → 3002).
-- **Servidor:** `pnpm dev:server` o `node server/index.js` con Node 20 (puerto 3002, conecta a Neon).
-- **Credenciales master:** `juansc0630@gmail.com` — password por defecto del seed original (`admin123`); **cambiarla en producción**, es débil para la cuenta que controla todos los eventos.
-- **Neon puede estar dormido** al primer intento (arranque en frío) — un segundo intento tras unos segundos suele conectar.
+- **Node:** el proyecto pide 20.x (`.nvmrc: 20.19.6`). El shell por defecto de esta
+  máquina trae Node 18 — `nvm use 20.19.6` antes de correr el server.
+- **Cliente:** `node_modules/.bin/vite` (puerto 3000, proxy `/api` → 3002).
+- **Servidor:** `node server/index.js` con Node 20 (puerto 3002, conecta a Neon).
+- ⚠️ **`pnpm type-check` y `pnpm test` revientan bajo Node 20.19.6** con
+  `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING`: es el shim de corepack, no el proyecto.
+  Correr el gate con los binarios locales:
+  `./node_modules/.bin/tsc --noEmit`, `vitest run`, `eslint .`, `vite build`.
+- **Credenciales master:** `juansc0630@gmail.com` / `admin123` (password débil del seed
+  original; **cambiarla en producción**). Ojo: `ADMIN_EMAIL` del `.env`
+  (`admin@ejemplo.com`) **no** es el usuario real — no existe en la DB.
+- **Neon puede estar dormido** al primer intento (arranque en frío) — reintentar.
+- ⚠️ **`jimena-juan` es un evento en producción con tráfico real** (94 invitados, 91
+  confirmados, 563 accesos, subiendo). Para probar cambios de backend: crear un evento
+  desechable `zz-*`, ejercitarlo y borrarlo. Nunca mutar los eventos reales.
 
 ---
 
@@ -136,7 +231,8 @@ En `~/.claude/settings.json` y `~/.claude.json` (no específico de este repo, pe
 
 | Archivo | Contenido |
 |---|---|
-| `ESTADO_Y_ROADMAP_2026.md` | **Este archivo.** Fuente única de verdad, punto de entrada. |
+| `ESTADO_Y_ROADMAP_2026.md` | **Este archivo.** *Qué* está hecho y qué sigue. Punto de entrada. |
+| `CLAUDE.md` | *Cómo* se escribe el código: estándares, invariantes, deuda, definition of done. **Leer antes de programar.** |
 | `INVESTIGACION_MERCADO_2026.md` | Investigación de mercado detallada (RSVP, QR, WhatsApp/LATAM, plataformas). |
 | `CATALOGO_FEATURES_2026.md` | Catálogo exhaustivo de features invitado/admin/plataforma con estado ✅/⚠️/❌. |
 | `FASE_C_MULTI_OCASION.md` | Diseño detallado de la abstracción multi-ocasión (honorees, EventType). |
