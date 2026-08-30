@@ -50,12 +50,7 @@
     "declarationMap": false
   },
   "include": ["src/**/*", "src/**/*.ts", "src/**/*.tsx", "vite.config.js", "vite-env.d.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/*.spec.ts",
-    "**/*.spec.tsx"
-  ]
+  // Los tests SÍ se type-checkean: excluirlos dejaba pasar errores de tipo en
+  // ellos sin que el gate se enterara.
+  "exclude": ["node_modules", "dist"]
 }
