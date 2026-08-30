@@ -107,7 +107,7 @@ const GuestFilterBar: React.FC<GuestFilterBarProps> = ({
               <select
                 value={sortOrder}
                 onChange={e => onSort(e.target.value as SortOrder)}
-                className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                className="min-h-11 touch-manipulation rounded-md border bg-background px-2 py-1 text-base focus:outline-none focus:ring-1 focus:ring-ring sm:min-h-0 sm:text-sm"
               >
                 {SORT_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>

@@ -136,10 +136,10 @@ const RSVPForm = () => {
   return (
     <div className="flex flex-col items-center gap-6 w-full">
       {/* Attending selection */}
-      <div className="flex gap-3 flex-wrap justify-center">
+      <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto sm:flex-wrap sm:justify-center">
         <button
           onClick={() => setAttending(true)}
-          className={`px-5 py-2 rounded-full font-serif text-base border-2 transition-all ${
+          className={`min-h-12 touch-manipulation px-5 py-2 rounded-full font-serif text-base border-2 transition-all ${
             attending === true
               ? "bg-[var(--color-action)] border-[var(--color-action)] text-white"
               : "bg-transparent border-[var(--color-accent)] text-[var(--color-accent)]"
@@ -149,7 +149,7 @@ const RSVPForm = () => {
         </button>
         <button
           onClick={() => setAttending(false)}
-          className={`px-5 py-2 rounded-full font-serif text-base border-2 transition-all ${
+          className={`min-h-12 touch-manipulation px-5 py-2 rounded-full font-serif text-base border-2 transition-all ${
             attending === false
               ? "bg-red-400 border-red-400 text-white"
               : "bg-transparent border-[var(--color-accent)] text-[var(--color-accent)]"
@@ -175,11 +175,11 @@ const RSVPForm = () => {
             {companions.map(c => (
               <label
                 key={c.id}
-                className="flex items-center gap-3 cursor-pointer px-4 py-2 rounded-xl border border-[var(--color-accent)]/30 bg-white/30"
+                className="flex min-h-12 touch-manipulation items-center gap-3 cursor-pointer px-4 py-2 rounded-xl border border-[var(--color-accent)]/30 bg-white/30"
               >
                 <input
                   type="checkbox"
-                  className="w-4 h-4 accent-[var(--color-action)]"
+                  className="w-5 h-5 shrink-0 accent-[var(--color-action)]"
                   checked={companionMap[c.id] ?? false}
                   onChange={e =>
                     setCompanionMap(prev => ({ ...prev, [c.id]: e.target.checked }))
@@ -220,7 +220,7 @@ const RSVPForm = () => {
                       type="text"
                       value={typeof value === "string" ? value : ""}
                       onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                      className={`w-full rounded-xl border bg-white/40 px-4 py-2 font-serif text-[var(--color-primary)] ${
+                      className={`min-h-12 w-full rounded-xl border bg-white/40 px-4 py-2 font-serif text-base text-[var(--color-primary)] ${
                         falta ? "border-red-400" : "border-[var(--color-accent)]/30"
                       }`}
                       placeholder="Tu respuesta"
@@ -235,14 +235,14 @@ const RSVPForm = () => {
                         return (
                           <label
                             key={opt}
-                            className={`flex items-center gap-3 cursor-pointer px-4 py-2 rounded-xl border bg-white/30 ${
+                            className={`flex min-h-12 touch-manipulation items-center gap-3 cursor-pointer px-4 py-2 rounded-xl border bg-white/30 ${
                               falta ? "border-red-400" : "border-[var(--color-accent)]/30"
                             }`}
                           >
                             <input
                               type={q.type === "single" ? "radio" : "checkbox"}
                               name={q.id}
-                              className="w-4 h-4 accent-[var(--color-action)]"
+                              className="w-5 h-5 shrink-0 accent-[var(--color-action)]"
                               checked={checked}
                               onChange={() =>
                                 setAnswers(prev => {
@@ -279,7 +279,7 @@ const RSVPForm = () => {
 
       {/* Submit */}
       <Button
-        className="!bg-[var(--color-action)] !text-white !rounded-full !px-8 !py-2 !text-base disabled:!opacity-50"
+        className="!min-h-12 !w-full !bg-[var(--color-action)] !text-white !rounded-full !px-8 !py-2 !text-base disabled:!opacity-50 sm:!w-auto"
         onClick={handleSubmit}
         disabled={attending === null || loading}
       >

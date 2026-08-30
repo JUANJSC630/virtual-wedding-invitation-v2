@@ -36,12 +36,14 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="flex w-full items-center gap-2 px-4 py-3 text-left"
+        className="flex min-h-12 w-full touch-manipulation items-center gap-2 px-4 py-3 text-left"
       >
         {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        <span className="font-medium">Respuestas del RSVP</span>
-        <span className="text-sm text-muted-foreground">
-          {answered.length} de {guests.length} invitados respondieron
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium">Respuestas del RSVP</span>
+          <span className="block text-sm text-muted-foreground">
+            {answered.length} de {guests.length} invitados respondieron
+          </span>
         </span>
       </button>
 

@@ -251,19 +251,19 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder="Buscar por nombre o enlace…"
-                className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                className="h-11 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base shadow-sm focus:outline-none focus:ring-1 focus:ring-ring sm:h-9 sm:text-sm"
               />
             </div>
-            <div className="flex self-start overflow-hidden rounded-md border text-sm">
+            <div className="flex w-full self-stretch overflow-hidden rounded-md border text-sm sm:w-auto sm:self-start">
               <button
                 onClick={() => setShowArchived(false)}
-                className={`px-3 py-1.5 transition-colors ${!showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                className={`min-h-11 flex-1 touch-manipulation px-3 py-1.5 transition-colors sm:min-h-0 sm:flex-none ${!showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
               >
                 Activos
               </button>
               <button
                 onClick={() => setShowArchived(true)}
-                className={`px-3 py-1.5 transition-colors ${showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                className={`min-h-11 flex-1 touch-manipulation px-3 py-1.5 transition-colors sm:min-h-0 sm:flex-none ${showArchived ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
               >
                 Archivados
               </button>

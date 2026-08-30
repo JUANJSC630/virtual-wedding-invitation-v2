@@ -278,7 +278,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEve
                 <select
                   value={form.eventType}
                   onChange={e => handleEventTypeChange(e.target.value as EventTypeSlug)}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="flex h-11 w-full touch-manipulation rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm focus:outline-none focus:ring-1 focus:ring-ring sm:h-9 sm:text-sm"
                 >
                   {Object.entries(EVENT_TYPES).map(([slug, t]) => (
                     <option key={slug} value={slug}>{t.name}</option>
@@ -1045,7 +1045,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEve
                 <select
                   value={form.theme.fontSerif || ""}
                   onChange={e => setForm(prev => ({ ...prev, theme: { ...prev.theme, fontSerif: e.target.value } }))}
-                  className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+                  className="min-h-11 w-full touch-manipulation rounded-md border bg-background px-3 py-2 text-base sm:min-h-0 sm:text-sm"
                 >
                   <option value="">Serif del sistema (default)</option>
                   {SERIF_PRESETS.map(f => (

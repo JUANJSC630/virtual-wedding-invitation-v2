@@ -334,7 +334,7 @@ const InvitationSection8 = () => {
             <div className="flex flex-col items-center gap-2 py-4">
               <button
                 onClick={handleShare}
-                className="flex items-center gap-2 px-5 py-2 rounded-full border text-sm font-medium transition-colors hover:bg-accent"
+                className="flex min-h-12 touch-manipulation items-center gap-2 px-5 py-2 rounded-full border text-sm font-medium transition-colors hover:bg-accent"
                 style={{ color: "var(--color-primary)", borderColor: "var(--color-primary)" }}
               >
                 <Share2 className="h-4 w-4" />

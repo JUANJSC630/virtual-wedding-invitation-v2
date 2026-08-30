@@ -218,7 +218,7 @@ const WeddingInvitation: React.FC = () => {
       {isPreview && (
         <div className="fixed top-0 inset-x-0 z-50 flex items-center justify-between gap-3 bg-amber-500 px-4 py-2 text-sm font-medium text-white shadow-lg">
           <span>👁 Modo Vista Previa — los datos son ficticios</span>
-          <button onClick={() => window.close()} className="rounded bg-white/20 px-2 py-0.5 text-xs hover:bg-white/30">
+          <button onClick={() => window.close()} className="min-h-9 shrink-0 touch-manipulation rounded bg-white/20 px-3 py-1 text-xs hover:bg-white/30">
             Cerrar
           </button>
         </div>

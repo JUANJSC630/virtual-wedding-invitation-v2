@@ -1,4 +1,4 @@
-import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Plus, Trash2 } from "lucide-react";
 
 import { RSVP_QUESTION_TYPES, RsvpQuestion, RsvpQuestionType } from "@/lib/rsvpQuestions";
 
@@ -82,25 +82,25 @@ export const RsvpQuestionsEditor: React.FC<Props> = ({ questions, onChange }) =>
         {questions.map((q, i) => (
           <div key={q.id} className="rounded-lg border bg-card p-3 space-y-3">
             <div className="flex items-start gap-2">
-              <div className="flex flex-col pt-1.5">
+              <div className="flex shrink-0 flex-col items-center">
                 <button
                   type="button"
                   onClick={() => move(i, -1)}
                   disabled={i === 0}
-                  className="text-muted-foreground hover:text-foreground disabled:opacity-25"
+                  className="flex h-9 w-9 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-25"
                   aria-label="Subir pregunta"
                 >
-                  ▲
+                  <ChevronUp className="h-4 w-4" />
                 </button>
-                <GripVertical className="h-3 w-3 text-muted-foreground/40 mx-auto" />
+                <GripVertical className="h-3 w-3 text-muted-foreground/40" />
                 <button
                   type="button"
                   onClick={() => move(i, 1)}
                   disabled={i === questions.length - 1}
-                  className="text-muted-foreground hover:text-foreground disabled:opacity-25"
+                  className="flex h-9 w-9 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-25"
                   aria-label="Bajar pregunta"
                 >
-                  ▼
+                  <ChevronDown className="h-4 w-4" />
                 </button>
               </div>
 
@@ -127,7 +127,7 @@ export const RsvpQuestionsEditor: React.FC<Props> = ({ questions, onChange }) =>
                             : [],
                         });
                       }}
-                      className="h-10 w-full sm:w-44 rounded-md border border-input bg-background px-3 text-sm"
+                      className="h-11 w-full touch-manipulation rounded-md border border-input bg-background px-3 text-base sm:h-10 sm:w-44 sm:text-sm"
                     >
                       {RSVP_QUESTION_TYPES.map(t => (
                         <option key={t.value} value={t.value}>{t.label}</option>
@@ -178,12 +178,12 @@ export const RsvpQuestionsEditor: React.FC<Props> = ({ questions, onChange }) =>
                 )}
 
                 <div className="flex flex-wrap items-center gap-4">
-                  <label className="flex items-center gap-2 text-sm">
+                  <label className="-ml-2 flex min-h-11 cursor-pointer touch-manipulation items-center gap-2 rounded-md px-2 text-sm">
                     <input
                       type="checkbox"
                       checked={q.required}
                       onChange={e => update(i, { required: e.target.checked })}
-                      className="h-4 w-4"
+                      className="h-5 w-5 accent-primary"
                     />
                     Obligatoria
                   </label>
@@ -203,9 +203,17 @@ export const RsvpQuestionsEditor: React.FC<Props> = ({ questions, onChange }) =>
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
         {RSVP_QUESTION_TYPES.map(t => (
-          <Button key={t.value} type="button" variant="outline" size="sm" onClick={() => add(t.value)}>
+          <Button
+            key={t.value}
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => add(t.value)}
+            className="!justify-start sm:!justify-center"
+            title={t.hint}
+          >
             <Plus className="h-3 w-3 mr-1" /> {t.label}
           </Button>
         ))}

@@ -197,7 +197,7 @@ export function LayoutBuilder({ blocks, onChange }: Props) {
             if (e.target.value) add(e.target.value as BlockType);
             e.target.value = "";
           }}
-          className="h-8 rounded-md border border-input bg-background px-2 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          className="h-11 w-full touch-manipulation rounded-md border border-input bg-background px-2 text-base shadow-sm focus:outline-none focus:ring-1 focus:ring-ring sm:h-8 sm:w-auto sm:text-xs"
         >
           <option value="">+ Añadir bloque…</option>
           {addable.map(m => (
