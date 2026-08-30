@@ -151,7 +151,7 @@ lote (`findMany` con `in`, `createMany`, `groupBy`), nunca en un bucle `await`.
 
 | Punto | Detalle |
 |---|---|
-| `MasterDashboard.tsx` — 2004 líneas | Contiene 3 componentes; `EventFormModal` solo son 1113 líneas con 12 tabs. Candidato #1 a split (un archivo por tab). |
+| `EventFormModal.tsx` — 1153 líneas | 12 pestañas en un componente. Siguiente split natural: un archivo por pestaña. |
 | `fetch` directo en 9 componentes | Rompe la capa de servicios. Lo nuevo va en `src/services/`. |
 | `font-serif` hardcodeado (49 usos) | Bloquea que la fuente sea configurable por tema. |
 | Tests de integración | Los 43 tests son de lógica pura (`src/lib/`). Cero cobertura de aislamiento multi-tenant y roles contra una DB real. |
@@ -161,7 +161,8 @@ lote (`findMany` con `in`, `createMany`, `groupBy`), nunca en un bucle `await`.
 
 Resuelto en la sesión del 30 ago 2026: código muerto (`AdminLogin.tsx`,
 `prisma.ts`, `prisma.js.map`, `tsconfig.node.json`, script `build:server` roto),
-los dos N+1, el lint ciego al frontend y los tests fuera del type-check.
+los dos N+1, el lint ciego al frontend, los tests fuera del type-check y el split
+de `MasterDashboard.tsx` (2004 → 449 líneas).
 
 ---
 
@@ -188,6 +189,13 @@ Antes de dar por cerrado cualquier cambio:
    Ojo: las secciones que montan con `IntersectionObserver` (la cuenta regresiva)
    no aparecen en un volcado headless. Ausencia ahí no es prueba de regresión —
    compáralo contra `git stash` antes de concluir nada.
+
+   Para los paneles hace falta sesión. Node 22 (`nvm use 22.21.1`) trae `WebSocket`
+   nativo, así que se puede conducir Chrome por CDP sin instalar nada: arrancarlo con
+   `--remote-debugging-port=9222`, inyectar la cookie con `Network.setCookie`
+   (`admin_token`, obtenida del `Set-Cookie` del login), navegar y evaluar
+   `document.documentElement.outerHTML`. Sirve también para hacer clic en un botón
+   y comprobar que un modal monta.
 8. **Un commit por sub-paso**, en español, formato Conventional Commits con scope.
 
 ---

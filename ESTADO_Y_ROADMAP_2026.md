@@ -198,8 +198,9 @@ producto sin arrastrar deuda.
    estaba cargado ni el 17 ni el 30 de agosto; hace falta reiniciar la sesión.
 
 **Técnico — lo que queda de deuda (detalle en `CLAUDE.md` §5)**
-6. **Split de `MasterDashboard.tsx`** (2004 líneas, 3 componentes; `EventFormModal` son
-   1113 con 12 tabs). Es el archivo que más fricción añade a cualquier cambio de panel.
+6. ~~Split de `MasterDashboard.tsx`~~ ✅ hecho (`fcab922`): 2004 → 449 líneas, repartido
+   en `eventFormModel.ts`, `EventFormModal.tsx` y `ClientAdminModal.tsx`. El siguiente
+   split natural sería una pestaña por archivo dentro de `EventFormModal` (1153 líneas).
 7. **Tests de integración con DB real** — el aislamiento multi-tenant no tiene ninguna
    red hoy; los 43 tests son de lógica pura.
 8. Índices en `GuestAccess` (`eventId`, `guestCode`), code-splitting del bundle
