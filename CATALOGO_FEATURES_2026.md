@@ -69,14 +69,14 @@
 |---------------|---------|--------|
 | Sí / No | Confirmación básica | ✅ |
 | Nº de acompañantes / +1 | Con nombres | ✅ |
-| **Selección de menú** | Dropdown/imagen por plato | ❌ |
-| **Restricciones dietéticas** | Texto o checkboxes | ❌ |
-| **Canción sugerida** | Petición para el DJ | ❌ |
-| **Transporte** | ¿Necesita shuttle? | ❌ |
-| **Solicitud de accesibilidad** | Silla de ruedas, etc. | ❌ |
-| **Nota para los anfitriones** | Mensaje libre | ⚠️ (notas internas admin, no del invitado) |
+| **Selección de menú** | Pregunta de elección única | ✅ (RSVP custom) |
+| **Restricciones dietéticas** | Texto o elección múltiple | ✅ (RSVP custom) |
+| **Canción sugerida** | Pregunta de texto libre | ✅ (RSVP custom) |
+| **Transporte** | Elección única Sí/No | ✅ (RSVP custom) |
+| **Solicitud de accesibilidad** | Pregunta de texto libre | ✅ (RSVP custom) |
+| **Nota para los anfitriones** | Mensaje libre | ✅ (pregunta de texto libre) |
 | **Lógica condicional** | Si "No asiste" → salta a agradecimiento; si "Sí" → muestra menú/+1 | ❌ |
-| **Preguntas custom** | El admin define preguntas propias | ❌ |
+| **Preguntas custom** | El admin define preguntas propias | ✅ (3 tipos: única, múltiple, texto) |
 | **Respuestas con emoji** | Toque contemporáneo | ❌ |
 | RSVP por WhatsApp | Confirmación por chat | ✅ (crítico LATAM) |
 | RSVP nativo in-app | Formulario propio | ✅ (G1) |
@@ -109,7 +109,7 @@
 | Feature | Detalle | Estado |
 |---------|---------|--------|
 | **Seating chart / mesas** | Asignación drag-and-drop de mesas | ❌ |
-| **Menú → catering** | Conteo de platos para el catering | ❌ |
+| **Menú → catering** | Conteo de platos para el catering | ✅ (panel de respuestas) |
 | **Sub-eventos / satélites** | Welcome dinner, ceremonia, after (invitar a subsets) | ❌ |
 | **Check-in el día del evento** | Marcar asistencia en la puerta (QR) | ❌ |
 | Deadline de RSVP editable | Cambiar fecha límite | ✅ |
@@ -162,7 +162,7 @@
 ## Prioridades sugeridas (impacto × esfuerzo)
 
 **Quick wins de alto impacto (bajo esfuerzo):**
-1. **RSVP con preguntas custom** (menú, dieta, canción, transporte) — demanda #1 del mercado.
+1. ~~RSVP con preguntas custom~~ ✅ **hecho** (30 ago 2026) — menú, dieta, canción, transporte y accesibilidad, con conteo para catering.
 2. **Mapa embebido** (S6 ya tiene la URL) e **FAQ** (bloque simple).
 3. **Mesa de regalos estructurada** (links + datos bancarios) en vez de texto libre.
 4. **Export CSV** de invitados (verificar/pulir).

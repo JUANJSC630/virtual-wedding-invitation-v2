@@ -8,12 +8,13 @@
 
 ## 0. TL;DR — dónde quedamos hoy
 
-- **Gate del proyecto: verde y ahora de verdad.** `type-check` 0 errores (tests incluidos) · `lint` 0 errores sobre **100 archivos** · **43 tests** · `build` OK.
+- **Gate del proyecto: verde y ahora de verdad.** `type-check` 0 errores (tests incluidos) · `lint` 0 errores sobre **100+ archivos** · **68 tests** · `build` OK.
   Hasta el 30 ago el lint solo analizaba 15 archivos —ninguno del frontend— así que su verde no significaba gran cosa. Ver §4bis.
 - **Fase A (estabilización):** ✅ completa. Ver §1.
 - **Fase B (secciones dinámicas):** ✅ núcleo completo — reordenar/mostrar/ocultar/eliminar/añadir/editar bloques desde el panel. Ver §2.
 - **Fase C (multi-ocasión):** ✅ núcleo completo — la plataforma soporta boda/XV/bautizo/comunión/cumpleaños/corporativo. Ver §3.
 - **Panel maestro rediseñado:** ✅ ventana dedicada por evento con gestión completa (CRUD invitados + analítica) + dashboard principal simplificado a hub de eventos. Ver §4.
+- **RSVP con preguntas personalizadas (30 ago):** ✅ la demanda #1 del mercado, entregada de punta a punta. Ver §4ter.
 - **Saneamiento (30 ago):** ✅ dos bugs de pérdida de datos corregidos, lint extendido al frontend, código muerto fuera, dos N+1 eliminados (uno superaba el timeout de Vercel). Ver §4bis.
 - **Herramientas de diseño de Claude Code:** instaladas globalmente (frontend-design, ui-ux-pro-max, taste-skill, Playwright MCP, shadcn MCP). Ver §5.
 - **Siguiente prioridad recomendada:** ver §6.
@@ -163,6 +164,66 @@ todos los casos borde y se comprobó que la nueva es byte a byte idéntica.
 
 ---
 
+## 4ter. RSVP con preguntas personalizadas ✅ — 30 de agosto de 2026
+
+Commits `b98dee6` (modelo, schema y backend) y `39f646e` (UI). Era la demanda #1
+del mercado según `CATALOGO_FEATURES_2026.md` y estaba en ❌.
+
+### Los tres tipos, y por qué solo tres
+Elegidos con evidencia, no a ojo. De los 6 campos que el catálogo marca como
+demandados, **4 son texto libre** (alergias, canción, accesibilidad, nota) y solo
+2 son de elegir — así que "elección única" sola no habría entregado la función.
+
+- `single` — menú y transporte. Es lo que permite contar platos para el catering.
+- `text`   — alergias, canción, accesibilidad, notas.
+- `multi`  — el catálogo pide las restricciones dietéticas como "texto o checkboxes".
+
+Se **descartó** un tipo "sí/no": es un `single` de dos opciones y añadiría un
+camino de código y un caso de agregación sin ganar expresividad. Joy, de las
+plataformas grandes, ships exactamente elección única + texto; QuikRSVP resuelve
+el sí/no con radios.
+
+### Dónde vive cada cosa
+- **Definición:** `config.rsvpQuestions`, sin columnas nuevas — mismo patrón que
+  el layout (Fase B) y los honorees (Fase C). `buildConfig` las conserva ante un
+  PATCH parcial, como el resto de la config.
+- **Respuestas:** `Guest.rsvpAnswers` (Json), aplicado con **`db push`**. Ver el
+  aviso de §7 sobre por qué `migrate dev` sería destructivo aquí.
+- **Lógica pura:** `src/lib/rsvpQuestions.ts` es la definición canónica, con 25
+  tests (saneado, normalización, obligatorias y `tallyAnswers` para el conteo).
+  `server/lib/rsvp-questions.js` la replica para el backend, que corre en Node
+  plano y no puede importar TS. **Si cambias las reglas, cambia los dos lados.**
+
+### UI
+- Pestaña **RSVP** en el panel (`RsvpQuestionsEditor.tsx`, en su propio archivo
+  para no volver a engordar `EventFormModal`). El `id` de cada pregunta se deriva
+  de la etiqueta **solo al crearla** y nunca se recalcula: es la clave de las
+  respuestas ya recibidas, así que renombrar no huerfana nada.
+- `RSVPForm` renderiza radio / checkbox / texto, solo cuando el invitado asiste,
+  y siembra el estado con lo ya respondido.
+- `RsvpAnswersPanel` en `GuestManager`: conteo por opción para el catering y las
+  respuestas abiertas con el nombre de quien las escribió.
+- Las preguntas se pasan **por prop, no por EventContext**: los paneles de
+  administración no están envueltos en ese contexto, que es exclusivo de la
+  invitación pública.
+
+### Verificación
+Ciclo entero en un navegador real conducido por CDP: entrar con `?code=`, pasar
+la pantalla de datos, pulsar "Sí, asistiré", ver aparecer las preguntas, intentar
+confirmar sin la obligatoria y ser bloqueado, marcar radio y checkbox, escribir la
+canción, confirmar — y luego, en el panel maestro autenticado, ver el conteo y la
+respuesta de texto atribuida. Antes del cambio de schema se hizo respaldo de los
+94 invitados y comprobación de integridad posterior (0 diferencias reales).
+
+### Pendiente de esta función
+- **Lógica condicional** (`CATALOGO` §A): mostrar una pregunta según la respuesta
+  a otra. Hoy solo existe la regla implícita "solo se preguntan si asiste".
+- **Export CSV de respuestas** para pasárselo al catering en un archivo.
+- Las preguntas **no distinguen entre invitado y acompañantes**: se responden una
+  vez por invitación. Para menús por persona haría falta llevarlas a `Companion`.
+
+---
+
 ## 5. Herramientas de diseño de Claude Code (config global, todos los proyectos)
 
 En `~/.claude/settings.json` y `~/.claude.json` (no específico de este repo, pero relevante para retomar trabajo de diseño):
@@ -185,9 +246,9 @@ La base técnica quedó sana el 30 de agosto (§4bis), así que lo que sigue pue
 producto sin arrastrar deuda.
 
 **Producto — lo que mueve la aguja comercial**
-1. **RSVP con preguntas personalizadas** (menú, dieta, canción, transporte). Demanda
-   **#1 del mercado** según `CATALOGO_FEATURES_2026.md` y hoy sigue ❌. Encaja en el
-   patrón de `config` sin migración.
+1. ~~RSVP con preguntas personalizadas~~ ✅ **hecho** (§4ter). Quedan tres extensiones
+   naturales: lógica condicional, export CSV de respuestas para el catering, y
+   preguntas por acompañante (hoy se responden una vez por invitación).
 2. **B.3/B.4** — bloques heredados por-instancia, para que duplicar un bloque de foto
    no repita la misma imagen (`ARQUITECTURA_SECCIONES_DINAMICAS.md` §5).
 3. **Fase D — Plantillas** (`Template`): selector visual de estética al crear evento,
@@ -222,6 +283,11 @@ producto sin arrastrar deuda.
   original; **cambiarla en producción**). Ojo: `ADMIN_EMAIL` del `.env`
   (`admin@ejemplo.com`) **no** es el usuario real — no existe en la DB.
 - **Neon puede estar dormido** al primer intento (arranque en frío) — reintentar.
+- ⚠️ **Nunca uses `prisma migrate dev`.** La migración `init` no contiene
+  `archivedAt`, `notes`, `eventId` ni `rsvpAnswers` — todos se aplicaron con
+  `db push`. `migrate status` dice "up to date" porque solo mira qué migraciones
+  corrieron, no la deriva real, así que `migrate dev` vería drift e intentaría
+  **resetear la base**. Los cambios de schema van con `prisma db push`.
 - ⚠️ **`jimena-juan` es un evento en producción con tráfico real** (94 invitados, 91
   confirmados, 563 accesos, subiendo). Para probar cambios de backend: crear un evento
   desechable `zz-*`, ejercitarlo y borrarlo. Nunca mutar los eventos reales.

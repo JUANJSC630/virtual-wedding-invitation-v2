@@ -134,10 +134,26 @@ Usa `confirmationFields(confirmed)` de `server/lib/confirmation.js`. Escribir
 `confirmed: undefined` pero sí aplica `confirmedAt: null`, así que renombrar a un
 invitado confirmado le borraba la fecha y corrompía la analítica.
 
+### La lógica del RSVP vive en dos sitios a la vez
+`src/lib/rsvpQuestions.ts` es la definición canónica (y la que tiene los tests);
+`server/lib/rsvp-questions.js` la replica porque el backend corre en Node plano y
+no puede importar TS. Es el mismo motivo por el que `buildConfig` sanea `layout` y
+`honorees` a mano. **Si cambias las reglas de saneado o normalización, cambia los
+dos lados.**
+
 ### El lint debe ver los archivos que escribes
 `eslint.config.js` cubre `.ts/.tsx` desde `62ea18e` (15 → 99 archivos). Si añades
 un directorio o una extensión nueva, comprueba que entra:
 `./node_modules/.bin/eslint . -f json | node -pe '"archivos: "+JSON.parse(require("fs").readFileSync(0)).length'`
+
+### Los cambios de schema van con `db push`, nunca con `migrate dev`
+La migración `init` no contiene `archivedAt`, `notes`, `eventId` ni `rsvpAnswers`:
+todos se aplicaron con `db push`. `prisma migrate status` dice "up to date" porque
+solo mira qué migraciones corrieron, no la deriva real — así que `migrate dev`
+vería drift e intentaría **resetear la base**, con los invitados reales dentro.
+Antes de tocar el schema: respaldo de lectura de `guest`/`event` a un archivo, y
+comprobación de integridad después. Al comparar fechas, normaliza a ISO en ambos
+lados o un `Date` contra una cadena JSON te dará falsos positivos.
 
 ### Nada de una consulta por fila — hay un techo de 30 s
 `vercel.json` fija `maxDuration: 30` para `api/server.js`. El import de CSV hacía
@@ -151,10 +167,10 @@ lote (`findMany` con `in`, `createMany`, `groupBy`), nunca en un bucle `await`.
 
 | Punto | Detalle |
 |---|---|
-| `EventFormModal.tsx` — 1153 líneas | 12 pestañas en un componente. Siguiente split natural: un archivo por pestaña. |
+| `EventFormModal.tsx` — ~1160 líneas | 13 pestañas en un componente. Siguiente split natural: un archivo por pestaña (la de RSVP ya se extrajo así). |
 | `fetch` directo en 9 componentes | Rompe la capa de servicios. Lo nuevo va en `src/services/`. |
 | `font-serif` hardcodeado (49 usos) | Bloquea que la fuente sea configurable por tema. |
-| Tests de integración | Los 43 tests son de lógica pura (`src/lib/`). Cero cobertura de aislamiento multi-tenant y roles contra una DB real. |
+| Tests de integración | Los 68 tests son de lógica pura (`src/lib/`). Cero cobertura de aislamiento multi-tenant y roles contra una DB real. |
 | Sin índices en `GuestAccess` | `eventId` y `guestCode` sin índice; los `groupBy` de analítica escanean la tabla. |
 | Bundle de 692 kB | El build avisa. Falta code-splitting de los paneles. |
 | `groomName`/`brideName` siguen siendo NOT NULL | Legacy de boda: un bautizo tiene que rellenarlas igual. Migrar cuando se toque el schema. |
@@ -171,7 +187,7 @@ de `MasterDashboard.tsx` (2004 → 449 líneas).
 Antes de dar por cerrado cualquier cambio:
 
 1. `./node_modules/.bin/tsc --noEmit` → 0 errores.
-2. `./node_modules/.bin/vitest run` → 43 en verde. **Lógica pura nueva ⇒ test nuevo** en `src/lib/*.test.ts`.
+2. `./node_modules/.bin/vitest run` → 68 en verde. **Lógica pura nueva ⇒ test nuevo** en `src/lib/*.test.ts`.
    Si un componente encapsula lógica pura difícil de verificar en ejecución, sácala a `src/lib/` y tésteala.
 3. `./node_modules/.bin/eslint .` → 0 errores y 0 advertencias, sobre 99 archivos.
 4. `./node_modules/.bin/vite build` → build OK.
