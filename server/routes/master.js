@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import prisma from "../../src/lib/prisma.js";
 import { confirmationFields } from "../lib/confirmation.js";
+import { importGuestRows } from "../lib/guest-import.js";
 import { requireMaster } from "../middleware/auth.js";
 
 // Mismo esquema que admin (crear invitado)
@@ -142,14 +143,25 @@ masterRoutes.get("/events", async (req, res) => {
       },
     });
 
-    const withStats = await Promise.all(
-      events.map(async (ev) => {
-        const confirmedGuests = await prisma.guest.count({
-          where: { eventId: ev.id, confirmed: true },
-        });
-        return { ...ev, stats: { totalGuests: ev._count.guests, confirmedGuests, totalAccesses: ev._count.guestAccesses } };
-      })
+    // Un solo groupBy en vez de un guest.count() por evento (N+1): el listado
+    // hacía 1 + N viajes a Neon y crecía con cada evento nuevo.
+    const confirmedByEvent = await prisma.guest.groupBy({
+      by: ["eventId"],
+      where: { confirmed: true, eventId: { in: events.map(e => e.id) } },
+      _count: { _all: true },
+    });
+    const confirmedMap = new Map(
+      confirmedByEvent.map(row => [row.eventId, row._count._all])
     );
+
+    const withStats = events.map(ev => ({
+      ...ev,
+      stats: {
+        totalGuests: ev._count.guests,
+        confirmedGuests: confirmedMap.get(ev.id) ?? 0,
+        totalAccesses: ev._count.guestAccesses,
+      },
+    }));
 
     res.json(withStats);
   } catch (error) {
@@ -400,38 +412,7 @@ masterRoutes.post("/events/:id/import-guests", async (req, res) => {
       return res.status(400).json({ error: "No hay filas para importar" });
     }
 
-    let created = 0;
-    let skipped = 0;
-    const errors = [];
-
-    for (const row of rows) {
-      const code = (row.code || "").trim().toUpperCase();
-      const name = (row.name || "").trim();
-      if (!code || !name) {
-        errors.push({ code: code || "?", reason: "código y nombre son obligatorios" });
-        continue;
-      }
-      const maxGuests = parseInt(row.maxGuests, 10) || 1;
-
-      const exists = await prisma.guest.findUnique({
-        where: { eventId_code: { eventId, code } },
-      });
-      if (exists) { skipped++; continue; }
-
-      await prisma.guest.create({
-        data: {
-          eventId,
-          code,
-          name,
-          email: row.email?.trim() || undefined,
-          phone: row.phone?.trim() || undefined,
-          maxGuests,
-        },
-      });
-      created++;
-    }
-
-    res.json({ created, skipped, errors });
+    res.json(await importGuestRows(eventId, rows));
   } catch (error) {
     console.error("Error importing guests (master):", error);
     res.status(500).json({ error: "Error interno del servidor" });

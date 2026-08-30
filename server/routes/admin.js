@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import prisma from "../../src/lib/prisma.js";
 import { confirmationFields } from "../lib/confirmation.js";
+import { importGuestRows } from "../lib/guest-import.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const createGuestSchema = z.object({
@@ -167,38 +168,7 @@ adminRoutes.post("/guests/import", async (req, res) => {
       return res.status(400).json({ error: "No hay filas para importar" });
     }
 
-    let created = 0;
-    let skipped = 0;
-    const errors = [];
-
-    for (const row of rows) {
-      const code = (row.code || "").trim().toUpperCase();
-      const name = (row.name || "").trim();
-      if (!code || !name) {
-        errors.push({ code: code || "?", reason: "código y nombre son obligatorios" });
-        continue;
-      }
-      const maxGuests = parseInt(row.maxGuests, 10) || 1;
-
-      const exists = await prisma.guest.findUnique({
-        where: { eventId_code: { eventId, code } },
-      });
-      if (exists) { skipped++; continue; }
-
-      await prisma.guest.create({
-        data: {
-          eventId,
-          code,
-          name,
-          email: row.email?.trim() || undefined,
-          phone: row.phone?.trim() || undefined,
-          maxGuests,
-        },
-      });
-      created++;
-    }
-
-    res.json({ created, skipped, errors });
+    res.json(await importGuestRows(eventId, rows));
   } catch (error) {
     console.error("Error importing guests:", error);
     res.status(500).json({ error: "Error interno del servidor" });
