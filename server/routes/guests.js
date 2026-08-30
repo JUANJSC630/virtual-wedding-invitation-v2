@@ -137,6 +137,12 @@ guestRoutes.post("/rsvp", rsvpLimiter, async (req, res) => {
   try {
     const { guestCode, confirmed, companions, eventSlug } = req.body;
 
+    // `confirmed` es la respuesta del invitado: sin ella la petición está
+    // malformada. Dejarla pasar escribía confirmedAt: null silenciosamente.
+    if (typeof confirmed !== "boolean") {
+      return res.status(400).json({ error: "Falta la confirmación de asistencia." });
+    }
+
     const event = await resolveEvent(eventSlug);
     if (!event) return res.status(404).json({ error: "Evento no encontrado" });
 

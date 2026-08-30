@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 
 import prisma from "../../src/lib/prisma.js";
+import { confirmationFields } from "../lib/confirmation.js";
 import { requireMaster } from "../middleware/auth.js";
 
 // Mismo esquema que admin (crear invitado)
@@ -510,8 +511,8 @@ masterRoutes.patch("/events/:id/guests/:guestId", async (req, res) => {
     const guest = await prisma.guest.update({
       where: { id: guestId },
       data: {
-        name, email: email || undefined, phone: phone || undefined, maxGuests, confirmed,
-        confirmedAt: confirmed ? new Date() : null,
+        name, email: email || undefined, phone: phone || undefined, maxGuests,
+        ...confirmationFields(confirmed),
         notes: notes !== undefined ? notes : undefined,
       },
       include: { companions: true },
@@ -558,7 +559,7 @@ masterRoutes.patch("/events/:id/companions/:companionId", async (req, res) => {
     if (!owned) return res.status(404).json({ error: "Acompañante no encontrado en este evento" });
     const companion = await prisma.companion.update({
       where: { id: companionId },
-      data: { confirmed, confirmedAt: confirmed ? new Date() : null },
+      data: confirmationFields(confirmed),
     });
     res.json(companion);
   } catch (error) {

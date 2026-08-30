@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 
 import prisma from "../../src/lib/prisma.js";
+import { confirmationFields } from "../lib/confirmation.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const createGuestSchema = z.object({
@@ -124,8 +125,7 @@ adminRoutes.patch("/guests/:id", async (req, res) => {
         email: email || undefined,
         phone: phone || undefined,
         maxGuests,
-        confirmed,
-        confirmedAt: confirmed ? new Date() : null,
+        ...confirmationFields(confirmed),
         notes: notes !== undefined ? notes : undefined,
       },
       include: { companions: true },
@@ -226,7 +226,7 @@ adminRoutes.patch("/companions/:id", async (req, res) => {
 
     const companion = await prisma.companion.update({
       where: { id },
-      data: { confirmed, confirmedAt: confirmed ? new Date() : null },
+      data: confirmationFields(confirmed),
     });
     res.json(companion);
   } catch (error) {
