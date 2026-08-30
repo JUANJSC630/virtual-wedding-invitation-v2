@@ -2,7 +2,7 @@
 > Última actualización: 30 de agosto de 2026 (sesión de saneamiento)
 > Reemplaza a `PLAN_PLATAFORMA.md` e `INVITATION_IMPROVEMENT_PLAN.md` (quedan como referencia histórica).
 > Complementado por: `CLAUDE.md` (**estándares de código — leer antes de tocar nada**),
-> `INVESTIGACION_SISTEMA_COMPLETO_2026.md` (**qué falta para ser un sistema completo**),
+> `INVESTIGACION_SISTEMA_COMPLETO_2026.md` (**qué falta**) e `INVESTIGACION_TECNICA_2026.md` (**con qué construirlo**),
 > `INVESTIGACION_MERCADO_2026.md`, `CATALOGO_FEATURES_2026.md`, `FASE_C_MULTI_OCASION.md`, `ARQUITECTURA_SECCIONES_DINAMICAS.md`.
 
 ---
@@ -309,6 +309,7 @@ producto sin arrastrar deuda.
 | `CLAUDE.md` | *Cómo* se escribe el código: estándares, invariantes, deuda, definition of done. **Leer antes de programar.** |
 | `INVESTIGACION_MERCADO_2026.md` | Investigación de mercado (RSVP, QR, WhatsApp/LATAM, plataformas). |
 | `INVESTIGACION_SISTEMA_COMPLETO_2026.md` | **Qué falta para ser un sistema completo**: mesas, check-in, sub-eventos, galería colaborativa. 16 fuentes. Leer antes de decidir el siguiente gran bloque. |
+| `INVESTIGACION_TECNICA_2026.md` | **Con qué construirlo**: librerías evaluadas contra las restricciones reales (serverless, 30 s). Qué instalar, qué NO y por qué. |
 | `CATALOGO_FEATURES_2026.md` | Catálogo exhaustivo de features invitado/admin/plataforma con estado ✅/⚠️/❌. |
 | `FASE_C_MULTI_OCASION.md` | Diseño detallado de la abstracción multi-ocasión (honorees, EventType). |
 | `ARQUITECTURA_SECCIONES_DINAMICAS.md` | Diseño detallado del sistema de bloques (SECTION_REGISTRY, layout). |
