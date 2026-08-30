@@ -123,6 +123,7 @@
     "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
+    "typescript-eslint": "^8.68.0",
     "vaul": "^0.9.9",
     "vite": "^7.1.2",
     "vitest": "^4.1.10",

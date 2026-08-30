@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -140,9 +140,12 @@ const LoginPage: React.FC = () => {
     document.head.appendChild(style);
   }, []);
 
-  const redirect = (user: AdminUser) => {
-    navigate(user.role === "master" ? "/master" : "/admin", { replace: true });
-  };
+  const redirect = useCallback(
+    (user: AdminUser) => {
+      navigate(user.role === "master" ? "/master" : "/admin", { replace: true });
+    },
+    [navigate]
+  );
 
   useEffect(() => {
     fetch("/api/auth/me", { credentials: "include" })
@@ -150,7 +153,7 @@ const LoginPage: React.FC = () => {
       .then(data => { if (data?.user) redirect(data.user); })
       .catch(() => {})
       .finally(() => setChecking(false));
-  }, []);
+  }, [redirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

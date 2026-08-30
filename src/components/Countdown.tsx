@@ -1,27 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AnimatePresence, motion } from "framer-motion";
+
+import { getTimeLeft } from "@/lib/countdown";
 
 import { useEventContext } from "@/context/EventContext";
 
 const FALLBACK_DATE = "2025-11-22T18:00:00-05:00";
 
-function getTimeLeft(eventDate: Date) {
-  const now = new Date();
-  const diff = eventDate.getTime() - now.getTime();
-  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-  const minutes = Math.floor((diff / (1000 * 60)) % 60);
-  const seconds = Math.floor((diff / 1000) % 60);
-  return { days, hours, minutes, seconds };
-}
-
 const Countdown = () => {
   const { event } = useEventContext();
-  const eventDate = new Date(event?.eventDate ?? FALLBACK_DATE);
+  const eventDateISO = event?.eventDate ?? FALLBACK_DATE;
+  // Identidad estable: sin memo, `new Date(...)` se recrea en cada render y el
+  // efecto no puede declarar deps estáticamente verificables.
+  const eventDate = useMemo(() => new Date(eventDateISO), [eventDateISO]);
 
-  const [timeLeft, setTimeLeft] = useState(getTimeLeft(eventDate));
+  const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(eventDate));
 
   useEffect(() => {
     setTimeLeft(getTimeLeft(eventDate));
@@ -29,7 +23,7 @@ const Countdown = () => {
       setTimeLeft(getTimeLeft(eventDate));
     }, 1000);
     return () => clearInterval(timer);
-  }, [eventDate.getTime()]);
+  }, [eventDate]);
 
   const locale = "es-CO";
   const tz = "America/Bogota";
