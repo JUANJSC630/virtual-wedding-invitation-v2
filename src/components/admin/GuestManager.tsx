@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 
 import { Guest } from "@/types";
 
+import { downloadCsv } from "@/lib/csv";
 import { RsvpQuestion } from "@/lib/rsvpQuestions";
 
 import { useAllGuests, useDeleteGuest, useUpdateGuest } from "@/hooks/useGuests";
@@ -168,8 +169,14 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQue
   };
 
   const handleExportCSV = () => {
+    // Las respuestas del RSVP se añaden como una columna por pregunta: es lo que
+    // el organizador le pasa al catering sin tener que cruzar dos archivos.
     const rows = [
-      ["Código", "Nombre", "Email", "Teléfono", "Cupos", "Confirmado", "Fecha confirmación", "Acompañantes confirmados", "Acompañantes total", "Notas"],
+      [
+        "Código", "Nombre", "Email", "Teléfono", "Cupos", "Confirmado",
+        "Fecha confirmación", "Acompañantes confirmados", "Acompañantes total", "Notas",
+        ...rsvpQuestions.map(q => q.label),
+      ],
       ...guests.map(g => [
         g.code,
         g.name,
@@ -181,18 +188,13 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQue
         String(g.companions.filter(c => c.confirmed).length),
         String(g.companions.length),
         g.notes ?? "",
+        ...rsvpQuestions.map(q => {
+          const a = g.rsvpAnswers?.[q.id];
+          return Array.isArray(a) ? a.join("; ") : (a ?? "");
+        }),
       ]),
     ];
-    const csv = rows
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `invitados-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`invitados-${new Date().toISOString().slice(0, 10)}.csv`, rows);
     toast.success(`${guests.length} invitados exportados a CSV`);
   };
 

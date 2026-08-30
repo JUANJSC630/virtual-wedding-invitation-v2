@@ -1,10 +1,13 @@
 import { useState } from "react";
 
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Download } from "lucide-react";
 
 import { Guest } from "@/types";
 
+import { downloadCsv } from "@/lib/csv";
 import { RsvpAnswers, RsvpQuestion, tallyAnswers } from "@/lib/rsvpQuestions";
+
+import { Button } from "@/components/ui/button";
 
 interface Props {
   guests: Guest[];
@@ -31,6 +34,23 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
   const answered = guests.filter(g => g.rsvpAnswers && Object.keys(g.rsvpAnswers).length > 0);
   const allAnswers = answered.map(g => g.rsvpAnswers as RsvpAnswers);
 
+  /** Resumen agregado: lo que se le manda al catering, no la lista completa. */
+  const exportSummary = () => {
+    const rows: unknown[][] = [["Pregunta", "Respuesta", "Cantidad"]];
+    for (const q of questions) {
+      if (q.type === "text") {
+        for (const g of answered) {
+          const value = (g.rsvpAnswers as RsvpAnswers)[q.id];
+          if (typeof value === "string" && value) rows.push([q.label, value, g.name]);
+        }
+        continue;
+      }
+      const counts = tallyAnswers(q, allAnswers);
+      for (const opt of q.options) rows.push([q.label, opt, counts[opt] ?? 0]);
+    }
+    downloadCsv(`respuestas-rsvp-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  };
+
   return (
     <div className="rounded-lg border bg-card">
       <button
@@ -48,7 +68,18 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
       </button>
 
       {open && (
-        <div className="grid grid-cols-1 gap-4 border-t p-4 sm:grid-cols-2">
+        <div className="space-y-4 border-t p-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={exportSummary}
+            disabled={answered.length === 0}
+            className="!w-full sm:!w-auto"
+          >
+            <Download className="mr-2 h-4 w-4" /> Descargar resumen para el catering
+          </Button>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {questions.map(q => {
             if (q.type === "text") {
               const respuestas = answered
@@ -99,6 +130,7 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
               </div>
             );
           })}
+          </div>
         </div>
       )}
     </div>
