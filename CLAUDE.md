@@ -139,9 +139,11 @@ invitado confirmado le borraba la fecha y corrompía la analítica.
 un directorio o una extensión nueva, comprueba que entra:
 `./node_modules/.bin/eslint . -f json | node -pe '"archivos: "+JSON.parse(require("fs").readFileSync(0)).length'`
 
-### Los tests siguen sin type-checkearse
-`tsconfig.json` excluye `**/*.test.ts`. Un test puede tener tipos mal y pasar
-desapercibido. Sigue pendiente.
+### Nada de una consulta por fila — hay un techo de 30 s
+`vercel.json` fija `maxDuration: 30` para `api/server.js`. El import de CSV hacía
+2 consultas por fila y tardaba 46 s con 200 invitados: en producción no iba
+lento, **fallaba por timeout**. Cualquier operación sobre una colección va en
+lote (`findMany` con `in`, `createMany`, `groupBy`), nunca en un bucle `await`.
 
 ---
 
@@ -150,16 +152,16 @@ desapercibido. Sigue pendiente.
 | Punto | Detalle |
 |---|---|
 | `MasterDashboard.tsx` — 2004 líneas | Contiene 3 componentes; `EventFormModal` solo son 1113 líneas con 12 tabs. Candidato #1 a split (un archivo por tab). |
-| `AdminLogin.tsx` — 117 líneas | **Código muerto:** nadie lo importa desde que existe `LoginPage`. Borrar. |
-| `src/lib/prisma.ts` | **Código muerto:** todo el backend importa `prisma.js`. Los dos están trackeados. Dejar uno. |
-| `src/lib/prisma.js.map` | Volvió al árbol pese a `*.js.map` en `.gitignore` (ya estaba trackeado). `git rm --cached`. |
-| N+1 en `GET /master/events` | Un `guest.count()` por evento. Resolver con un `groupBy`. |
-| N+1 en `import-guests` | `findUnique` + `create` secuenciales por fila; un CSV de 200 filas = 400 viajes a Neon. |
-| `fetch` directo en 10 componentes | Rompe la capa de servicios. Lo nuevo va en `src/services/`. |
+| `fetch` directo en 9 componentes | Rompe la capa de servicios. Lo nuevo va en `src/services/`. |
 | `font-serif` hardcodeado (49 usos) | Bloquea que la fuente sea configurable por tema. |
 | Tests de integración | Los 43 tests son de lógica pura (`src/lib/`). Cero cobertura de aislamiento multi-tenant y roles contra una DB real. |
 | Sin índices en `GuestAccess` | `eventId` y `guestCode` sin índice; los `groupBy` de analítica escanean la tabla. |
 | Bundle de 692 kB | El build avisa. Falta code-splitting de los paneles. |
+| `groomName`/`brideName` siguen siendo NOT NULL | Legacy de boda: un bautizo tiene que rellenarlas igual. Migrar cuando se toque el schema. |
+
+Resuelto en la sesión del 30 ago 2026: código muerto (`AdminLogin.tsx`,
+`prisma.ts`, `prisma.js.map`, `tsconfig.node.json`, script `build:server` roto),
+los dos N+1, el lint ciego al frontend y los tests fuera del type-check.
 
 ---
 
