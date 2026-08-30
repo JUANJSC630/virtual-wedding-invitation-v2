@@ -1,4 +1,5 @@
 import type { BlockInstance } from "@/blocks/types";
+import type { RsvpQuestion, RsvpAnswers } from "@/lib/rsvpQuestions";
 
 // Audio Player Types
 export interface AudioPlayerProps {
@@ -171,6 +172,8 @@ export interface EventConfig {
   gallery?: GalleryPhoto[];
   sections?: SectionsConfig;
   rsvpMode?: "whatsapp" | "form";
+  // Preguntas personalizadas del RSVP (ver src/lib/rsvpQuestions.ts).
+  rsvpQuestions?: RsvpQuestion[];
   labels?: {
     // Section 5
     familyTitle?: string;
@@ -325,6 +328,7 @@ export interface Guest {
   confirmed: boolean;
   confirmedAt?: Date;
   notes?: string;
+  rsvpAnswers?: RsvpAnswers | null;
   createdAt: Date;
   updatedAt: Date;
   companions: Companion[];
@@ -373,6 +377,7 @@ export interface RSVPData {
   guestCode: string;
   confirmed: boolean;
   eventSlug: string;
+  answers?: RsvpAnswers;
   companions: Array<{
     id?: string;
     name: string;

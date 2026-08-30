@@ -7,6 +7,8 @@
 import { buildLegacyLayout } from "@/blocks/legacyLayout";
 import { BlockInstance } from "@/blocks/types";
 
+import { RsvpQuestion, sanitizeQuestions } from "@/lib/rsvpQuestions";
+
 import {
   AssetMap,
   EventTypeSlug,
@@ -79,6 +81,7 @@ export interface EventFormData {
   sections: SectionsConfig;
   // RSVP mode
   rsvpMode: "whatsapp" | "form";
+  rsvpQuestions: RsvpQuestion[];
   // Labels
   labels: Record<string, string>;
   // Secciones dinámicas (Fase B)
@@ -128,6 +131,7 @@ export const emptyForm: EventFormData = {
   audioUrl: "", announcementText: "", timeline: [], gallery: [],
   sections: { showVerse: true, showNames: true, showPhotos: true, showFamily: true, showVenues: true, showTimeline: true, showGifts: true, showGallery: true },
   rsvpMode: "whatsapp",
+  rsvpQuestions: [],
   assets: {}, theme: {}, labels: {},
   layout: buildLegacyLayout(undefined),
 };
@@ -188,6 +192,7 @@ export function eventToForm(ev: EventWithStats): EventFormData {
       showGallery:  ev.config?.sections?.showGallery  ?? true,
     },
     rsvpMode: (ev.config?.rsvpMode === "form" ? "form" : "whatsapp") as "whatsapp" | "form",
+    rsvpQuestions: sanitizeQuestions(ev.config?.rsvpQuestions),
     assets: (ev.assets as AssetMap) ?? {},
     theme: (ev.theme as ThemeConfig) ?? {},
     labels: (ev.config?.labels as Record<string, string>) ?? {},

@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BarChart3, Heart, LogOut, Users2 } from "lucide-react";
 
 import { AdminUser } from "@/types";
+
+import { RsvpQuestion, sanitizeQuestions } from "@/lib/rsvpQuestions";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,6 +30,19 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
+  // El panel del cliente solo conoce su slug; las preguntas del RSVP viven en la
+  // config del evento, así que se leen del endpoint público (aquí no hay
+  // EventContext, que es exclusivo de la invitación).
+  const [rsvpQuestions, setRsvpQuestions] = useState<RsvpQuestion[]>([]);
+
+  useEffect(() => {
+    if (!user.eventSlug) return;
+    fetch(`/api/events/${user.eventSlug}`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => setRsvpQuestions(sanitizeQuestions(data?.config?.rsvpQuestions)))
+      .catch(() => {});
+  }, [user.eventSlug]);
+
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     onLogout();
@@ -79,7 +94,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onLogout }) => {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="guests" className="mt-6">
-              <GuestManager eventSlug={user.eventSlug ?? ""} />
+              <GuestManager eventSlug={user.eventSlug ?? ""} rsvpQuestions={rsvpQuestions} />
             </TabsContent>
             <TabsContent value="analytics" className="mt-6">
               <AnalyticsDashboard />

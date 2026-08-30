@@ -3,6 +3,8 @@ import { ArrowLeft, BarChart3, Edit2, MonitorSmartphone, Settings, Users2 } from
 import { getHonoreesNames } from "@/lib/honorees";
 import { EventWithStats } from "@/types";
 
+import { sanitizeQuestions } from "@/lib/rsvpQuestions";
+
 import { GuestScopeContext } from "@/context/GuestScopeContext";
 
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
@@ -75,7 +77,11 @@ export function EventDetail({ event, onBack, onEdit, onManageAdmins }: Props) {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="guests" className="pt-4">
-            <GuestManager eventSlug={event.slug} eventId={event.id} />
+            <GuestManager
+              eventSlug={event.slug}
+              eventId={event.id}
+              rsvpQuestions={sanitizeQuestions(event.config?.rsvpQuestions)}
+            />
           </TabsContent>
           <TabsContent value="analytics" className="pt-4">
             <AnalyticsDashboard />

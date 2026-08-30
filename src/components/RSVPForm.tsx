@@ -5,6 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGuestContext } from "@/context/GuestContext";
 import { useEventContext } from "@/context/EventContext";
 import { Guest } from "@/types";
+import {
+  RsvpAnswers,
+  missingRequired,
+  sanitizeQuestions,
+} from "@/lib/rsvpQuestions";
 import { Button } from "@/components/ui/button";
 
 type AttendingState = true | false | null;
@@ -34,6 +39,14 @@ const RSVPForm = () => {
     guest?.companions?.forEach(c => { map[c.id] = c.confirmed; });
     return map;
   });
+  // Preguntas personalizadas del evento. Se siembran con lo ya respondido para
+  // que "Modificar respuesta" no obligue a rellenarlo todo de nuevo.
+  const questions = sanitizeQuestions(event?.config?.rsvpQuestions);
+  const [answers, setAnswers] = useState<RsvpAnswers>(
+    () => (guest?.rsvpAnswers ?? {}) as RsvpAnswers
+  );
+  const [missing, setMissing] = useState<string[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(alreadyConfirmed || alreadyDeclined);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +55,17 @@ const RSVPForm = () => {
 
   const handleSubmit = async () => {
     if (attending === null || !code) return;
+
+    // Solo se piden al asistir; al declinar el backend las limpia.
+    if (attending) {
+      const faltan = missingRequired(questions, answers);
+      setMissing(faltan);
+      if (faltan.length > 0) {
+        setError("Responde las preguntas obligatorias antes de confirmar.");
+        return;
+      }
+    }
+    setMissing([]);
     setLoading(true);
     setError(null);
     try {
@@ -58,15 +82,19 @@ const RSVPForm = () => {
           confirmed: attending,
           companions: companionsPayload,
           eventSlug,
+          ...(attending ? { answers } : {}),
         }),
       });
 
-      if (!res.ok) throw new Error("Error al confirmar");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "Error al confirmar");
+      }
       const updated: Guest = await res.json();
       setGuest(updated);
       setSubmitted(true);
-    } catch {
-      setError("Ocurrió un error. Intenta de nuevo.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ocurrió un error. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -160,6 +188,86 @@ const RSVPForm = () => {
                 <span className="font-serif text-[var(--color-primary)]">{c.name}</span>
               </label>
             ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Preguntas personalizadas (solo al asistir) */}
+      <AnimatePresence>
+        {attending === true && questions.length > 0 && (
+          <motion.div
+            className="flex flex-col gap-4 w-full"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.35 }}
+          >
+            {questions.map(q => {
+              const falta = missing.includes(q.id);
+              const value = answers[q.id];
+              return (
+                <div key={q.id} className="flex flex-col gap-2 w-full">
+                  <p className="text-sm font-serif text-[var(--color-primary)] font-semibold">
+                    {q.label}
+                    {q.required && <span className="text-[var(--color-accent)]"> *</span>}
+                  </p>
+                  {q.help && (
+                    <p className="text-xs font-serif text-[var(--color-text)] opacity-70">{q.help}</p>
+                  )}
+
+                  {q.type === "text" ? (
+                    <input
+                      type="text"
+                      value={typeof value === "string" ? value : ""}
+                      onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                      className={`w-full rounded-xl border bg-white/40 px-4 py-2 font-serif text-[var(--color-primary)] ${
+                        falta ? "border-red-400" : "border-[var(--color-accent)]/30"
+                      }`}
+                      placeholder="Tu respuesta"
+                    />
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {q.options.map(opt => {
+                        const checked =
+                          q.type === "single"
+                            ? value === opt
+                            : Array.isArray(value) && value.includes(opt);
+                        return (
+                          <label
+                            key={opt}
+                            className={`flex items-center gap-3 cursor-pointer px-4 py-2 rounded-xl border bg-white/30 ${
+                              falta ? "border-red-400" : "border-[var(--color-accent)]/30"
+                            }`}
+                          >
+                            <input
+                              type={q.type === "single" ? "radio" : "checkbox"}
+                              name={q.id}
+                              className="w-4 h-4 accent-[var(--color-action)]"
+                              checked={checked}
+                              onChange={() =>
+                                setAnswers(prev => {
+                                  if (q.type === "single") return { ...prev, [q.id]: opt };
+                                  const current = Array.isArray(prev[q.id])
+                                    ? (prev[q.id] as string[])
+                                    : [];
+                                  return {
+                                    ...prev,
+                                    [q.id]: current.includes(opt)
+                                      ? current.filter(o => o !== opt)
+                                      : [...current, opt],
+                                  };
+                                })
+                              }
+                            />
+                            <span className="font-serif text-[var(--color-primary)]">{opt}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>

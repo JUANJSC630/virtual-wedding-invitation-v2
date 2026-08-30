@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
 import { LayoutBuilder } from "@/components/master/LayoutBuilder";
+import { RsvpQuestionsEditor } from "@/components/master/RsvpQuestionsEditor";
 
 import {
   ASSET_LABELS,
@@ -230,6 +231,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEve
                 { v: "texts",    l: "Textos" },
                 { v: "families", l: "Familias" },
                 { v: "timeline", l: "Itinerario" },
+                { v: "rsvp",     l: "RSVP" },
                 { v: "labels",   l: "Etiquetas" },
                 { v: "gallery",  l: "Galería" },
                 { v: "photos",   l: "Fotos" },
@@ -592,6 +594,14 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEve
             </TabsContent>
 
             {/* ── Tab: Etiquetas ──────────────────────────── */}
+            {/* ── Tab: RSVP ───────────────────────────────── */}
+            <TabsContent value="rsvp" className="space-y-4 pt-4">
+              <RsvpQuestionsEditor
+                questions={form.rsvpQuestions}
+                onChange={rsvpQuestions => setForm(prev => ({ ...prev, rsvpQuestions }))}
+              />
+            </TabsContent>
+
             <TabsContent value="labels" className="space-y-6 pt-4">
               <p className="text-xs text-muted-foreground">
                 Personaliza todos los textos de la invitación. Dejar en blanco usa el texto por defecto.

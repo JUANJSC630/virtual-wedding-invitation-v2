@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 
 import { Guest } from "@/types";
 
+import { RsvpQuestion } from "@/lib/rsvpQuestions";
+
 import { useAllGuests, useDeleteGuest, useUpdateGuest } from "@/hooks/useGuests";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,7 @@ import GuestFormModal from "./GuestFormModal";
 import GuestList from "./GuestList";
 import GuestQRModal from "./GuestQRModal";
 import GuestStatsPanel from "./GuestStatsPanel";
+import { RsvpAnswersPanel } from "./RsvpAnswersPanel";
 
 type StatusFilter = "all" | "confirmed" | "pending" | "companions-pending" | "no-access" | "accessed-not-confirmed" | "groups";
 type SortOrder = "default" | "name" | "code" | "confirmed-date";
@@ -26,9 +29,11 @@ interface GuestManagerProps {
   eventSlug: string;
   /** Presente en modo master por-evento: habilita el import CSV por evento. */
   eventId?: string;
+  /** Preguntas del RSVP del evento; sin ellas no se muestra el panel de respuestas. */
+  rsvpQuestions?: RsvpQuestion[];
 }
 
-const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId }) => {
+const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQuestions = [] }) => {
   const queryClient = useQueryClient();
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
@@ -273,6 +278,8 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId }) => {
       })()}
 
       <GuestStatsPanel liveMode={liveMode} />
+
+      <RsvpAnswersPanel guests={guests} questions={rsvpQuestions} />
 
       <GuestFilterBar
         guests={guests}
