@@ -23,66 +23,107 @@ masterRoutes.use(requireMaster);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function buildConfig(body) {
-  const {
-    eventType, honorees, eventTitle, layout,
-    verseText, verseReference,
-    ceremonyName, ceremonyAddress, ceremonyMapsUrl,
-    receptionName, receptionAddress, receptionMapsUrl,
-    heroMessage, giftMessage, announcementText,
-    dressCodeLabel, dressCodeLadies, dressCodeGentlemen,
-    parentsBride, parentsGroom, godparents, bridesmaids, groomsmen,
-    timeline, gallery, sections, rsvpMode,
-  } = body;
+/**
+ * Construye el objeto `config` de un evento.
+ *
+ * `existing` es la config que el evento ya tiene (vacía al crear). Todo campo que
+ * el body NO traiga conserva su valor actual en vez de volver al default.
+ *
+ * Sin esta fusión, un PATCH parcial —como el toggle Activar/Desactivar, que solo
+ * manda {isActive}— reconstruía la config desde cero y borraba layout (Fase B),
+ * eventType/honorees (Fase C) y todos los textos del evento.
+ */
+function buildConfig(body, existing = {}) {
+  const base = (existing && typeof existing === "object") ? existing : {};
+  const sent = (key) => body[key] !== undefined;
 
   const splitLines = (str) =>
     (str || "").split("\n").map(s => s.trim()).filter(Boolean);
 
+  // Texto: usa el del body si vino, si no conserva el guardado.
+  const text = (key, current) => (sent(key) ? (body[key] || "") : (current ?? ""));
+
+  // Lista multilínea: el body la manda como string, se guarda como array.
+  const lines = (key, current) =>
+    sent(key) ? splitLines(body[key]) : (Array.isArray(current) ? current : []);
+
+  // Array ya estructurado (timeline, gallery).
+  const list = (key, current) =>
+    sent(key) && Array.isArray(body[key]) ? body[key] : (Array.isArray(current) ? current : []);
+
   return {
     // Multi-ocasión (Fase C) — guardado en config, sin columnas nuevas.
-    eventType: typeof eventType === "string" && eventType ? eventType : "wedding",
-    honorees: Array.isArray(honorees)
-      ? honorees
-          .filter(h => h && typeof h.name === "string")
-          .map(h => ({ role: String(h.role || "host"), label: String(h.label || ""), name: h.name.trim() }))
-      : [],
-    eventTitle: eventTitle || "",
+    eventType: sent("eventType") && typeof body.eventType === "string" && body.eventType
+      ? body.eventType
+      : (base.eventType ?? "wedding"),
+    honorees: sent("honorees")
+      ? (Array.isArray(body.honorees)
+          ? body.honorees
+              .filter(h => h && typeof h.name === "string")
+              .map(h => ({ role: String(h.role || "host"), label: String(h.label || ""), name: h.name.trim() }))
+          : [])
+      : (Array.isArray(base.honorees) ? base.honorees : []),
+    eventTitle: text("eventTitle", base.eventTitle),
     // Secciones dinámicas (Fase B) — array ordenado de bloques, saneado.
-    layout: Array.isArray(layout)
-      ? layout
-          .filter(b => b && typeof b.type === "string" && b.id)
-          .map(b => ({
-            id: String(b.id),
-            type: String(b.type),
-            enabled: b.enabled !== false,
-            config: b.config && typeof b.config === "object" ? b.config : {},
-          }))
-      : [],
-    verse: { text: verseText || "", reference: verseReference || "" },
-    ceremony: { name: ceremonyName || "", address: ceremonyAddress || "", mapsUrl: ceremonyMapsUrl || "" },
-    reception: { name: receptionName || "", address: receptionAddress || "", mapsUrl: receptionMapsUrl || "" },
-    heroMessage: heroMessage || "",
-    giftMessage: giftMessage || "",
-    announcementText: announcementText || "",
-    dressCode: { label: dressCodeLabel || "", ladies: dressCodeLadies || "", gentlemen: dressCodeGentlemen || "" },
-    parents: { bride: splitLines(parentsBride), groom: splitLines(parentsGroom) },
-    godparents: splitLines(godparents),
-    bridesmaids: splitLines(bridesmaids),
-    groomsmen: splitLines(groomsmen),
-    timeline: Array.isArray(timeline) ? timeline : [],
-    gallery: Array.isArray(gallery) ? gallery : [],
-    sections: {
-      showVerse:    sections?.showVerse    ?? true,
-      showNames:    sections?.showNames    ?? true,
-      showPhotos:   sections?.showPhotos   ?? true,
-      showFamily:   sections?.showFamily   ?? true,
-      showVenues:   sections?.showVenues   ?? true,
-      showTimeline: sections?.showTimeline ?? true,
-      showGifts:    sections?.showGifts    ?? true,
-      showGallery:  sections?.showGallery  ?? true,
+    layout: sent("layout")
+      ? (Array.isArray(body.layout)
+          ? body.layout
+              .filter(b => b && typeof b.type === "string" && b.id)
+              .map(b => ({
+                id: String(b.id),
+                type: String(b.type),
+                enabled: b.enabled !== false,
+                config: b.config && typeof b.config === "object" ? b.config : {},
+              }))
+          : [])
+      : (Array.isArray(base.layout) ? base.layout : []),
+    verse: {
+      text: text("verseText", base.verse?.text),
+      reference: text("verseReference", base.verse?.reference),
     },
-    rsvpMode: rsvpMode === "form" ? "form" : "whatsapp",
-    labels: (typeof body.labels === "object" && body.labels !== null) ? body.labels : {},
+    ceremony: {
+      name: text("ceremonyName", base.ceremony?.name),
+      address: text("ceremonyAddress", base.ceremony?.address),
+      mapsUrl: text("ceremonyMapsUrl", base.ceremony?.mapsUrl),
+    },
+    reception: {
+      name: text("receptionName", base.reception?.name),
+      address: text("receptionAddress", base.reception?.address),
+      mapsUrl: text("receptionMapsUrl", base.reception?.mapsUrl),
+    },
+    heroMessage: text("heroMessage", base.heroMessage),
+    giftMessage: text("giftMessage", base.giftMessage),
+    announcementText: text("announcementText", base.announcementText),
+    dressCode: {
+      label: text("dressCodeLabel", base.dressCode?.label),
+      ladies: text("dressCodeLadies", base.dressCode?.ladies),
+      gentlemen: text("dressCodeGentlemen", base.dressCode?.gentlemen),
+    },
+    parents: {
+      bride: lines("parentsBride", base.parents?.bride),
+      groom: lines("parentsGroom", base.parents?.groom),
+    },
+    godparents: lines("godparents", base.godparents),
+    bridesmaids: lines("bridesmaids", base.bridesmaids),
+    groomsmen: lines("groomsmen", base.groomsmen),
+    timeline: list("timeline", base.timeline),
+    gallery: list("gallery", base.gallery),
+    sections: {
+      showVerse:    body.sections?.showVerse    ?? base.sections?.showVerse    ?? true,
+      showNames:    body.sections?.showNames    ?? base.sections?.showNames    ?? true,
+      showPhotos:   body.sections?.showPhotos   ?? base.sections?.showPhotos   ?? true,
+      showFamily:   body.sections?.showFamily   ?? base.sections?.showFamily   ?? true,
+      showVenues:   body.sections?.showVenues   ?? base.sections?.showVenues   ?? true,
+      showTimeline: body.sections?.showTimeline ?? base.sections?.showTimeline ?? true,
+      showGifts:    body.sections?.showGifts    ?? base.sections?.showGifts    ?? true,
+      showGallery:  body.sections?.showGallery  ?? base.sections?.showGallery  ?? true,
+    },
+    rsvpMode: sent("rsvpMode")
+      ? (body.rsvpMode === "form" ? "form" : "whatsapp")
+      : (base.rsvpMode ?? "whatsapp"),
+    labels: (typeof body.labels === "object" && body.labels !== null)
+      ? { ...(base.labels ?? {}), ...body.labels }
+      : (base.labels ?? {}),
   };
 }
 
@@ -196,7 +237,8 @@ masterRoutes.patch("/events/:id", async (req, res) => {
       if (slugTaken) return res.status(400).json({ error: `El slug "${slug}" ya está en uso` });
     }
 
-    const config = buildConfig(req.body);
+    // Fusiona sobre la config actual: un PATCH parcial no debe borrar el resto.
+    const config = buildConfig(req.body, existing.config ?? {});
 
     const event = await prisma.event.update({
       where: { id },
