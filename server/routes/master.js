@@ -672,6 +672,127 @@ masterRoutes.get("/events/:id/analytics", async (req, res) => {
   }
 });
 
+// ─── MESAS ───────────────────────────────────────────────────────────────────
+// La ocupación no se guarda en la mesa: se deriva de los Attendee que apuntan a
+// ella. Ver ARQUITECTURA_MESAS.md §2.
+
+const tableSchema = z.object({
+  name: z.string().min(1).max(60),
+  shape: z.enum(["round", "rect"]).default("round"),
+  capacity: z.coerce.number().int().min(1).max(50).default(8),
+  x: z.coerce.number().default(0),
+  y: z.coerce.number().default(0),
+  rotation: z.coerce.number().default(0),
+});
+
+// GET — mesas del evento con las personas sentadas en cada una
+masterRoutes.get("/events/:id/tables", async (req, res) => {
+  try {
+    const tables = await prisma.table.findMany({
+      where: { eventId: req.params.id },
+      orderBy: { createdAt: "asc" },
+      include: {
+        attendees: {
+          select: { id: true, name: true, isPrimary: true, guestId: true },
+          orderBy: { name: "asc" },
+        },
+      },
+    });
+    res.json(tables);
+  } catch (error) {
+    console.error("Error listing tables:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.post("/events/:id/tables", async (req, res) => {
+  const parsed = tableSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" });
+  }
+  try {
+    const table = await prisma.table.create({
+      data: { ...parsed.data, eventId: req.params.id },
+      include: { attendees: { select: { id: true, name: true, isPrimary: true, guestId: true } } },
+    });
+    res.status(201).json(table);
+  } catch (error) {
+    console.error("Error creating table:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.patch("/events/:id/tables/:tableId", async (req, res) => {
+  const parsed = tableSchema.partial().safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" });
+  }
+  try {
+    const { id: eventId, tableId } = req.params;
+    const owned = await prisma.table.findFirst({ where: { id: tableId, eventId } });
+    if (!owned) return res.status(404).json({ error: "Mesa no encontrada en este evento" });
+
+    const table = await prisma.table.update({
+      where: { id: tableId },
+      data: parsed.data,
+      include: { attendees: { select: { id: true, name: true, isPrimary: true, guestId: true } } },
+    });
+    res.json(table);
+  } catch (error) {
+    console.error("Error updating table:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// DELETE — al borrar la mesa sus personas quedan sin sitio (SetNull), no se borran
+masterRoutes.delete("/events/:id/tables/:tableId", async (req, res) => {
+  try {
+    const { id: eventId, tableId } = req.params;
+    const owned = await prisma.table.findFirst({ where: { id: tableId, eventId } });
+    if (!owned) return res.status(404).json({ error: "Mesa no encontrada en este evento" });
+    await prisma.table.delete({ where: { id: tableId } });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting table:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// PUT — aplica un reparto completo: { asignaciones: { personaId: mesaId|null } }
+masterRoutes.put("/events/:id/seating", async (req, res) => {
+  try {
+    const { id: eventId } = req.params;
+    const { assignments } = req.body;
+    if (!assignments || typeof assignments !== "object" || Array.isArray(assignments)) {
+      return res.status(400).json({ error: "Se esperaba un objeto de asignaciones" });
+    }
+
+    // Solo personas y mesas de ESTE evento: el id llega del cliente.
+    const [personas, mesas] = await Promise.all([
+      prisma.attendee.findMany({ where: { guest: { eventId } }, select: { id: true } }),
+      prisma.table.findMany({ where: { eventId }, select: { id: true } }),
+    ]);
+    const personasValidas = new Set(personas.map(p => p.id));
+    const mesasValidas = new Set(mesas.map(t => t.id));
+
+    const cambios = Object.entries(assignments)
+      .filter(([attendeeId, tableId]) =>
+        personasValidas.has(attendeeId) && (tableId === null || mesasValidas.has(tableId))
+      );
+
+    await prisma.$transaction(
+      cambios.map(([attendeeId, tableId]) =>
+        prisma.attendee.update({ where: { id: attendeeId }, data: { tableId } })
+      )
+    );
+
+    res.json({ applied: cambios.length, ignored: Object.keys(assignments).length - cambios.length });
+  } catch (error) {
+    console.error("Error applying seating:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // ─── POST /api/master/events/:id/client-admins — crear client admin ──────────
 
 masterRoutes.post("/events/:id/client-admins", async (req, res) => {

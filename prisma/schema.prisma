@@ -53,6 +53,7 @@ model Event {
   clientAdmins  ClientAdmin[]
   guests        Guest[]
   guestAccesses GuestAccess[]
+  tables        Table[]
 
   @@map("events")
 }
@@ -117,11 +118,17 @@ model Attendee {
   confirmed   Boolean   @default(false)
   confirmedAt DateTime?
   rsvpAnswers Json?                          // respuestas propias (menú individual)
+  // Asignación de mesa. Cuelga de la PERSONA a propósito: si alguien cancela,
+  // su sitio se libera solo. Ver ARQUITECTURA_MESAS.md §2.
+  tableId     String?
+  table       Table?    @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  seatIndex   Int?                           // sitio dentro de la mesa (opcional)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([guestId])
   @@index([companionId])
+  @@index([tableId])
   @@map("attendees")
 }
 
@@ -136,6 +143,28 @@ model Companion {
   updatedAt   DateTime  @updatedAt
 
   @@map("companions")
+}
+
+// ─── MESAS ────────────────────────────────────────────────────────────────────
+// Una mesa del salón. Su ocupación NO se guarda aquí: se deriva de los Attendee
+// que apuntan a ella. Ver ARQUITECTURA_MESAS.md §2.
+model Table {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  name      String                            // "Mesa 1", "Novios", "Familia"
+  shape     String   @default("round")        // round | rect
+  capacity  Int      @default(8)
+  x         Float    @default(0)              // posición en el plano
+  y         Float    @default(0)
+  rotation  Float    @default(0)              // solo relevante en rectangulares
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendees Attendee[]
+
+  @@index([eventId])
+  @@map("tables")
 }
 
 // ─── TRACKING DE ACCESOS ──────────────────────────────────────────────────────
