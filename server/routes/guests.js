@@ -3,6 +3,10 @@ import express from "express";
 import prisma from "../../src/lib/prisma.js";
 import { accessLimiter, rsvpLimiter, validateLimiter } from "../middleware/limiters.js";
 import {
+  syncAllCompanionAttendees,
+  syncPrimaryAttendee,
+} from "../lib/attendees.js";
+import {
   missingRequiredRsvp,
   normalizeRsvpAnswers,
   sanitizeRsvpQuestions,
@@ -202,6 +206,16 @@ guestRoutes.post("/rsvp", rsvpLimiter, async (req, res) => {
           });
         }
       }
+    }
+
+    // Espeja el RSVP en la tabla de personas (titular + acompañantes).
+    const conCompanions = await prisma.guest.findUnique({
+      where: { id: guest.id },
+      include: { companions: true },
+    });
+    if (conCompanions) {
+      await syncPrimaryAttendee(conCompanions);
+      await syncAllCompanionAttendees(conCompanions.id, conCompanions.companions);
     }
 
     const finalGuest = await prisma.guest.findUnique({

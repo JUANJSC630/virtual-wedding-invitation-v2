@@ -6,6 +6,11 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 
 import prisma from "../../src/lib/prisma.js";
+import {
+  deleteCompanionAttendee,
+  syncCompanionAttendee,
+  syncPrimaryAttendee,
+} from "../lib/attendees.js";
 import { confirmationFields } from "../lib/confirmation.js";
 import { importGuestRows } from "../lib/guest-import.js";
 import { sanitizeRsvpQuestions } from "../lib/rsvp-questions.js";
@@ -480,6 +485,7 @@ masterRoutes.post("/events/:id/guests", async (req, res) => {
       data: { eventId, code: code.toUpperCase(), name, email: email || undefined, phone: phone || undefined, maxGuests },
       include: { companions: true },
     });
+    await syncPrimaryAttendee(guest);
     return res.status(201).json(guest);
   } catch (error) {
     console.error("Error creating guest (master):", error);
@@ -504,6 +510,7 @@ masterRoutes.patch("/events/:id/guests/:guestId", async (req, res) => {
       },
       include: { companions: true },
     });
+    await syncPrimaryAttendee(guest);
     res.json(guest);
   } catch (error) {
     console.error("Error updating guest (master):", error);
@@ -531,6 +538,7 @@ masterRoutes.post("/events/:id/companions", async (req, res) => {
     const owned = await prisma.guest.findFirst({ where: { id: guestId, eventId } });
     if (!owned) return res.status(404).json({ error: "Invitado no encontrado en este evento" });
     const companion = await prisma.companion.create({ data: { guestId, name } });
+    await syncCompanionAttendee(guestId, companion);
     res.status(201).json(companion);
   } catch (error) {
     console.error("Error creating companion (master):", error);
@@ -548,6 +556,7 @@ masterRoutes.patch("/events/:id/companions/:companionId", async (req, res) => {
       where: { id: companionId },
       data: confirmationFields(confirmed),
     });
+    await syncCompanionAttendee(companion.guestId, companion);
     res.json(companion);
   } catch (error) {
     console.error("Error updating companion (master):", error);
@@ -561,6 +570,7 @@ masterRoutes.delete("/events/:id/companions/:companionId", async (req, res) => {
     const owned = await prisma.companion.findFirst({ where: { id: companionId, guest: { eventId } } });
     if (!owned) return res.status(404).json({ error: "Acompañante no encontrado en este evento" });
     await prisma.companion.delete({ where: { id: companionId } });
+    await deleteCompanionAttendee(companionId);
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting companion (master):", error);

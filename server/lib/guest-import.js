@@ -1,4 +1,5 @@
 import prisma from "../../src/lib/prisma.js";
+import { syncPrimaryAttendee } from "./attendees.js";
 
 /**
  * Importa filas de un CSV de invitados a un evento.
@@ -64,6 +65,12 @@ export async function importGuestRows(eventId, rows) {
   // la carrera entre la comprobación de arriba y esta escritura.
   const { count } = await prisma.guest.createMany({ data: toCreate, skipDuplicates: true });
   skipped += toCreate.length - count;
+
+  // createMany no devuelve las filas: se releen para crear su asistente titular.
+  const creados = await prisma.guest.findMany({
+    where: { eventId, code: { in: toCreate.map(g => g.code) } },
+  });
+  for (const guest of creados) await syncPrimaryAttendee(guest);
 
   return { created: count, skipped, errors };
 }

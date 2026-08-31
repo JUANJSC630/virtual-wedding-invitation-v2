@@ -108,6 +108,12 @@ model Attendee {
   guest       Guest     @relation(fields: [guestId], references: [id], onDelete: Cascade)
   name        String
   isPrimary   Boolean   @default(false)      // el titular de la invitación
+  // Enlace al Companion del que procede, para mantenerlos sincronizados sin
+  // depender del nombre. Temporal: desaparece cuando Companion se retire.
+  // Índice normal y no @unique a propósito: añadir una restricción única sobre
+  // una tabla con datos hace que `db push` exija --accept-data-loss, y esa
+  // bandera no se usa contra producción. La unicidad se garantiza en el código.
+  companionId String?
   confirmed   Boolean   @default(false)
   confirmedAt DateTime?
   rsvpAnswers Json?                          // respuestas propias (menú individual)
@@ -115,6 +121,7 @@ model Attendee {
   updatedAt   DateTime  @updatedAt
 
   @@index([guestId])
+  @@index([companionId])
   @@map("attendees")
 }
 

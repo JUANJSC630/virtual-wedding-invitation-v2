@@ -3,6 +3,11 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 
 import prisma from "../../src/lib/prisma.js";
+import {
+  deleteCompanionAttendee,
+  syncCompanionAttendee,
+  syncPrimaryAttendee,
+} from "../lib/attendees.js";
 import { confirmationFields } from "../lib/confirmation.js";
 import { importGuestRows } from "../lib/guest-import.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -100,6 +105,7 @@ adminRoutes.post("/guests", async (req, res) => {
       include: { companions: true },
     });
 
+    await syncPrimaryAttendee(guest);
     return res.status(201).json(guest);
   } catch (error) {
     console.error("Error creating guest:", error);
@@ -132,6 +138,7 @@ adminRoutes.patch("/guests/:id", async (req, res) => {
       include: { companions: true },
     });
 
+    await syncPrimaryAttendee(guest);
     res.json(guest);
   } catch (error) {
     console.error("Error updating guest:", error);
@@ -181,6 +188,7 @@ adminRoutes.post("/companions", async (req, res) => {
     const { guestId, name } = req.body;
 
     const companion = await prisma.companion.create({ data: { guestId, name } });
+    await syncCompanionAttendee(guestId, companion);
     res.status(201).json(companion);
   } catch (error) {
     console.error("Error creating companion:", error);
@@ -198,6 +206,7 @@ adminRoutes.patch("/companions/:id", async (req, res) => {
       where: { id },
       data: confirmationFields(confirmed),
     });
+    await syncCompanionAttendee(companion.guestId, companion);
     res.json(companion);
   } catch (error) {
     console.error("Error updating companion:", error);
@@ -210,6 +219,7 @@ adminRoutes.delete("/companions/:id", async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.companion.delete({ where: { id } });
+    await deleteCompanionAttendee(id);
     res.json({ success: true });
   } catch (error) {
     console.error("Error deleting companion:", error);

@@ -55,7 +55,8 @@ async function main() {
 
     // ── Acompañantes ─────────────────────────────────────────────────────
     for (const companion of guest.companions) {
-      const existe = guest.attendees.some(a => !a.isPrimary && a.name === companion.name);
+      const existe = guest.attendees.some(a => a.companionId === companion.id)
+        || guest.attendees.some(a => !a.isPrimary && !a.companionId && a.name === companion.name);
       if (existe) {
         yaExistian++;
         continue;
@@ -67,10 +68,30 @@ async function main() {
             guestId: guest.id,
             name: companion.name,
             isPrimary: false,
+            companionId: companion.id,
             confirmed: companion.confirmed,
             confirmedAt: companion.confirmedAt,
           },
         });
+      }
+    }
+  }
+
+  // Enlaza los asistentes creados antes de que existiera `companionId`.
+  let enlazados = 0;
+  for (const guest of guests) {
+    for (const companion of guest.companions) {
+      const huerfano = guest.attendees.find(
+        a => !a.isPrimary && !a.companionId && a.name === companion.name
+      );
+      if (!huerfano) continue;
+      enlazados++;
+      if (!dryRun) {
+        await prisma.attendee.update({
+          where: { id: huerfano.id },
+          data: { companionId: companion.id },
+        });
+        huerfano.companionId = companion.id; // evita reusarlo con un homónimo
       }
     }
   }
@@ -81,6 +102,7 @@ async function main() {
   console.log(`  titulares creados    : ${creadosTitulares}`);
   console.log(`  acompañantes creados : ${creadosAcompanantes}`);
   console.log(`  ya existían          : ${yaExistian}`);
+  console.log(`  enlazados a Companion: ${enlazados}`);
   console.log(`  total en attendees   : ${total}`);
 }
 
