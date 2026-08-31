@@ -12,6 +12,9 @@ export default defineConfig({
     alias: {
       "@": resolve(__dirname, "src"),
     },
+    // Una sola copia de React en el grafo. Sin esto, react-konva arrastra su
+    // propio React por react-reconciler y salta "Invalid hook call".
+    dedupe: ["react", "react-dom"],
   },
   build: {
     rollupOptions: {
@@ -20,6 +23,7 @@ export default defineConfig({
           vendor: ["react", "react-dom"],
           animations: ["framer-motion"],
           ui: ["lucide-react", "@radix-ui/react-slot"],
+          canvas: ["konva", "react-konva"],
         },
       },
     },
@@ -42,6 +46,6 @@ export default defineConfig({
   },
   // Pre-bundling para mejor performance
   optimizeDeps: {
-    include: ["react", "react-dom", "framer-motion"],
+    include: ["react", "react-dom", "framer-motion", "konva", "react-konva"],
   },
 });

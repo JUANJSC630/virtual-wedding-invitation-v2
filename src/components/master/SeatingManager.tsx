@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import toast from "react-hot-toast";
-import { LayoutGrid, List, Plus, Sparkles } from "lucide-react";
+import type Konva from "konva";
+import { Download, LayoutGrid, List, Plus, Sparkles } from "lucide-react";
 
 import { Guest } from "@/types";
 
@@ -55,6 +56,27 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
   const [mode, setMode] = useState<"lista" | "plano">("lista");
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [proposal, setProposal] = useState<SeatingProposal | null>(null);
+  const stageRef = useRef<Konva.Stage | null>(null);
+
+  /** Exporta el plano al doble de resolución, para imprimirlo sin pixelar. */
+  const exportarPlano = () => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const link = document.createElement("a");
+    link.download = `plano-mesas-${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = stage.toDataURL({ pixelRatio: 2 });
+    link.click();
+  };
+
+  /**
+   * Una mesa sin posición (creada por API o importada) se colocaría en la
+   * esquina, encima de las demás. Se le asigna un hueco en rejilla.
+   */
+  const tablesConPosicion = tables.map((t, i) =>
+    t.x === 0 && t.y === 0
+      ? { ...t, x: 200 + (i % 4) * 300, y: 180 + Math.floor(i / 4) * 260 }
+      : t
+  );
 
   const people = toPeople(guests);
   const resumen = capacitySummary(tables, people);
@@ -158,6 +180,11 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
         <Button variant="outline" onClick={handleCreateTable} disabled={busy} className="gap-1.5">
           <Plus className="h-4 w-4" /> Nueva mesa
         </Button>
+        {mode === "plano" && tables.length > 0 && (
+          <Button variant="outline" onClick={exportarPlano} className="gap-1.5">
+            <Download className="h-4 w-4" /> Exportar plano
+          </Button>
+        )}
         <div className="flex overflow-hidden rounded-md border text-sm sm:ml-auto">
           {([
             ["lista", "Lista", List],
@@ -221,9 +248,10 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
         />
       ) : (
         <SeatingPlan
-          tables={tables}
+          tables={tablesConPosicion}
           selectedId={selectedTable}
           onSelect={setSelectedTable}
+          stageRef={stageRef}
           onMove={(id, x, y) => updateTable.mutate({ id, updates: { x, y } })}
         />
       )}

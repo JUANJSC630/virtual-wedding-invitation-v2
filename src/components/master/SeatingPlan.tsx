@@ -1,173 +1,285 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import type Konva from "konva";
+import { Circle, Group, Layer, Line, Rect, Stage, Text } from "react-konva";
 
 import { TableWithPeople } from "@/services/seating-service";
 
 interface Props {
   tables: TableWithPeople[];
+  /** Se llama UNA vez, al soltar. Durante el arrastre el movimiento es local. */
   onMove: (id: string, x: number, y: number) => void;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  /** Expone el escenario para poder exportarlo a imagen. */
+  stageRef?: React.MutableRefObject<Konva.Stage | null>;
 }
 
-const LIENZO = { width: 1000, height: 700 };
-const RADIO_REDONDA = 55;
-const RECT = { w: 130, h: 70 };
+const LIENZO = { width: 1400, height: 950 };
+const REJILLA = 25;
+const IMAN = 8; // distancia a la que una mesa se alinea con otra
+const RADIO = 58;
+const RECT = { w: 150, h: 78 };
+
+const COLORES = {
+  libre: "#466691",
+  llena: "#d97706",
+  excedida: "#dc2626",
+};
+
+/** Media dimensión de la mesa, para calcular sus bordes. */
+const medio = (t: TableWithPeople) =>
+  t.shape === "rect" ? { x: RECT.w / 2, y: RECT.h / 2 } : { x: RADIO, y: RADIO };
 
 /**
- * Modo plano: el salón visto desde arriba, con las mesas colocables.
+ * Plano del salón con Konva.
  *
- * En SVG y no en canvas a propósito: se conserva la accesibilidad, el texto es
- * seleccionable, se estila con Tailwind y se imprime bien. Para 12–30 mesas
- * sobra. Ver ARQUITECTURA_MESAS.md §4.
- *
- * El arrastre se implementa con eventos de puntero nativos —que cubren ratón y
- * dedo con el mismo código— en vez de con @dnd-kit: aquí no hay listas ni zonas
- * de destino, solo una coordenada libre dentro del lienzo.
+ * Se pasó de SVG a canvas al pedir calidad de edición: Konva trae arrastre,
+ * zoom con rueda y pellizco, y exportación a imagen de alta resolución sin
+ * reimplementar nada. La accesibilidad que se pierde al dibujar en canvas la
+ * cubre el modo lista, que hace lo mismo con controles nativos.
+ * Ver ARQUITECTURA_MESAS.md §4.
  */
-export const SeatingPlan: React.FC<Props> = ({ tables, onMove, selectedId, onSelect }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [dragging, setDragging] = useState<string | null>(null);
+export const SeatingPlan: React.FC<Props> = ({ tables, onMove, selectedId, onSelect, stageRef }) => {
+  const contenedor = useRef<HTMLDivElement>(null);
+  const localStage = useRef<Konva.Stage | null>(null);
+  const [ancho, setAncho] = useState(900);
+  const [vista, setVista] = useState({ x: 0, y: 0, escala: 1 });
+  /** Guías de alineación que se pintan mientras se arrastra. */
+  const [guias, setGuias] = useState<{ v: number[]; h: number[] }>({ v: [], h: [] });
 
-  /** Pasa las coordenadas del puntero al sistema del SVG. */
-  const toSvg = (clientX: number, clientY: number) => {
-    const svg = svgRef.current;
-    if (!svg) return null;
-    const rect = svg.getBoundingClientRect();
-    return {
-      x: ((clientX - rect.left) / rect.width) * LIENZO.width,
-      y: ((clientY - rect.top) / rect.height) * LIENZO.height,
+  // El lienzo se adapta al ancho disponible; la altura mantiene la proporción.
+  useEffect(() => {
+    const el = contenedor.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      if (entry) setAncho(entry.contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const alto = Math.round((ancho * LIENZO.height) / LIENZO.width);
+  const base = ancho / LIENZO.width;
+
+  const setStage = (node: Konva.Stage | null) => {
+    localStage.current = node;
+    if (stageRef) stageRef.current = node;
+  };
+
+  /** Zoom con rueda, centrado en el puntero. */
+  const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
+    e.evt.preventDefault();
+    const stage = localStage.current;
+    if (!stage) return;
+    const puntero = stage.getPointerPosition();
+    if (!puntero) return;
+
+    const escalaVieja = vista.escala;
+    const dir = e.evt.deltaY > 0 ? -1 : 1;
+    const escala = Math.min(3, Math.max(0.4, escalaVieja * (dir > 0 ? 1.08 : 1 / 1.08)));
+
+    // El punto bajo el cursor debe quedarse donde está.
+    const mundo = {
+      x: (puntero.x - vista.x) / escalaVieja,
+      y: (puntero.y - vista.y) / escalaVieja,
     };
+    setVista({ escala, x: puntero.x - mundo.x * escala, y: puntero.y - mundo.y * escala });
   };
 
-  const handlePointerDown = (e: React.PointerEvent, id: string) => {
-    e.preventDefault();
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    setDragging(id);
-    onSelect(id);
-  };
+  /**
+   * Imán: redondea a la rejilla y, si hay otra mesa casi alineada, se alinea con
+   * ella exactamente. Devuelve también las guías a dibujar.
+   */
+  const imantar = (id: string, x: number, y: number) => {
+    let sx = Math.round(x / REJILLA) * REJILLA;
+    let sy = Math.round(y / REJILLA) * REJILLA;
+    const v: number[] = [];
+    const h: number[] = [];
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragging) return;
-    const p = toSvg(e.clientX, e.clientY);
-    if (!p) return;
-    // Se mantiene dentro del lienzo para que ninguna mesa se pierda de vista.
-    onMove(
-      dragging,
-      Math.max(RADIO_REDONDA, Math.min(LIENZO.width - RADIO_REDONDA, p.x)),
-      Math.max(RADIO_REDONDA, Math.min(LIENZO.height - RADIO_REDONDA, p.y))
-    );
+    for (const otra of tables) {
+      if (otra.id === id) continue;
+      if (Math.abs(otra.x - x) < IMAN) {
+        sx = otra.x;
+        v.push(otra.x);
+      }
+      if (Math.abs(otra.y - y) < IMAN) {
+        sy = otra.y;
+        h.push(otra.y);
+      }
+    }
+    return { x: sx, y: sy, v, h };
   };
-
-  const endDrag = () => setDragging(null);
 
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">
-        Arrastra las mesas para colocarlas como está el salón. Toca una para ver quién se sienta.
+        Arrastra las mesas para colocarlas. Rueda o pellizco para acercar; arrastra el fondo
+        para desplazarte. Se alinean solas con la rejilla y con las demás mesas.
       </p>
-      <div className="overflow-x-auto rounded-lg border bg-muted/30">
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${LIENZO.width} ${LIENZO.height}`}
-          className="h-auto w-full min-w-[560px] touch-none select-none"
-          onPointerMove={handlePointerMove}
-          onPointerUp={endDrag}
-          onPointerLeave={endDrag}
-          role="application"
-          aria-label="Plano de mesas"
+
+      <div ref={contenedor} className="overflow-hidden rounded-lg border bg-muted/20">
+        <Stage
+          ref={setStage}
+          width={ancho}
+          height={alto}
+          scaleX={base * vista.escala}
+          scaleY={base * vista.escala}
+          x={vista.x}
+          y={vista.y}
+          draggable
+          onWheel={handleWheel}
+          onDragEnd={e => {
+            // Solo el arrastre del propio escenario mueve la vista.
+            if (e.target === e.currentTarget) {
+              setVista(v => ({ ...v, x: e.target.x(), y: e.target.y() }));
+            }
+          }}
+          onMouseDown={e => {
+            if (e.target === e.currentTarget) onSelect(null);
+          }}
+          onTouchStart={e => {
+            if (e.target === e.currentTarget) onSelect(null);
+          }}
         >
-          <defs>
-            <pattern id="cuadricula" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.12" />
-            </pattern>
-          </defs>
-          <rect width={LIENZO.width} height={LIENZO.height} fill="url(#cuadricula)" />
+          <Layer listening={false}>
+            {/* Rejilla de referencia */}
+            {Array.from({ length: Math.ceil(LIENZO.width / 50) + 1 }, (_, i) => (
+              <Line key={`v${i}`} points={[i * 50, 0, i * 50, LIENZO.height]} stroke="#0f172a" strokeWidth={0.5} opacity={0.07} />
+            ))}
+            {Array.from({ length: Math.ceil(LIENZO.height / 50) + 1 }, (_, i) => (
+              <Line key={`h${i}`} points={[0, i * 50, LIENZO.width, i * 50]} stroke="#0f172a" strokeWidth={0.5} opacity={0.07} />
+            ))}
+            {/* Guías de alineación, solo mientras se arrastra */}
+            {guias.v.map(x => (
+              <Line key={`gv${x}`} points={[x, 0, x, LIENZO.height]} stroke="#bfa15a" strokeWidth={1.5} dash={[6, 6]} />
+            ))}
+            {guias.h.map(y => (
+              <Line key={`gh${y}`} points={[0, y, LIENZO.width, y]} stroke="#bfa15a" strokeWidth={1.5} dash={[6, 6]} />
+            ))}
+          </Layer>
 
-          {tables.map(table => {
-            const ocupadas = table.attendees.length;
-            const llena = ocupadas >= table.capacity;
-            const excedida = ocupadas > table.capacity;
-            const seleccionada = selectedId === table.id;
-            const color = excedida
-              ? "hsl(var(--destructive))"
-              : llena
-                ? "hsl(38 92% 50%)"
-                : "hsl(var(--primary))";
+          <Layer>
+            {tables.map(table => {
+              const ocupadas = table.attendees.length;
+              const color =
+                ocupadas > table.capacity
+                  ? COLORES.excedida
+                  : ocupadas >= table.capacity
+                    ? COLORES.llena
+                    : COLORES.libre;
+              const sel = selectedId === table.id;
+              const m = medio(table);
 
-            return (
-              <g
-                key={table.id}
-                transform={`translate(${table.x || LIENZO.width / 2}, ${table.y || LIENZO.height / 2})`}
-                onPointerDown={e => handlePointerDown(e, table.id)}
-                className="cursor-grab active:cursor-grabbing"
-                tabIndex={0}
-                role="button"
-                aria-label={`${table.name}, ${ocupadas} de ${table.capacity}`}
-              >
-                {table.shape === "rect" ? (
-                  <rect
-                    x={-RECT.w / 2}
-                    y={-RECT.h / 2}
-                    width={RECT.w}
-                    height={RECT.h}
-                    rx={10}
-                    fill={color}
-                    fillOpacity={seleccionada ? 0.35 : 0.18}
-                    stroke={color}
-                    strokeWidth={seleccionada ? 3 : 2}
-                  />
-                ) : (
-                  <circle
-                    r={RADIO_REDONDA}
-                    fill={color}
-                    fillOpacity={seleccionada ? 0.35 : 0.18}
-                    stroke={color}
-                    strokeWidth={seleccionada ? 3 : 2}
-                  />
-                )}
-                <text
-                  textAnchor="middle"
-                  y={-6}
-                  className="pointer-events-none fill-foreground text-[15px] font-semibold"
+              return (
+                <Group
+                  key={table.id}
+                  x={table.x}
+                  y={table.y}
+                  draggable
+                  onDragStart={() => onSelect(table.id)}
+                  dragBoundFunc={pos => pos}
+                  onDragMove={e => {
+                    // El movimiento es LOCAL: nada de red mientras se arrastra.
+                    const { x, y, v, h } = imantar(table.id, e.target.x(), e.target.y());
+                    const cx = Math.max(m.x, Math.min(LIENZO.width - m.x, x));
+                    const cy = Math.max(m.y, Math.min(LIENZO.height - m.y, y));
+                    e.target.position({ x: cx, y: cy });
+                    setGuias({ v, h });
+                  }}
+                  onDragEnd={e => {
+                    setGuias({ v: [], h: [] });
+                    // Se guarda UNA vez, al soltar.
+                    onMove(table.id, Math.round(e.target.x()), Math.round(e.target.y()));
+                  }}
+                  onClick={() => onSelect(table.id)}
+                  onTap={() => onSelect(table.id)}
                 >
-                  {table.name}
-                </text>
-                <text
-                  textAnchor="middle"
-                  y={14}
-                  className="pointer-events-none fill-muted-foreground text-[13px]"
-                >
-                  {ocupadas}/{table.capacity}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+                  {table.shape === "rect" ? (
+                    <Rect
+                      x={-RECT.w / 2}
+                      y={-RECT.h / 2}
+                      width={RECT.w}
+                      height={RECT.h}
+                      cornerRadius={10}
+                      fill={color}
+                      opacity={sel ? 0.4 : 0.2}
+                      stroke={color}
+                      strokeWidth={sel ? 3 : 2}
+                      shadowColor={color}
+                      shadowBlur={sel ? 16 : 0}
+                      perfectDrawEnabled={false}
+                    />
+                  ) : (
+                    <Circle
+                      radius={RADIO}
+                      fill={color}
+                      opacity={sel ? 0.4 : 0.2}
+                      stroke={color}
+                      strokeWidth={sel ? 3 : 2}
+                      shadowColor={color}
+                      shadowBlur={sel ? 16 : 0}
+                      perfectDrawEnabled={false}
+                    />
+                  )}
+                  <Text
+                    text={table.name}
+                    fontSize={17}
+                    fontStyle="600"
+                    fill="#0f172a"
+                    width={m.x * 2}
+                    offsetX={m.x}
+                    offsetY={10}
+                    align="center"
+                    listening={false}
+                  />
+                  <Text
+                    text={`${ocupadas}/${table.capacity}`}
+                    fontSize={15}
+                    fill={color}
+                    width={m.x * 2}
+                    offsetX={m.x}
+                    offsetY={-10}
+                    align="center"
+                    listening={false}
+                  />
+                </Group>
+              );
+            })}
+          </Layer>
+        </Stage>
       </div>
 
-      {selectedId && (
-        <div className="rounded-lg border bg-card p-3">
-          {(() => {
-            const t = tables.find(x => x.id === selectedId);
-            if (!t) return null;
-            return (
-              <>
-                <p className="font-medium">
-                  {t.name}{" "}
-                  <span className="font-normal text-muted-foreground">
-                    {t.attendees.length}/{t.capacity}
-                  </span>
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t.attendees.length === 0
-                    ? "Nadie sentado todavía."
-                    : t.attendees.map(a => a.name).join(", ")}
-                </p>
-              </>
-            );
-          })()}
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setVista({ x: 0, y: 0, escala: 1 })}
+          className="min-h-11 touch-manipulation rounded-md border px-3 text-sm hover:bg-muted sm:min-h-9"
+        >
+          Centrar vista
+        </button>
+        <span className="text-xs text-muted-foreground">Zoom {Math.round(vista.escala * 100)}%</span>
+      </div>
+
+      {selectedId && (() => {
+        const t = tables.find(x => x.id === selectedId);
+        if (!t) return null;
+        return (
+          <div className="rounded-lg border bg-card p-3">
+            <p className="font-medium">
+              {t.name}{" "}
+              <span className="font-normal text-muted-foreground">
+                {t.attendees.length}/{t.capacity}
+              </span>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t.attendees.length === 0
+                ? "Nadie sentado todavía."
+                : t.attendees.map(a => a.name).join(", ")}
+            </p>
+          </div>
+        );
+      })()}
     </div>
   );
 };
