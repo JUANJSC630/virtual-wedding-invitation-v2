@@ -256,6 +256,12 @@ vez de distinguir titular de acompañante en cada consulta y cada pantalla.
 2. Retirar `Companion` y el campo puente `Attendee.companionId`.
 3. Dar a cada persona su propio código/QR → check-in en la puerta.
 
+### Mesas — en curso (31 ago)
+Diseño en `ARQUITECTURA_MESAS.md`. Hecho: modelo (`Table` + `Attendee.tableId`),
+algoritmo de recomendación con 23 tests y endpoints. **Falta la interfaz**: modo
+lista (el que se usa desde el móvil), modo plano en SVG, y el bloque "tu mesa" en
+la invitación del invitado.
+
 ### Detalles que conviene no olvidar
 - `Attendee.companionId` lleva `@@index` y **no** `@unique`: añadir una
   restricción única sobre una tabla con datos hace que `db push` exija
@@ -354,6 +360,7 @@ producto sin arrastrar deuda.
 | `CLAUDE.md` | *Cómo* se escribe el código: estándares, invariantes, deuda, definition of done. **Leer antes de programar.** |
 | `INVESTIGACION_MERCADO_2026.md` | Investigación de mercado (RSVP, QR, WhatsApp/LATAM, plataformas). |
 | `INVESTIGACION_SISTEMA_COMPLETO_2026.md` | **Qué falta para ser un sistema completo**: mesas, check-in, sub-eventos, galería colaborativa. 16 fuentes. Leer antes de decidir el siguiente gran bloque. |
+| `ARQUITECTURA_MESAS.md` | Diseño del mapa de mesas: modelo, algoritmo de recomendación y los dos modos de interfaz. |
 | `INVESTIGACION_TECNICA_2026.md` | **Con qué construirlo**: librerías evaluadas contra las restricciones reales (serverless, 30 s). Qué instalar, qué NO y por qué. |
 | `CATALOGO_FEATURES_2026.md` | Catálogo exhaustivo de features invitado/admin/plataforma con estado ✅/⚠️/❌. |
 | `FASE_C_MULTI_OCASION.md` | Diseño detallado de la abstracción multi-ocasión (honorees, EventType). |
