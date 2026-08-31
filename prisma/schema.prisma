@@ -89,9 +89,33 @@ model Guest {
   updatedAt   DateTime  @updatedAt
 
   companions  Companion[]
+  attendees   Attendee[]                     // las personas de esta invitación
 
   @@unique([eventId, code])                  // código único dentro del evento
   @@map("guests")
+}
+
+// ─── ASISTENTES ───────────────────────────────────────────────────────────────
+// Una fila por PERSONA. `Guest` modela el hogar/invitación (quien abre un mismo
+// enlace); `Attendee` modela a cada individuo dentro de ella, titular incluido.
+//
+// Es el cimiento de mesas, menú por persona y check-in: un acompañante necesita
+// su propia silla, su propio plato y su propio código. Ver
+// INVESTIGACION_SISTEMA_COMPLETO_2026.md §1.
+model Attendee {
+  id          String    @id @default(cuid())
+  guestId     String
+  guest       Guest     @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  name        String
+  isPrimary   Boolean   @default(false)      // el titular de la invitación
+  confirmed   Boolean   @default(false)
+  confirmedAt DateTime?
+  rsvpAnswers Json?                          // respuestas propias (menú individual)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([guestId])
+  @@map("attendees")
 }
 
 model Companion {
