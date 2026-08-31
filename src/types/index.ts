@@ -352,6 +352,9 @@ export interface Attendee {
   confirmed: boolean;
   confirmedAt?: Date | null;
   rsvpAnswers?: RsvpAnswers | null;
+  /** Mesa asignada. La asignación cuelga de la persona: ver ARQUITECTURA_MESAS.md §2. */
+  tableId?: string | null;
+  seatIndex?: number | null;
 }
 
 export interface Companion {

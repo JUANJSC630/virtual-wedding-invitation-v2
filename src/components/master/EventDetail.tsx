@@ -1,14 +1,17 @@
-import { ArrowLeft, BarChart3, Edit2, MonitorSmartphone, Settings, Users2 } from "lucide-react";
+import { ArrowLeft, BarChart3, Edit2, LayoutGrid, MonitorSmartphone, Settings, Users2 } from "lucide-react";
 
 import { getHonoreesNames } from "@/lib/honorees";
 import { EventWithStats } from "@/types";
 
 import { sanitizeQuestions } from "@/lib/rsvpQuestions";
 
+import { useAllGuests } from "@/hooks/useGuests";
+
 import { GuestScopeContext } from "@/context/GuestScopeContext";
 
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import GuestManager from "@/components/admin/GuestManager";
+import { SeatingManager } from "@/components/master/SeatingManager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,6 +28,15 @@ interface Props {
  * que el admin cliente, pero para cualquier evento. Reusa GuestManager y
  * AnalyticsDashboard apuntándolos a /api/master/events/:id vía GuestScopeContext.
  */
+/**
+ * Vive dentro del GuestScopeContext del evento, así que `useAllGuests` ya
+ * apunta a él y las mesas comparten la misma lista que la pestaña de invitados.
+ */
+function SeatingTab() {
+  const { data: guests = [] } = useAllGuests();
+  return <SeatingManager guests={guests} />;
+}
+
 export function EventDetail({ event, onBack, onEdit, onManageAdmins }: Props) {
   const base = `/api/master/events/${event.id}`;
   const title = getHonoreesNames(event) || event.slug;
@@ -72,6 +84,9 @@ export function EventDetail({ event, onBack, onEdit, onManageAdmins }: Props) {
             <TabsTrigger value="guests" className="gap-2">
               <Users2 className="h-4 w-4" /> Invitados
             </TabsTrigger>
+            <TabsTrigger value="tables" className="gap-2">
+              <LayoutGrid className="h-4 w-4" /> Mesas
+            </TabsTrigger>
             <TabsTrigger value="analytics" className="gap-2">
               <BarChart3 className="h-4 w-4" /> Analítica
             </TabsTrigger>
@@ -82,6 +97,9 @@ export function EventDetail({ event, onBack, onEdit, onManageAdmins }: Props) {
               eventId={event.id}
               rsvpQuestions={sanitizeQuestions(event.config?.rsvpQuestions)}
             />
+          </TabsContent>
+          <TabsContent value="tables" className="pt-4">
+            <SeatingTab />
           </TabsContent>
           <TabsContent value="analytics" className="pt-4">
             <AnalyticsDashboard />
