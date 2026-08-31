@@ -1,4 +1,6 @@
-import { ChevronDown, ChevronUp, Trash2, UserMinus } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { Trash2, UserMinus } from "lucide-react";
 
 import { SeatingPerson } from "@/lib/seating";
 import { TableWithPeople } from "@/services/seating-service";
@@ -43,6 +45,43 @@ export const SeatingList: React.FC<Props> = ({
   onDeleteTable,
   busy,
 }) => {
+  /**
+   * Borrador local del nombre y la capacidad. Sin esto, cada tecla lanzaba un
+   * PATCH: escribir "Mesa de los novios" eran 18 peticiones. Se guarda al salir
+   * del campo o al pulsar Enter.
+   */
+  const [borrador, setBorrador] = useState<Record<string, { name: string; capacity: number }>>({});
+
+  // Si el dato cambia por fuera (otra pestaña, o el reparto), el borrador se descarta.
+  useEffect(() => {
+    setBorrador(prev => {
+      const siguiente = { ...prev };
+      for (const t of tables) {
+        const b = siguiente[t.id];
+        if (b && b.name === t.name && b.capacity === t.capacity) delete siguiente[t.id];
+      }
+      return siguiente;
+    });
+  }, [tables]);
+
+  const valorDe = (t: TableWithPeople) => borrador[t.id] ?? { name: t.name, capacity: t.capacity };
+
+  const editar = (t: TableWithPeople, patch: Partial<{ name: string; capacity: number }>) =>
+    setBorrador(prev => ({ ...prev, [t.id]: { ...valorDe(t), ...patch } }));
+
+  const confirmar = (t: TableWithPeople) => {
+    const b = borrador[t.id];
+    if (!b) return;
+    const cambios: { name?: string; capacity?: number } = {};
+    const nombre = b.name.trim();
+    if (nombre && nombre !== t.name) cambios.name = nombre;
+    if (b.capacity !== t.capacity) cambios.capacity = b.capacity;
+    if (Object.keys(cambios).length > 0) onUpdateTable(t.id, cambios);
+    setBorrador(prev => {
+      const { [t.id]: _descartado, ...resto } = prev;
+      return resto;
+    });
+  };
   const confirmados = people.filter(p => p.confirmed);
   const sinMesa = confirmados.filter(p => !p.tableId);
   const pendientes = people.filter(p => !p.confirmed);
@@ -152,8 +191,10 @@ export const SeatingList: React.FC<Props> = ({
                 <div key={table.id} className="rounded-lg border bg-card p-3">
                   <div className="flex items-start gap-2">
                     <Input
-                      value={table.name}
-                      onChange={e => onUpdateTable(table.id, { name: e.target.value })}
+                      value={valorDe(table).name}
+                      onChange={e => editar(table, { name: e.target.value })}
+                      onBlur={() => confirmar(table)}
+                      onKeyDown={e => e.key === "Enter" && e.currentTarget.blur()}
                       className="!h-11 flex-1 font-medium sm:!h-9"
                       aria-label="Nombre de la mesa"
                     />
@@ -163,10 +204,10 @@ export const SeatingList: React.FC<Props> = ({
                         type="number"
                         min={1}
                         max={50}
-                        value={table.capacity}
-                        onChange={e =>
-                          onUpdateTable(table.id, { capacity: Number(e.target.value) || 1 })
-                        }
+                        value={valorDe(table).capacity}
+                        onChange={e => editar(table, { capacity: Number(e.target.value) || 1 })}
+                        onBlur={() => confirmar(table)}
+                        onKeyDown={e => e.key === "Enter" && e.currentTarget.blur()}
                         className="!h-11 w-20 sm:!h-9"
                       />
                     </label>
@@ -226,5 +267,3 @@ export const SeatingList: React.FC<Props> = ({
   );
 };
 
-/** Iconos reexportados para que el contenedor no tenga que importarlos aparte. */
-export { ChevronDown, ChevronUp };

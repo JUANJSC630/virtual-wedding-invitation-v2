@@ -100,18 +100,16 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
     );
   };
 
+  /**
+   * El nombre y la posición los pone el servidor. Derivarlos aquí de
+   * `tables.length` provocaba dos "Mesa 2" superpuestas al crear dos seguidas
+   * antes de que la lista se refrescara.
+   */
   const handleCreateTable = () =>
     createTable.mutate(
+      { capacity: 8, shape: "round" },
       {
-        name: `Mesa ${tables.length + 1}`,
-        capacity: 8,
-        shape: "round",
-        // Se reparten en rejilla para que no nazcan una encima de otra.
-        x: 160 + (tables.length % 4) * 220,
-        y: 150 + Math.floor(tables.length / 4) * 200,
-      },
-      {
-        onSuccess: () => toast.success("Mesa creada"),
+        onSuccess: t => toast.success(`${t.name} creada`),
         onError: (e: Error) => toast.error(e.message),
       }
     );

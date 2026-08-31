@@ -680,7 +680,7 @@ masterRoutes.get("/events/:id/analytics", async (req, res) => {
 // ella. Ver ARQUITECTURA_MESAS.md §2.
 
 const tableSchema = z.object({
-  name: z.string().min(1).max(60),
+  name: z.string().min(1).max(60).optional(),
   shape: z.enum(["round", "rect"]).default("round"),
   capacity: z.coerce.number().int().min(1).max(50).default(8),
   x: z.coerce.number().default(0),
@@ -708,16 +708,74 @@ masterRoutes.get("/events/:id/tables", async (req, res) => {
   }
 });
 
+/**
+ * Nombre y posición por defecto se calculan AQUÍ, no en el cliente.
+ *
+ * El cliente los derivaba de `tables.length`, y eso se rompe de dos formas: dos
+ * creaciones seguidas antes de que su lista se refresque calculan lo mismo (dos
+ * "Mesa 2" superpuestas), y borrar una mesa intermedia descuadra el contador
+ * respecto al número más alto. Dentro de la petición no hay carrera posible.
+ */
+function siguienteNombre(existentes) {
+  const numeros = existentes
+    .map(t => /^Mesa\s+(\d+)$/i.exec(t.name.trim())?.[1])
+    .filter(Boolean)
+    .map(Number);
+  return `Mesa ${numeros.length > 0 ? Math.max(...numeros) + 1 : existentes.length + 1}`;
+}
+
+/** Primer hueco de la rejilla que no pise a ninguna mesa existente. */
+function siguientePosicion(existentes) {
+  const SEPARACION = 100;
+  for (let fila = 0; fila < 12; fila++) {
+    for (let col = 0; col < 5; col++) {
+      const x = 200 + col * 280;
+      const y = 180 + fila * 240;
+      const libre = existentes.every(
+        t => Math.hypot((t.x || 0) - x, (t.y || 0) - y) >= SEPARACION
+      );
+      if (libre) return { x, y };
+    }
+  }
+  return { x: 200, y: 180 };
+}
+
 masterRoutes.post("/events/:id/tables", async (req, res) => {
   const parsed = tableSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" });
   }
   try {
-    const table = await prisma.table.create({
-      data: { ...parsed.data, eventId: req.params.id },
-      include: { attendees: { select: { id: true, name: true, isPrimary: true, guestId: true } } },
+    const eventId = req.params.id;
+
+    // Leer-y-escribir dentro de UNA transacción con cerrojo por evento. Sin él,
+    // dos creaciones simultáneas leen la misma lista y nacen las dos como
+    // "Mesa 2" en la misma posición: mover el cálculo al servidor no bastaba,
+    // la carrera estaba en la base. El cerrojo es por evento, así que dos bodas
+    // distintas no se estorban, y se libera solo al cerrar la transacción.
+    const table = await prisma.$transaction(async tx => {
+      // El cast a text es necesario: la función devuelve `void` y Prisma no
+      // sabe deserializar esa columna.
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${eventId}))::text`;
+
+      const existentes = await tx.table.findMany({
+        where: { eventId },
+        select: { name: true, x: true, y: true },
+      });
+      const hueco = siguientePosicion(existentes);
+
+      return tx.table.create({
+        data: {
+          ...parsed.data,
+          name: parsed.data.name ?? siguienteNombre(existentes),
+          x: parsed.data.x || hueco.x,
+          y: parsed.data.y || hueco.y,
+          eventId,
+        },
+        include: { attendees: { select: { id: true, name: true, isPrimary: true, guestId: true } } },
+      });
     });
+
     res.status(201).json(table);
   } catch (error) {
     console.error("Error creating table:", error);
@@ -782,6 +840,39 @@ masterRoutes.put("/events/:id/seating", async (req, res) => {
       .filter(([attendeeId, tableId]) =>
         personasValidas.has(attendeeId) && (tableId === null || mesasValidas.has(tableId))
       );
+
+    // La capacidad se valida AQUÍ, no solo en la interfaz: el cliente podría
+    // llegar con una lista desfasada o con un reparto calculado a mano.
+    const mesasConCupo = await prisma.table.findMany({
+      where: { eventId },
+      select: { id: true, name: true, capacity: true, _count: { select: { attendees: true } } },
+    });
+    const ocupacion = new Map(mesasConCupo.map(t => [t.id, t._count.attendees]));
+
+    // Quien cambia de mesa libera su sitio anterior antes de contar.
+    const previas = await prisma.attendee.findMany({
+      where: { id: { in: cambios.map(([id]) => id) } },
+      select: { id: true, tableId: true },
+    });
+    for (const p of previas) {
+      if (p.tableId && ocupacion.has(p.tableId)) {
+        ocupacion.set(p.tableId, (ocupacion.get(p.tableId) ?? 1) - 1);
+      }
+    }
+    for (const [, tableId] of cambios) {
+      if (tableId) ocupacion.set(tableId, (ocupacion.get(tableId) ?? 0) + 1);
+    }
+
+    const desbordadas = mesasConCupo.filter(t => (ocupacion.get(t.id) ?? 0) > t.capacity);
+    if (desbordadas.length > 0) {
+      const detalle = desbordadas
+        .map(t => `${t.name} (${ocupacion.get(t.id)} de ${t.capacity})`)
+        .join(", ");
+      return res.status(400).json({
+        error: `No caben: ${detalle}. Amplía la capacidad o usa otra mesa.`,
+        overflow: desbordadas.map(t => t.id),
+      });
+    }
 
     await prisma.$transaction(
       cambios.map(([attendeeId, tableId]) =>
