@@ -31,17 +31,26 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
 
   if (questions.length === 0) return null;
 
-  const answered = guests.filter(g => g.rsvpAnswers && Object.keys(g.rsvpAnswers).length > 0);
-  const allAnswers = answered.map(g => g.rsvpAnswers as RsvpAnswers);
+  /**
+   * Se cuenta por PERSONA, no por invitación: en una boda cada comensal elige su
+   * plato. Si un evento antiguo aún no tiene asistentes, se cae al invitado.
+   */
+  const personas = guests.flatMap(g =>
+    g.attendees?.length
+      ? g.attendees.map(a => ({ name: a.name, answers: a.rsvpAnswers }))
+      : [{ name: g.name, answers: g.rsvpAnswers }]
+  );
+  const answered = personas.filter(p => p.answers && Object.keys(p.answers).length > 0);
+  const allAnswers = answered.map(p => p.answers as RsvpAnswers);
 
   /** Resumen agregado: lo que se le manda al catering, no la lista completa. */
   const exportSummary = () => {
     const rows: unknown[][] = [["Pregunta", "Respuesta", "Cantidad"]];
     for (const q of questions) {
       if (q.type === "text") {
-        for (const g of answered) {
-          const value = (g.rsvpAnswers as RsvpAnswers)[q.id];
-          if (typeof value === "string" && value) rows.push([q.label, value, g.name]);
+        for (const p of answered) {
+          const value = (p.answers as RsvpAnswers)[q.id];
+          if (typeof value === "string" && value) rows.push([q.label, value, p.name]);
         }
         continue;
       }
@@ -62,7 +71,7 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
         <span className="min-w-0 flex-1">
           <span className="block font-medium">Respuestas del RSVP</span>
           <span className="block text-sm text-muted-foreground">
-            {answered.length} de {guests.length} invitados respondieron
+              {answered.length} de {personas.length} personas respondieron
           </span>
         </span>
       </button>
@@ -83,7 +92,7 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
           {questions.map(q => {
             if (q.type === "text") {
               const respuestas = answered
-                .map(g => ({ name: g.name, value: (g.rsvpAnswers as RsvpAnswers)[q.id] }))
+                .map(p => ({ name: p.name, value: (p.answers as RsvpAnswers)[q.id] }))
                 .filter(r => typeof r.value === "string" && r.value);
               return (
                 <div key={q.id} className="space-y-1">
@@ -92,8 +101,8 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
                     <p className="text-sm text-muted-foreground">Sin respuestas todavía.</p>
                   ) : (
                     <ul className="max-h-40 space-y-1 overflow-y-auto text-sm">
-                      {respuestas.map(r => (
-                        <li key={r.name} className="text-muted-foreground">
+                      {respuestas.map((r, i) => (
+                        <li key={`${r.name}-${i}`} className="text-muted-foreground">
                           <span className="text-foreground">{r.value as string}</span>
                           <span className="opacity-60"> — {r.name}</span>
                         </li>

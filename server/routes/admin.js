@@ -43,7 +43,10 @@ adminRoutes.get("/guests", async (req, res) => {
     const [guests, accessCounts] = await Promise.all([
       prisma.guest.findMany({
         where: eventFilter(req.user),
-        include: { companions: true },
+        include: {
+        companions: true,
+        attendees: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+      },
         orderBy: { createdAt: "desc" },
       }),
       prisma.guestAccess.groupBy({
@@ -102,7 +105,10 @@ adminRoutes.post("/guests", async (req, res) => {
         phone: phone || undefined,
         maxGuests,
       },
-      include: { companions: true },
+      include: {
+        companions: true,
+        attendees: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+      },
     });
 
     await syncPrimaryAttendee(guest);
@@ -135,7 +141,10 @@ adminRoutes.patch("/guests/:id", async (req, res) => {
         ...confirmationFields(confirmed),
         notes: notes !== undefined ? notes : undefined,
       },
-      include: { companions: true },
+      include: {
+        companions: true,
+        attendees: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+      },
     });
 
     await syncPrimaryAttendee(guest);
@@ -318,7 +327,10 @@ adminRoutes.get("/analytics", async (req, res) => {
 
     const accessedButNotConfirmed = await prisma.guest.findMany({
       where: { ...filter, confirmed: false, code: { in: [...accessedCodesSet] } },
-      include: { companions: true },
+      include: {
+        companions: true,
+        attendees: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+      },
     });
 
     const allGuests = await prisma.guest.findMany({

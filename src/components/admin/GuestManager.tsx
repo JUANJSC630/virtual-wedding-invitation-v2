@@ -173,26 +173,44 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQue
     // el organizador le pasa al catering sin tener que cruzar dos archivos.
     const rows = [
       [
-        "Código", "Nombre", "Email", "Teléfono", "Cupos", "Confirmado",
-        "Fecha confirmación", "Acompañantes confirmados", "Acompañantes total", "Notas",
+        "Código", "Persona", "Rol", "Email", "Teléfono",
+        "Confirmado", "Fecha confirmación", "Notas",
         ...rsvpQuestions.map(q => q.label),
       ],
-      ...guests.map(g => [
-        g.code,
-        g.name,
-        g.email ?? "",
-        g.phone ?? "",
-        String(g.maxGuests),
-        g.confirmed ? "Sí" : "No",
-        g.confirmedAt ? new Date(g.confirmedAt).toLocaleDateString("es-CO") : "",
-        String(g.companions.filter(c => c.confirmed).length),
-        String(g.companions.length),
-        g.notes ?? "",
-        ...rsvpQuestions.map(q => {
-          const a = g.rsvpAnswers?.[q.id];
-          return Array.isArray(a) ? a.join("; ") : (a ?? "");
-        }),
-      ]),
+      // Una fila por PERSONA: el catering necesita un plato por comensal, no por
+      // invitación. Sin asistentes (eventos antiguos) se cae al invitado.
+      ...guests.flatMap(g => {
+        const personas = g.attendees?.length
+          ? g.attendees.map(a => ({
+              nombre: a.name,
+              esTitular: a.isPrimary,
+              confirmed: a.confirmed,
+              confirmedAt: a.confirmedAt,
+              answers: a.rsvpAnswers,
+            }))
+          : [{
+              nombre: g.name,
+              esTitular: true,
+              confirmed: g.confirmed,
+              confirmedAt: g.confirmedAt,
+              answers: g.rsvpAnswers,
+            }];
+
+        return personas.map(p => [
+          g.code,
+          p.nombre,
+          p.esTitular ? "Titular" : "Acompañante",
+          p.esTitular ? (g.email ?? "") : "",
+          p.esTitular ? (g.phone ?? "") : "",
+          p.confirmed ? "Sí" : "No",
+          p.confirmedAt ? new Date(p.confirmedAt).toLocaleDateString("es-CO") : "",
+          p.esTitular ? (g.notes ?? "") : "",
+          ...rsvpQuestions.map(q => {
+            const a = p.answers?.[q.id];
+            return Array.isArray(a) ? a.join("; ") : (a ?? "");
+          }),
+        ]);
+      }),
     ];
     downloadCsv(`invitados-${new Date().toISOString().slice(0, 10)}.csv`, rows);
     toast.success(`${guests.length} invitados exportados a CSV`);

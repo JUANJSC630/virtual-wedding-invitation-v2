@@ -332,7 +332,24 @@ export interface Guest {
   createdAt: Date;
   updatedAt: Date;
   companions: Companion[];
+  /** Las personas de esta invitación. Ausente en payloads antiguos. */
+  attendees?: Attendee[];
   accessCount?: number;
+}
+
+/**
+ * Una PERSONA de la invitación (titular incluido, vía `isPrimary`).
+ * `Guest` modela el hogar; `Attendee`, a cada individuo — es lo que permite
+ * menú, silla y código propios. Ver ESTADO_Y_ROADMAP_2026.md §4quater.
+ */
+export interface Attendee {
+  id: string;
+  guestId: string;
+  name: string;
+  isPrimary: boolean;
+  confirmed: boolean;
+  confirmedAt?: Date | null;
+  rsvpAnswers?: RsvpAnswers | null;
 }
 
 export interface Companion {

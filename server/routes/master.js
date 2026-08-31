@@ -439,7 +439,10 @@ masterRoutes.get("/events/:id/guests", async (req, res) => {
     const [guests, accessCounts] = await Promise.all([
       prisma.guest.findMany({
         where: { eventId },
-        include: { companions: true },
+        include: {
+        companions: true,
+        attendees: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+      },
         orderBy: { createdAt: "desc" },
       }),
       prisma.guestAccess.groupBy({
@@ -483,7 +486,10 @@ masterRoutes.post("/events/:id/guests", async (req, res) => {
 
     const guest = await prisma.guest.create({
       data: { eventId, code: code.toUpperCase(), name, email: email || undefined, phone: phone || undefined, maxGuests },
-      include: { companions: true },
+      include: {
+        companions: true,
+        attendees: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+      },
     });
     await syncPrimaryAttendee(guest);
     return res.status(201).json(guest);
@@ -508,7 +514,10 @@ masterRoutes.patch("/events/:id/guests/:guestId", async (req, res) => {
         ...confirmationFields(confirmed),
         notes: notes !== undefined ? notes : undefined,
       },
-      include: { companions: true },
+      include: {
+        companions: true,
+        attendees: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+      },
     });
     await syncPrimaryAttendee(guest);
     res.json(guest);
@@ -622,7 +631,10 @@ masterRoutes.get("/events/:id/analytics", async (req, res) => {
     const accessedCodesSet = new Set(accessedCodes.map(a => a.guestCode));
     const accessedButNotConfirmed = await prisma.guest.findMany({
       where: { ...filter, confirmed: false, code: { in: [...accessedCodesSet] } },
-      include: { companions: true },
+      include: {
+        companions: true,
+        attendees: { orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }] },
+      },
     });
     const allGuests = await prisma.guest.findMany({
       where: filter, select: { code: true, name: true, createdAt: true },
