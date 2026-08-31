@@ -243,17 +243,18 @@ vez de distinguir titular de acompañante en cada consulta y cada pantalla.
 
 ### Estado actual de la transición
 - ✅ Tabla creada y rellenada: **178 asistentes** (94 titulares + 84 acompañantes).
-- ✅ Los 7 caminos de escritura la mantienen al día (crear/editar invitado, alta,
-  confirmación y baja de acompañante, RSVP público, import CSV).
-- ⏳ **Las lecturas siguen yendo a `Companion`.** La app no ha cambiado de
-  comportamiento; `Attendee` es todavía un espejo.
+- ✅ Los 7 caminos de escritura la mantienen al día.
+- ✅ **Menú por persona funcionando** (`a96d546`, `<pendiente>`): cada asistente
+  guarda sus propias respuestas, el formulario público pregunta a cada uno, el
+  panel cuenta por persona y el CSV saca una fila por comensal.
+- ⏳ Las lecturas de acompañantes siguen yendo a `Companion`; `Attendee` convive
+  con él mediante el puente `companionId`.
 
 ### Lo que falta para completarla
-1. Cambiar las lecturas: derivar `companions` de `Attendee` en las respuestas de
-   la API para no romper el contrato del frontend.
+1. Derivar `companions` de `Attendee` en las respuestas de la API, para poder
+   retirar la tabla sin romper el contrato del frontend.
 2. Retirar `Companion` y el campo puente `Attendee.companionId`.
-3. Mover `rsvpAnswers` del `Guest` al `Attendee` → **menú por persona**, que es
-   lo que hoy impide usar el RSVP para catering individual.
+3. Dar a cada persona su propio código/QR → check-in en la puerta.
 
 ### Detalles que conviene no olvidar
 - `Attendee.companionId` lleva `@@index` y **no** `@unique`: añadir una
