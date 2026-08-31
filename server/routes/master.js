@@ -394,10 +394,13 @@ masterRoutes.post("/events/:id/unarchive", async (req, res) => {
 masterRoutes.delete("/events/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    // Delete related records first (no onDelete: Cascade on Event relations)
-    // Companion already cascades from Guest, so deleting guests covers it.
+    // Las relaciones de Event no tienen onDelete: Cascade, así que se borran a
+    // mano y EN ORDEN. Companion y Attendee sí caen en cascada desde Guest.
+    // Las mesas van ANTES que los invitados: si no, sus Attendee seguirían
+    // apuntando a mesas ya borradas.
     await prisma.$transaction([
       prisma.guestAccess.deleteMany({ where: { eventId: id } }),
+      prisma.table.deleteMany({ where: { eventId: id } }),
       prisma.guest.deleteMany({ where: { eventId: id } }),
       prisma.clientAdmin.deleteMany({ where: { eventId: id } }),
       prisma.event.delete({ where: { id } }),
