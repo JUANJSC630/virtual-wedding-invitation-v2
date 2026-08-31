@@ -344,9 +344,11 @@ export interface Guest {
  */
 export interface Attendee {
   id: string;
-  guestId: string;
+  guestId?: string;
   name: string;
   isPrimary: boolean;
+  /** Acompañante del que procede; ausente en el titular. Puente temporal. */
+  companionId?: string | null;
   confirmed: boolean;
   confirmedAt?: Date | null;
   rsvpAnswers?: RsvpAnswers | null;

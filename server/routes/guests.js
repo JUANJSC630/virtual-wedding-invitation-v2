@@ -39,7 +39,7 @@ const GUEST_PUBLIC_SELECT = {
   // Las personas de la invitación: el formulario pregunta a cada una por separado.
   attendees: {
     select: {
-      id: true, name: true, isPrimary: true,
+      id: true, name: true, isPrimary: true, companionId: true,
       confirmed: true, confirmedAt: true, rsvpAnswers: true,
     },
     orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],

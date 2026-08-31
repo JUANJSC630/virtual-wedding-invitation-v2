@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { useGuestContext } from "@/context/GuestContext";
 import { useEventContext } from "@/context/EventContext";
-import { Guest } from "@/types";
+import { Attendee, Guest } from "@/types";
 import {
   RsvpAnswers,
   missingRequired,
@@ -42,10 +42,19 @@ const RSVPForm = () => {
   // Preguntas personalizadas del evento. Se siembran con lo ya respondido para
   // que "Modificar respuesta" no obligue a rellenarlo todo de nuevo.
   const questions = sanitizeQuestions(event?.config?.rsvpQuestions);
-  const [answers, setAnswers] = useState<RsvpAnswers>(
-    () => (guest?.rsvpAnswers ?? {}) as RsvpAnswers
+  // Las personas de la invitación. Cada una responde lo suyo (su menú, sus
+  // alergias). Si el evento aún no tiene asistentes, se cae al invitado solo.
+  const attendees: Attendee[] =
+    guest?.attendees?.length
+      ? guest.attendees
+      : guest
+        ? [{ id: guest.id, name: guest.name, isPrimary: true, confirmed: guest.confirmed }]
+        : [];
+
+  const [answersByAttendee, setAnswersByAttendee] = useState<Record<string, RsvpAnswers>>(() =>
+    Object.fromEntries(attendees.map(a => [a.id, (a.rsvpAnswers ?? {}) as RsvpAnswers]))
   );
-  const [missing, setMissing] = useState<string[]>([]);
+  const [missingByAttendee, setMissingByAttendee] = useState<Record<string, string[]>>({});
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(alreadyConfirmed || alreadyDeclined);
@@ -53,19 +62,38 @@ const RSVPForm = () => {
 
   const companions = guest?.companions ?? [];
 
+  /** Personas que van a asistir según lo marcado ahora mismo. */
+  const asistentesActivos = attendees.filter(a =>
+    a.isPrimary ? attending === true : companionMap[a.companionId ?? ""] ?? false
+  );
+
+  const setAnswer = (attendeeId: string, questionId: string, value: RsvpAnswers[string]) =>
+    setAnswersByAttendee(prev => ({
+      ...prev,
+      [attendeeId]: { ...(prev[attendeeId] ?? {}), [questionId]: value },
+    }));
+
   const handleSubmit = async () => {
     if (attending === null || !code) return;
 
     // Solo se piden al asistir; al declinar el backend las limpia.
-    if (attending) {
-      const faltan = missingRequired(questions, answers);
-      setMissing(faltan);
-      if (faltan.length > 0) {
-        setError("Responde las preguntas obligatorias antes de confirmar.");
+    if (attending && questions.length > 0) {
+      const faltan: Record<string, string[]> = {};
+      for (const a of asistentesActivos) {
+        const suyas = missingRequired(questions, answersByAttendee[a.id] ?? {});
+        if (suyas.length > 0) faltan[a.id] = suyas;
+      }
+      setMissingByAttendee(faltan);
+      if (Object.keys(faltan).length > 0) {
+        const nombres = asistentesActivos
+          .filter(a => faltan[a.id])
+          .map(a => a.name)
+          .join(", ");
+        setError(`Faltan respuestas obligatorias de: ${nombres}`);
         return;
       }
     }
-    setMissing([]);
+    setMissingByAttendee({});
     setLoading(true);
     setError(null);
     try {
@@ -82,7 +110,15 @@ const RSVPForm = () => {
           confirmed: attending,
           companions: companionsPayload,
           eventSlug,
-          ...(attending ? { answers } : {}),
+          ...(attending
+            ? {
+                // El titular también viaja en `answers` por compatibilidad.
+                answers: answersByAttendee[attendees.find(a => a.isPrimary)?.id ?? ""] ?? {},
+                attendeeAnswers: Object.fromEntries(
+                  asistentesActivos.map(a => [a.id, answersByAttendee[a.id] ?? {}])
+                ),
+              }
+            : {}),
         }),
       });
 
@@ -192,79 +228,94 @@ const RSVPForm = () => {
         )}
       </AnimatePresence>
 
-      {/* Preguntas personalizadas (solo al asistir) */}
+      {/* Preguntas personalizadas: un bloque por persona que asiste */}
       <AnimatePresence>
-        {attending === true && questions.length > 0 && (
+        {attending === true && questions.length > 0 && asistentesActivos.length > 0 && (
           <motion.div
-            className="flex flex-col gap-4 w-full"
+            className="flex flex-col gap-6 w-full"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.35 }}
           >
-            {questions.map(q => {
-              const falta = missing.includes(q.id);
-              const value = answers[q.id];
+            {asistentesActivos.map(persona => {
+              const suyas = answersByAttendee[persona.id] ?? {};
+              const faltanSuyas = missingByAttendee[persona.id] ?? [];
               return (
-                <div key={q.id} className="flex flex-col gap-2 w-full">
-                  <p className="text-sm font-serif text-[var(--color-primary)] font-semibold">
-                    {q.label}
-                    {q.required && <span className="text-[var(--color-accent)]"> *</span>}
-                  </p>
-                  {q.help && (
-                    <p className="text-xs font-serif text-[var(--color-text)] opacity-70">{q.help}</p>
+                <div key={persona.id} className="flex w-full flex-col gap-3">
+                  {/* El nombre solo hace falta si hay más de una persona */}
+                  {asistentesActivos.length > 1 && (
+                    <p className="border-b border-[var(--color-accent)]/30 pb-1 font-serif text-base font-semibold text-[var(--color-accent)]">
+                      {persona.name}
+                    </p>
                   )}
 
-                  {q.type === "text" ? (
-                    <input
-                      type="text"
-                      value={typeof value === "string" ? value : ""}
-                      onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                      className={`min-h-12 w-full rounded-xl border bg-white/40 px-4 py-2 font-serif text-base text-[var(--color-primary)] ${
-                        falta ? "border-red-400" : "border-[var(--color-accent)]/30"
-                      }`}
-                      placeholder="Tu respuesta"
-                    />
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      {q.options.map(opt => {
-                        const checked =
-                          q.type === "single"
-                            ? value === opt
-                            : Array.isArray(value) && value.includes(opt);
-                        return (
-                          <label
-                            key={opt}
-                            className={`flex min-h-12 touch-manipulation items-center gap-3 cursor-pointer px-4 py-2 rounded-xl border bg-white/30 ${
+                  {questions.map(q => {
+                    const falta = faltanSuyas.includes(q.id);
+                    const value = suyas[q.id];
+                    return (
+                      <div key={q.id} className="flex w-full flex-col gap-2">
+                        <p className="font-serif text-sm font-semibold text-[var(--color-primary)]">
+                          {q.label}
+                          {q.required && <span className="text-[var(--color-accent)]"> *</span>}
+                        </p>
+                        {q.help && (
+                          <p className="font-serif text-xs text-[var(--color-text)] opacity-70">{q.help}</p>
+                        )}
+
+                        {q.type === "text" ? (
+                          <input
+                            type="text"
+                            value={typeof value === "string" ? value : ""}
+                            onChange={e => setAnswer(persona.id, q.id, e.target.value)}
+                            className={`min-h-12 w-full rounded-xl border bg-white/40 px-4 py-2 font-serif text-base text-[var(--color-primary)] ${
                               falta ? "border-red-400" : "border-[var(--color-accent)]/30"
                             }`}
-                          >
-                            <input
-                              type={q.type === "single" ? "radio" : "checkbox"}
-                              name={q.id}
-                              className="w-5 h-5 shrink-0 accent-[var(--color-action)]"
-                              checked={checked}
-                              onChange={() =>
-                                setAnswers(prev => {
-                                  if (q.type === "single") return { ...prev, [q.id]: opt };
-                                  const current = Array.isArray(prev[q.id])
-                                    ? (prev[q.id] as string[])
-                                    : [];
-                                  return {
-                                    ...prev,
-                                    [q.id]: current.includes(opt)
-                                      ? current.filter(o => o !== opt)
-                                      : [...current, opt],
-                                  };
-                                })
-                              }
-                            />
-                            <span className="font-serif text-[var(--color-primary)]">{opt}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
+                            placeholder="Tu respuesta"
+                          />
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            {q.options.map(opt => {
+                              const checked =
+                                q.type === "single"
+                                  ? value === opt
+                                  : Array.isArray(value) && value.includes(opt);
+                              return (
+                                <label
+                                  key={opt}
+                                  className={`flex min-h-12 touch-manipulation cursor-pointer items-center gap-3 rounded-xl border bg-white/30 px-4 py-2 ${
+                                    falta ? "border-red-400" : "border-[var(--color-accent)]/30"
+                                  }`}
+                                >
+                                  <input
+                                    type={q.type === "single" ? "radio" : "checkbox"}
+                                    name={`${persona.id}-${q.id}`}
+                                    className="h-5 w-5 shrink-0 accent-[var(--color-action)]"
+                                    checked={checked}
+                                    onChange={() => {
+                                      if (q.type === "single") {
+                                        setAnswer(persona.id, q.id, opt);
+                                        return;
+                                      }
+                                      const actuales = Array.isArray(value) ? value : [];
+                                      setAnswer(
+                                        persona.id,
+                                        q.id,
+                                        actuales.includes(opt)
+                                          ? actuales.filter(o => o !== opt)
+                                          : [...actuales, opt]
+                                      );
+                                    }}
+                                  />
+                                  <span className="font-serif text-[var(--color-primary)]">{opt}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
