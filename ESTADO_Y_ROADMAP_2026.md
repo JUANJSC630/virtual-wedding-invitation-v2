@@ -16,6 +16,7 @@
 - **Fase C (multi-ocasión):** ✅ núcleo completo — la plataforma soporta boda/XV/bautizo/comunión/cumpleaños/corporativo. Ver §3.
 - **Panel maestro rediseñado:** ✅ ventana dedicada por evento con gestión completa (CRUD invitados + analítica) + dashboard principal simplificado a hub de eventos. Ver §4.
 - **RSVP con preguntas personalizadas (30 ago):** ✅ la demanda #1 del mercado, entregada de punta a punta. Ver §4ter.
+- **Cimiento de asistentes (31 ago):** ✅ tabla `Attendee` con 178 personas y escrituras sincronizadas. Desbloquea mesas, menú por persona y check-in. Ver §4quater.
 - **Saneamiento (30 ago):** ✅ dos bugs de pérdida de datos corregidos, lint extendido al frontend, código muerto fuera, dos N+1 eliminados (uno superaba el timeout de Vercel). Ver §4bis.
 - **Herramientas de diseño de Claude Code:** instaladas globalmente (frontend-design, ui-ux-pro-max, taste-skill, Playwright MCP, shadcn MCP). Ver §5.
 - **Siguiente prioridad recomendada:** ver §6.
@@ -222,6 +223,49 @@ respuesta de texto atribuida. Antes del cambio de schema se hizo respaldo de los
 - **Export CSV de respuestas** para pasárselo al catering en un archivo.
 - Las preguntas **no distinguen entre invitado y acompañantes**: se responden una
   vez por invitación. Para menús por persona haría falta llevarlas a `Companion`.
+
+---
+
+## 4quater. Cimiento de asistentes ✅ — 31 de agosto de 2026
+
+Commits `eb6b5a5` (tabla + relleno) y `33d615c` (sincronización de escrituras).
+Es el cimiento que `INVESTIGACION_SISTEMA_COMPLETO_2026.md` §1 señala como
+prerrequisito de mesas, menú por persona y check-in.
+
+### El cambio
+`Guest` pasa a modelar el **hogar** (quien abre un mismo enlace: código,
+contacto, cupos) y `Attendee` la **persona**, con el titular marcado por
+`isPrimary`. Antes un acompañante era solo `{name, confirmed}` y no podía tener
+silla propia, plato propio ni código propio.
+
+Aguas abajo esto significa que mesas y check-in referencian **un único tipo** en
+vez de distinguir titular de acompañante en cada consulta y cada pantalla.
+
+### Estado actual de la transición
+- ✅ Tabla creada y rellenada: **178 asistentes** (94 titulares + 84 acompañantes).
+- ✅ Los 7 caminos de escritura la mantienen al día (crear/editar invitado, alta,
+  confirmación y baja de acompañante, RSVP público, import CSV).
+- ⏳ **Las lecturas siguen yendo a `Companion`.** La app no ha cambiado de
+  comportamiento; `Attendee` es todavía un espejo.
+
+### Lo que falta para completarla
+1. Cambiar las lecturas: derivar `companions` de `Attendee` en las respuestas de
+   la API para no romper el contrato del frontend.
+2. Retirar `Companion` y el campo puente `Attendee.companionId`.
+3. Mover `rsvpAnswers` del `Guest` al `Attendee` → **menú por persona**, que es
+   lo que hoy impide usar el RSVP para catering individual.
+
+### Detalles que conviene no olvidar
+- `Attendee.companionId` lleva `@@index` y **no** `@unique`: añadir una
+  restricción única sobre una tabla con datos hace que `db push` exija
+  `--accept-data-loss`, y esa bandera no se usa contra producción. La unicidad se
+  garantiza en el código.
+- `server/lib/attendees.js` es **best effort**: registra el fallo pero no tumba la
+  operación principal. `node scripts/backfill-attendees.js` es idempotente y
+  repara cualquier desvío (tiene `--dry`).
+- El script va en **JS y no en TS** porque el loader `ts-node/esm` que usan los
+  demás scripts revienta bajo Node 20 — los otros `pnpm seed:*` están rotos por
+  lo mismo, pendiente de arreglar.
 
 ---
 

@@ -146,6 +146,12 @@ dos lados.**
 un directorio o una extensión nueva, comprueba que entra:
 `./node_modules/.bin/eslint . -f json | node -pe '"archivos: "+JSON.parse(require("fs").readFileSync(0)).length'`
 
+### Nunca `--accept-data-loss` contra producción
+Si `db push` pide esa bandera, **el diseño es lo que hay que cambiar**, no la
+bandera. Pasó al añadir `Attendee.companionId @unique`: una restricción única
+sobre una tabla con datos dispara el aviso. Se resolvió con `@@index` normal y
+garantizando la unicidad en código. La base tiene un evento en producción.
+
 ### Los cambios de schema van con `db push`, nunca con `migrate dev`
 La migración `init` no contiene `archivedAt`, `notes`, `eventId` ni `rsvpAnswers`:
 todos se aplicaron con `db push`. `prisma migrate status` dice "up to date" porque
@@ -167,6 +173,8 @@ lote (`findMany` con `in`, `createMany`, `groupBy`), nunca en un bucle `await`.
 
 | Punto | Detalle |
 |---|---|
+| Transición de `Attendee` a medio camino | Las escrituras la sincronizan pero las lecturas siguen en `Companion`. Completar: derivar `companions` de `Attendee`, retirar `Companion` y mover `rsvpAnswers` a la persona (menú individual). Ver ESTADO_Y_ROADMAP §4quater. |
+| Scripts `pnpm seed:*` rotos bajo Node 20 | Usan el loader `ts-node/esm`, que revienta. El backfill de asistentes se escribió en JS por eso. |
 | `EventFormModal.tsx` — ~1160 líneas | 13 pestañas en un componente. Siguiente split natural: un archivo por pestaña (la de RSVP ya se extrajo así). |
 | `fetch` directo en 9 componentes | Rompe la capa de servicios. Lo nuevo va en `src/services/`. |
 | `font-serif` hardcodeado (49 usos) | Bloquea que la fuente sea configurable por tema. |
