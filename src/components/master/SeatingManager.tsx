@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   List,
   Plus,
+  Printer,
   RefreshCw,
   Sparkles,
   Trash2,
@@ -22,6 +23,7 @@ import {
   SeatingPlan as SeatingProposal,
   autoAssign,
   capacitySummary,
+  TABLE_PRESETS,
   findViolations,
 } from "@/lib/seating";
 import { TableWithPeople } from "@/services/seating-service";
@@ -206,9 +208,11 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
     capacity: 8,
     shape: "round",
   });
+  /** Preset elegido; por defecto la redonda de 60″, que es la más común. */
+  const [preset, setPreset] = useState("r60");
   const stageRef = useRef<Konva.Stage | null>(null);
 
-  /** Exporta el plano al doble de resolución, para imprimirlo sin pixelar. */
+  /** Exporta el plano como imagen, al doble de resolución. */
   const exportarPlano = () => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -216,6 +220,95 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
     link.download = `plano-mesas-${new Date().toISOString().slice(0, 10)}.png`;
     link.href = stage.toDataURL({ pixelRatio: 2 });
     link.click();
+  };
+
+  /**
+   * Hoja imprimible: el plano más el listado mesa por mesa.
+   *
+   * Se usa el diálogo de impresión del navegador, que ya ofrece "Guardar como
+   * PDF" en todos los sistemas, en vez de empaquetar jsPDF (~350 KB) para lo
+   * mismo. Va en un iframe oculto y no en una ventana nueva porque los
+   * bloqueadores de emergentes matan `window.open`.
+   *
+   * El plano solo no basta: quien coordina en la puerta necesita la lista de
+   * nombres por mesa, y quien sirve necesita saber quién es el titular.
+   */
+  const imprimirPlano = () => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const imagen = stage.toDataURL({ pixelRatio: 2 });
+
+    const nombreDe = new Map(people.map(p => [p.id, p]));
+    const filas = tables
+      .map(t => {
+        const gente = t.attendees
+          .map(a => nombreDe.get(a.id))
+          .filter(Boolean)
+          .sort((a, b) => Number(b?.isPrimary) - Number(a?.isPrimary));
+        return `<tr>
+          <th>${t.name}</th>
+          <td>${t.attendees.length}/${t.capacity}</td>
+          <td>${
+            gente.length === 0
+              ? "<em>vacía</em>"
+              : gente
+                  .map(p => (p?.isPrimary ? `<strong>${p.name}</strong>` : p?.name))
+                  .join(", ")
+          }</td>
+        </tr>`;
+      })
+      .join("");
+
+    const sinMesa = people.filter(p => p.confirmed && !p.tableId);
+    const hoy = new Date().toLocaleDateString("es-CO", { dateStyle: "long" });
+
+    const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
+      <title>Plano de mesas</title>
+      <style>
+        @page { size: A4; margin: 14mm; }
+        body { font-family: system-ui, -apple-system, sans-serif; color: #0f172a; }
+        h1 { font-size: 20px; margin: 0 0 2px; }
+        p.sub { color: #64748b; font-size: 12px; margin: 0 0 14px; }
+        img { width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 6px; }
+        h2 { font-size: 14px; margin: 18px 0 6px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border-bottom: 1px solid #e2e8f0; padding: 5px 6px; text-align: left; vertical-align: top; }
+        th { white-space: nowrap; width: 1%; }
+        td:nth-child(2) { white-space: nowrap; width: 1%; color: #64748b; }
+        tr { break-inside: avoid; }
+        .aviso { margin-top: 10px; font-size: 11px; color: #b45309; }
+        .pie { margin-top: 14px; font-size: 10px; color: #94a3b8; }
+      </style></head><body>
+      <h1>Plano de mesas</h1>
+      <p class="sub">${resumen.confirmed} confirmados · ${tables.length} mesas · ${hoy}</p>
+      <img src="${imagen}" alt="Plano del salón">
+      <h2>Quién se sienta dónde</h2>
+      <table><tbody>${filas}</tbody></table>
+      ${
+        sinMesa.length > 0
+          ? `<p class="aviso">${sinMesa.length} confirmados sin mesa: ${sinMesa.map(p => p.name).join(", ")}</p>`
+          : ""
+      }
+      <p class="pie">En negrita, el titular de cada invitación.</p>
+      </body></html>`;
+
+    const marco = document.createElement("iframe");
+    marco.style.cssText = "position:fixed;width:0;height:0;border:0;visibility:hidden";
+    document.body.appendChild(marco);
+    const doc = marco.contentDocument;
+    if (!doc) return;
+    doc.open();
+    doc.write(html);
+    doc.close();
+    // La imagen tarda en decodificarse; sin esperar, se imprime en blanco.
+    const lanzar = () => {
+      marco.contentWindow?.focus();
+      marco.contentWindow?.print();
+      setTimeout(() => marco.remove(), 1000);
+    };
+    const img = doc.querySelector("img");
+    if (img && !img.complete) img.onload = lanzar;
+    else setTimeout(lanzar, 250);
   };
 
   /**
@@ -390,10 +483,22 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
         <Button onClick={handleSuggest} disabled={busy || tables.length === 0} className="gap-1.5">
           <Sparkles className="h-4 w-4" /> Sugerir distribución
         </Button>
-        {/* Capacidad y forma se eligen ANTES de crear: un salón mezcla mesas de
-            8 con una presidencial de 4 o una larga de 12. */}
-        <div className="flex items-stretch gap-2">
-          <label className="flex items-center gap-1.5 rounded-md border px-2 text-sm">
+        {/* Se elige un tamaño de alquiler real; el número queda ajustable por si
+            el salón aprieta una silla más. */}
+        <div className="flex flex-1 items-stretch gap-2">
+          <Combobox
+            className="min-w-0 flex-1 sm:max-w-64"
+            value={preset}
+            onChange={id => {
+              const p = TABLE_PRESETS.find(x => x.id === id);
+              setPreset(id);
+              if (p) setNuevaMesa({ capacity: p.capacity, shape: p.shape });
+            }}
+            placeholder="Tamaño de mesa…"
+            aria-label="Tamaño de la mesa nueva"
+            options={TABLE_PRESETS.map(p => ({ value: p.id, label: p.label, hint: p.hint }))}
+          />
+          <label className="flex shrink-0 items-center gap-1.5 rounded-md border px-2 text-sm">
             <span className="text-muted-foreground">Sitios</span>
             <input
               type="number"
@@ -403,32 +508,23 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
               onChange={e =>
                 setNuevaMesa(v => ({ ...v, capacity: Math.min(50, Math.max(1, Number(e.target.value) || 1)) }))
               }
-              className="h-9 w-14 rounded border-0 bg-transparent text-base focus:outline-none sm:text-sm"
+              className="h-9 w-12 rounded border-0 bg-transparent text-base focus:outline-none sm:text-sm"
               aria-label="Sitios de la mesa nueva"
             />
           </label>
-          <div className="flex overflow-hidden rounded-md border text-sm">
-            {([["round", "Redonda"], ["rect", "Larga"]] as const).map(([forma, etiqueta]) => (
-              <button
-                key={forma}
-                type="button"
-                onClick={() => setNuevaMesa(v => ({ ...v, shape: forma }))}
-                className={`min-h-11 touch-manipulation px-3 sm:min-h-0 ${
-                  nuevaMesa.shape === forma ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                }`}
-              >
-                {etiqueta}
-              </button>
-            ))}
-          </div>
-          <Button variant="outline" onClick={handleCreateTable} disabled={busy} className="gap-1.5">
+          <Button variant="outline" onClick={handleCreateTable} disabled={busy} className="shrink-0 gap-1.5">
             <Plus className="h-4 w-4" /> Añadir
           </Button>
         </div>
         {mode === "plano" && tables.length > 0 && (
-          <Button variant="outline" onClick={exportarPlano} className="gap-1.5">
-            <Download className="h-4 w-4" /> Exportar plano
-          </Button>
+          <>
+            <Button variant="outline" onClick={exportarPlano} className="gap-1.5">
+              <Download className="h-4 w-4" /> PNG
+            </Button>
+            <Button variant="outline" onClick={imprimirPlano} className="gap-1.5">
+              <Printer className="h-4 w-4" /> Imprimir / PDF
+            </Button>
+          </>
         )}
         <div className="flex overflow-hidden rounded-md border text-sm sm:ml-auto">
           {([
@@ -560,6 +656,7 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
             onSelect={setSelectedTable}
             stageRef={stageRef}
             onMove={(id, x, y) => updateTable.mutate({ id, updates: { x, y } })}
+            onRotate={(id, rotation) => updateTable.mutate({ id, updates: { rotation } })}
             onMoveVenue={(id, x, y) => updateVenue.mutate({ id, updates: { x, y } })}
           />
         </>

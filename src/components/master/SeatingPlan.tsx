@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type Konva from "konva";
+import { RotateCcw, RotateCw } from "lucide-react";
 import { Circle, Group, Layer, Line, Rect, Stage, Text } from "react-konva";
 
 import { TableWithPeople, VenueElementRow } from "@/services/seating-service";
@@ -11,6 +12,8 @@ interface Props {
   onMove: (id: string, x: number, y: number) => void;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  /** Girar una mesa larga; en las redondas no tiene sentido. */
+  onRotate?: (id: string, rotation: number) => void;
   /** Expone el escenario para poder exportarlo a imagen. */
   stageRef?: React.MutableRefObject<Konva.Stage | null>;
   /** Pista, escenario, barra… Se dibujan DEBAJO de las mesas. */
@@ -67,7 +70,7 @@ const medio = (t: TableWithPeople) =>
  * Ver ARQUITECTURA_MESAS.md §4.
  */
 export const SeatingPlan: React.FC<Props> = ({
-  tables, onMove, selectedId, onSelect, stageRef, venue = [], onMoveVenue,
+  tables, onMove, selectedId, onSelect, stageRef, venue = [], onMoveVenue, onRotate,
 }) => {
   const contenedor = useRef<HTMLDivElement>(null);
   const localStage = useRef<Konva.Stage | null>(null);
@@ -253,6 +256,9 @@ export const SeatingPlan: React.FC<Props> = ({
                   key={table.id}
                   x={table.x}
                   y={table.y}
+                  // El origen del grupo está en el centro de la mesa, así que
+                  // rota sobre sí misma y no alrededor de una esquina.
+                  rotation={table.shape === "rect" ? (table.rotation ?? 0) : 0}
                   draggable
                   onDragStart={() => onSelect(table.id)}
                   dragBoundFunc={pos => pos}
@@ -301,6 +307,8 @@ export const SeatingPlan: React.FC<Props> = ({
                   )}
                   <Text
                     text={table.name}
+                    // Contrarrestar la rotación: el nombre siempre se lee recto.
+                    rotation={table.shape === "rect" ? -(table.rotation ?? 0) : 0}
                     fontSize={17}
                     fontStyle="600"
                     fill="#0f172a"
@@ -312,6 +320,7 @@ export const SeatingPlan: React.FC<Props> = ({
                   />
                   <Text
                     text={`${ocupadas}/${table.capacity}`}
+                    rotation={table.shape === "rect" ? -(table.rotation ?? 0) : 0}
                     fontSize={15}
                     fill={color}
                     width={m.x * 2}
@@ -343,12 +352,36 @@ export const SeatingPlan: React.FC<Props> = ({
         if (!t) return null;
         return (
           <div className="rounded-lg border bg-card p-3">
-            <p className="font-medium">
-              {t.name}{" "}
-              <span className="font-normal text-muted-foreground">
-                {t.attendees.length}/{t.capacity}
-              </span>
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="min-w-0 flex-1 font-medium">
+                {t.name}{" "}
+                <span className="font-normal text-muted-foreground">
+                  {t.attendees.length}/{t.capacity}
+                </span>
+              </p>
+              {/* Girar solo tiene sentido en las largas: una redonda es igual
+                  desde cualquier ángulo. */}
+              {t.shape === "rect" && onRotate && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground">
+                    {Math.round(t.rotation ?? 0)}°
+                  </span>
+                  {[-45, 45].map(paso => (
+                    <button
+                      key={paso}
+                      type="button"
+                      onClick={() =>
+                        onRotate(t.id, (((t.rotation ?? 0) + paso) % 360 + 360) % 360)
+                      }
+                      className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-md border text-muted-foreground hover:bg-accent sm:h-9 sm:w-9"
+                      aria-label={paso < 0 ? "Girar a la izquierda" : "Girar a la derecha"}
+                    >
+                      {paso < 0 ? <RotateCcw className="h-4 w-4" /> : <RotateCw className="h-4 w-4" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {t.attendees.length === 0 ? (
               <p className="mt-1 text-sm text-muted-foreground">Nadie sentado todavía.</p>
             ) : (

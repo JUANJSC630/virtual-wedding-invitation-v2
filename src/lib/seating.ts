@@ -14,6 +14,31 @@
 
 export type TableShape = "round" | "rect";
 
+/**
+ * Tamaños reales de alquiler, con la capacidad que admiten cómodamente.
+ *
+ * Los números vienen de las guías de montaje: una redonda de 60″ sienta 8, una
+ * de 72″ sienta 10, y una rectangular de 8 pies sienta 8 por los lados o 10
+ * añadiendo las cabeceras. Teclear la capacidad a ojo lleva a planos que en el
+ * salón no encajan. Ver INVESTIGACION_SISTEMA_COMPLETO_2026.md §3.
+ */
+export interface TablePreset {
+  id: string;
+  label: string;
+  hint: string;
+  shape: TableShape;
+  capacity: number;
+}
+
+export const TABLE_PRESETS: TablePreset[] = [
+  { id: "r48", label: "Redonda 48″", hint: "6 personas · 1,20 m", shape: "round", capacity: 6 },
+  { id: "r60", label: "Redonda 60″", hint: "8 personas · 1,50 m — la más común", shape: "round", capacity: 8 },
+  { id: "r72", label: "Redonda 72″", hint: "10 personas · 1,80 m", shape: "round", capacity: 10 },
+  { id: "l8", label: "Larga 8 pies", hint: "8 personas · 10 con cabeceras", shape: "rect", capacity: 8 },
+  { id: "l8c", label: "Larga con cabeceras", hint: "10 personas · 2,40 m", shape: "rect", capacity: 10 },
+  { id: "presi", label: "Presidencial", hint: "2 personas · solo los novios", shape: "round", capacity: 2 },
+];
+
 export interface SeatingTable {
   id: string;
   name: string;
