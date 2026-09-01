@@ -213,6 +213,14 @@ Antes de dar por cerrado cualquier cambio:
 5. Si tocaste endpoints: **verificación E2E contra la DB real**. Es el estándar que ya usó
    este proyecto en Fases B y C. Crea un evento desechable, ejercita el flujo, bórralo —
    nunca pruebes mutaciones sobre `xv-laura` ni `jimena-juan`.
+
+   **Esto vale también para las pruebas de INTERFAZ, no solo para las de API.** Pasó: un
+   test de navegador pulsó "Rehacer reparto" en `jimena-juan` para comprobar un diálogo, y
+   reasignó las 174 personas del evento real. El botón solo aparecía allí porque el estado
+   que lo dispara estaba en los datos del usuario. Lo correcto es **reproducir ese estado en
+   un evento de prueba** —cuesta veinte líneas de script— y no clicar nunca un botón que
+   escribe sobre datos reales. Si una acción destructiva no tiene forma de deshacerse,
+   guarda antes un volcado del estado que va a cambiar.
 6. Si tocaste un evento no-boda: revisa que no se filtre wording de boda (el bug de la
    Fase C, commit `e4c821e`).
 7. Smoke test de la UI cuando toques componentes. Hay un chromium en la caché de
