@@ -28,6 +28,7 @@ import { getHonoreesNames } from "@/lib/honorees";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -51,6 +52,7 @@ interface MasterDashboardProps {
 }
 
 const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => {
+  const confirmar = useConfirm();
   const [events, setEvents] = useState<EventWithStats[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -127,7 +129,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
   };
 
   const handleDeleteEvent = async (ev: EventWithStats) => {
-    if (!confirm(`¿Eliminar el evento "${ev.slug}"? Esta acción no se puede deshacer.`)) return;
+    const ok = await confirmar({
+      title: `¿Eliminar el evento "${ev.slug}"?`,
+      description: `Se borrarán sus ${ev.stats.totalGuests} invitados, sus mesas y sus accesos. No se puede deshacer.`,
+      confirmText: "Eliminar evento",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/master/events/${ev.id}`, {
         method: "DELETE",
@@ -142,7 +150,12 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({ user, onLogout }) => 
   };
 
   const handleArchiveEvent = async (ev: EventWithStats) => {
-    if (!confirm(`¿Archivar "${ev.slug}"? El evento dejará de ser accesible públicamente.`)) return;
+    const ok = await confirmar({
+      title: `¿Archivar "${ev.slug}"?`,
+      description: "La invitación dejará de ser accesible para los invitados. Podrás desarchivarla luego.",
+      confirmText: "Archivar",
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/master/events/${ev.id}/archive`, { method: "POST", credentials: "include" });
       if (!res.ok) throw new Error();

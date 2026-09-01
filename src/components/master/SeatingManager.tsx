@@ -42,6 +42,7 @@ import {
 } from "@/hooks/useSeating";
 
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Combobox } from "@/components/ui/combobox";
 
 import { SeatingList } from "./SeatingList";
@@ -183,6 +184,7 @@ const ReglasDeSeparacion: React.FC<{
 };
 
 export const SeatingManager: React.FC<Props> = ({ guests }) => {
+  const confirmar = useConfirm();
   const { data: tables = [], isLoading } = useTables();
   const createTable = useCreateTable();
   const updateTable = useUpdateTable();
@@ -269,12 +271,18 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
       }
     );
 
-  const handleDeleteTable = (table: TableWithPeople) => {
+  const handleDeleteTable = async (table: TableWithPeople) => {
     const aviso =
       table.attendees.length > 0
-        ? `¿Eliminar ${table.name}? Sus ${table.attendees.length} invitados quedarán sin mesa (no se borran).`
-        : `¿Eliminar ${table.name}?`;
-    if (!confirm(aviso)) return;
+        ? `Sus ${table.attendees.length} invitados quedarán sin mesa. No se borran.`
+        : "La mesa está vacía.";
+    const ok = await confirmar({
+      title: `¿Eliminar ${table.name}?`,
+      description: aviso,
+      confirmText: "Eliminar mesa",
+      variant: "destructive",
+    });
+    if (!ok) return;
     deleteTable.mutate(table.id, {
       onSuccess: () => toast.success("Mesa eliminada"),
       onError: (e: Error) => toast.error(e.message),
@@ -295,8 +303,13 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
    * Rehace el reparto ignorando lo ya asignado (salvo las mesas fijadas). Es la
    * única forma de que una regla creada a posteriori surta efecto.
    */
-  const handleRehacer = () => {
-    if (!confirm("Se recalculará el reparto de todos los confirmados, respetando las mesas fijadas y las reglas. ¿Continuar?")) return;
+  const handleRehacer = async () => {
+    const ok = await confirmar({
+      title: "¿Rehacer el reparto?",
+      description: "Se recalculará el sitio de todos los confirmados. Las mesas fijadas y las reglas se respetan.",
+      confirmText: "Rehacer reparto",
+    });
+    if (!ok) return;
     const plan = autoAssign(tables, people, { rules, respectExisting: false });
     // Se levanta a todo el mundo primero: si no, quien no entre en el plan
     // nuevo se quedaría donde estaba y la regla seguiría incumplida.

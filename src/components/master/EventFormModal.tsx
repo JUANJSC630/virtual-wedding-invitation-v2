@@ -13,6 +13,7 @@ import { DEFAULT_ASSETS } from "@/context/AssetContext";
 import { DEFAULT_THEME, SERIF_PRESETS } from "@/context/ThemeContext";
 
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import FileUpload from "@/components/ui/FileUpload";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ interface EventFormModalProps {
 }
 
 export const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEvent, onClose, onSaved }) => {
+  const confirmar = useConfirm();
   const [form, setForm] = useState<EventFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -151,9 +153,12 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ open, editingEve
       form.slug !== originalSlug.current &&
       editingEvent.stats.totalAccesses > 0
     ) {
-      const ok = window.confirm(
-        `⚠️ Estás cambiando el slug de "${originalSlug.current}" a "${form.slug}".\n\nEsto romperá todos los enlaces ya enviados a los invitados (${editingEvent.stats.totalAccesses} accesos registrados).\n\n¿Deseas continuar?`
-      );
+      const ok = await confirmar({
+        title: `¿Cambiar el enlace de "${originalSlug.current}" a "${form.slug}"?`,
+        description: `Romperá todos los enlaces ya enviados a los invitados. Hay ${editingEvent.stats.totalAccesses} accesos registrados.`,
+        confirmText: "Cambiar el enlace",
+        variant: "destructive",
+      });
       if (!ok) return;
     }
 

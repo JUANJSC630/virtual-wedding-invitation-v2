@@ -18,6 +18,8 @@ import { GuestContext } from "@/context/GuestContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 import AdminDashboard from "@/components/AdminDashboard";
+import { ConfirmProvider } from "@/components/ui/confirm-dialog";
+
 import { PanelErrorBoundary } from "@/components/ErrorBoundary";
 import GuestCodeEntry from "@/components/GuestCodeEntry";
 import GuestInfo from "@/components/GuestInfo";
@@ -241,6 +243,7 @@ function App(): React.JSX.Element {
   return (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
+        <ConfirmProvider>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -248,6 +251,7 @@ function App(): React.JSX.Element {
           <Route path="/master" element={<MasterPanel />} />
           <Route path="/:slug" element={<WeddingInvitation />} />
         </Routes>
+        </ConfirmProvider>
         <Toaster
           position="top-right"
           toastOptions={{

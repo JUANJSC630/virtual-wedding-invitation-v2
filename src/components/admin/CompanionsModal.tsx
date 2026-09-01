@@ -13,6 +13,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ const CompanionsModal: React.FC<CompanionsModalProps> = ({
   selectedGuest,
   guests,
 }) => {
+  const confirmar = useConfirm();
   const [showAddCompanion, setShowAddCompanion] = useState(false);
   const [newCompanionName, setNewCompanionName] = useState("");
 
@@ -98,7 +100,12 @@ const CompanionsModal: React.FC<CompanionsModalProps> = ({
   };
 
   const handleDeleteCompanion = async (companionId: string, companionName: string) => {
-    if (!window.confirm(`¿Estás seguro de eliminar a ${companionName}?`)) return;
+    const ok = await confirmar({
+      title: `¿Eliminar a ${companionName}?`,
+      confirmText: "Eliminar",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       await deleteCompanionMutation.mutateAsync(companionId);
       toast.success(`${companionName} eliminado exitosamente`);

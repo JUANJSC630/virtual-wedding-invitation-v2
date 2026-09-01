@@ -6,6 +6,7 @@ import { KeyRound, Trash2, UserPlus } from "lucide-react";
 import { EventWithStats } from "@/types";
 
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ interface ClientAdminModalProps {
 }
 
 export const ClientAdminModal: React.FC<ClientAdminModalProps> = ({ open, event, onClose }) => {
+  const confirmar = useConfirm();
   const [admins, setAdmins] = useState<ClientAdminRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -108,7 +110,13 @@ export const ClientAdminModal: React.FC<ClientAdminModalProps> = ({ open, event,
   };
 
   const handleDelete = async (adminId: string) => {
-    if (!confirm("¿Eliminar este admin?")) return;
+    const ok = await confirmar({
+      title: "¿Eliminar este administrador?",
+      description: "Perderá el acceso al panel de este evento.",
+      confirmText: "Eliminar",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/master/client-admins/${adminId}`, {
         method: "DELETE",

@@ -12,6 +12,7 @@ import { RsvpQuestion } from "@/lib/rsvpQuestions";
 import { useAllGuests, useDeleteGuest, useUpdateGuest } from "@/hooks/useGuests";
 
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 import CompanionsModal from "./CompanionsModal";
 import CSVImportModal from "./CSVImportModal";
@@ -37,6 +38,7 @@ interface GuestManagerProps {
 }
 
 const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQuestions = [], tables = [] }) => {
+  const confirmar = useConfirm();
   const queryClient = useQueryClient();
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
@@ -108,7 +110,13 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQue
   };
 
   const handleDelete = async (guest: Guest) => {
-    if (!window.confirm(`¿Estás seguro de eliminar a ${guest.name}?`)) return;
+    const ok = await confirmar({
+      title: `¿Eliminar a ${guest.name}?`,
+      description: "Se borrarán también sus acompañantes. No se puede deshacer.",
+      confirmText: "Eliminar",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       await deleteMutation.mutateAsync(guest.id);
       toast.success(`${guest.name} eliminado exitosamente`);
@@ -119,7 +127,11 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQue
   };
 
   const handleConfirm = async (guest: Guest) => {
-    if (!window.confirm(`¿Confirmar asistencia de ${guest.name}?`)) return;
+    const ok = await confirmar({
+      title: `¿Confirmar la asistencia de ${guest.name}?`,
+      confirmText: "Confirmar",
+    });
+    if (!ok) return;
     try {
       await updateMutation.mutateAsync({ id: guest.id, updates: { confirmed: true } });
       toast.success(`${guest.name} confirmado exitosamente`);
@@ -130,7 +142,13 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQue
   };
 
   const handleCancel = async (guest: Guest) => {
-    if (!window.confirm(`¿Cancelar confirmación de ${guest.name}?`)) return;
+    const ok = await confirmar({
+      title: `¿Cancelar la confirmación de ${guest.name}?`,
+      description: "Sus acompañantes también quedarán sin confirmar.",
+      confirmText: "Cancelar confirmación",
+      cancelText: "Dejarlo así",
+    });
+    if (!ok) return;
     try {
       await updateMutation.mutateAsync({ id: guest.id, updates: { confirmed: false } });
       toast.success(`Confirmación cancelada para ${guest.name}`);
