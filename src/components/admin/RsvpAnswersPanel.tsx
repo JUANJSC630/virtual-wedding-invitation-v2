@@ -39,8 +39,13 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions, tables = 
    */
   const personas = guests.flatMap(g =>
     g.attendees?.length
-      ? g.attendees.map(a => ({ name: a.name, answers: a.rsvpAnswers, tableId: a.tableId ?? null }))
-      : [{ name: g.name, answers: g.rsvpAnswers, tableId: null }]
+      ? g.attendees.map(a => ({
+          name: a.name,
+          answers: a.rsvpAnswers,
+          tableId: a.tableId ?? null,
+          isPrimary: a.isPrimary,
+        }))
+      : [{ name: g.name, answers: g.rsvpAnswers, tableId: null, isPrimary: true }]
   );
   const answered = personas.filter(p => p.answers && Object.keys(p.answers).length > 0);
   const allAnswers = answered.map(p => p.answers as RsvpAnswers);
@@ -72,7 +77,7 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions, tables = 
     const abiertas = questions.filter(q => q.type === "text");
 
     const rows: unknown[][] = [[
-      "Mesa", "Comensales",
+      "Mesa", "Comensales", "Invitados", "Acompañantes",
       ...eleccion.flatMap(q => q.options.map(o => `${q.label}: ${o}`)),
       ...abiertas.map(q => q.label),
     ]];
@@ -90,6 +95,8 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions, tables = 
       rows.push([
         grupo.nombre,
         grupo.gente.length,
+        grupo.gente.filter(p => p.isPrimary).length,
+        grupo.gente.filter(p => !p.isPrimary).length,
         ...eleccion.flatMap(q => {
           const counts = tallyAnswers(q, respuestas);
           return q.options.map(o => counts[o] ?? 0);

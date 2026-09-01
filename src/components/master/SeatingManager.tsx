@@ -43,6 +43,7 @@ function toPeople(guests: Guest[]): SeatingPerson[] {
       groupId: guest.id,
       groupName: guest.name,
       confirmed: a.confirmed,
+      isPrimary: a.isPrimary,
       tableId: a.tableId ?? null,
     }))
   );

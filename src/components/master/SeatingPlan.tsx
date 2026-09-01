@@ -349,11 +349,34 @@ export const SeatingPlan: React.FC<Props> = ({
                 {t.attendees.length}/{t.capacity}
               </span>
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t.attendees.length === 0
-                ? "Nadie sentado todavía."
-                : t.attendees.map(a => a.name).join(", ")}
-            </p>
+            {t.attendees.length === 0 ? (
+              <p className="mt-1 text-sm text-muted-foreground">Nadie sentado todavía.</p>
+            ) : (
+              <>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t.attendees.filter(a => a.isPrimary).length} invitados +{" "}
+                  {t.attendees.filter(a => !a.isPrimary).length} acompañantes
+                </p>
+                <ul className="mt-1 space-y-0.5 text-sm">
+                  {[...t.attendees]
+                    .sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
+                    .map(a => (
+                      <li key={a.id} className="flex items-center gap-1.5">
+                        <span
+                          className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
+                            a.isPrimary ? "bg-primary" : "bg-muted-foreground/40"
+                          }`}
+                          aria-hidden
+                        />
+                        <span className="truncate">{a.name}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {a.isPrimary ? "invitado" : "acomp."}
+                        </span>
+                      </li>
+                    ))}
+                </ul>
+              </>
+            )}
           </div>
         );
       })()}

@@ -45,6 +45,8 @@ export interface SeatingPerson {
   groupId: string;
   groupName: string;
   confirmed: boolean;
+  /** Titular de la invitación; el resto son sus acompañantes. */
+  isPrimary?: boolean;
   tableId?: string | null;
 }
 

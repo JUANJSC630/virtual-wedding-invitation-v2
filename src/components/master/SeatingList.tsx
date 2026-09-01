@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Trash2, UserMinus } from "lucide-react";
+import { Trash2, User, UserMinus, UserPlus } from "lucide-react";
 
 import { SeatingPerson } from "@/lib/seating";
 import { TableWithPeople } from "@/services/seating-service";
@@ -90,6 +90,28 @@ export const SeatingList: React.FC<Props> = ({
 
   const huecosDe = (t: TableWithPeople) => t.capacity - t.attendees.length;
 
+  /** De cada persona a su invitación, para poder agrupar dentro de la mesa. */
+  const hogarDe = new Map(people.map(p => [p.id, p.groupName]));
+
+  /**
+   * Las personas de una mesa, agrupadas por invitación y con el titular
+   * primero. Ver quién viene con quién es lo que permite decidir un reparto:
+   * dos titulares sueltos no es lo mismo que una familia de cuatro.
+   */
+  const gruposDe = (t: TableWithPeople) => {
+    const porHogar = new Map<string, { hogar: string; gente: typeof t.attendees }>();
+    for (const a of t.attendees) {
+      const clave = a.guestId;
+      const entrada = porHogar.get(clave);
+      if (entrada) entrada.gente.push(a);
+      else porHogar.set(clave, { hogar: hogarDe.get(a.id) ?? a.name, gente: [a] });
+    }
+    return [...porHogar.values()].map(g => ({
+      ...g,
+      gente: [...g.gente].sort((x, y) => Number(y.isPrimary) - Number(x.isPrimary)),
+    }));
+  };
+
   return (
     <div className="space-y-6">
       {/* ── Por sentar ─────────────────────────────────────────────── */}
@@ -145,7 +167,17 @@ export const SeatingList: React.FC<Props> = ({
                 <ul className="mt-2 space-y-2">
                   {hogar.people.map(persona => (
                     <li key={persona.id} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                      <span className="min-w-0 flex-1 truncate text-sm">{persona.name}</span>
+                      <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-sm">
+                        {persona.isPrimary ? (
+                          <User className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+                        ) : (
+                          <UserPlus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                        )}
+                        <span className="truncate">{persona.name}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {persona.isPrimary ? "invitado" : "acomp."}
+                        </span>
+                      </span>
                       <Combobox
                         className="w-full sm:w-56"
                         value=""
@@ -261,29 +293,58 @@ export const SeatingList: React.FC<Props> = ({
                       : llena
                         ? " · completa"
                         : ` · ${huecos} ${huecos === 1 ? "libre" : "libres"}`}
+                    {table.attendees.length > 0 && (
+                      <>
+                        {" · "}
+                        {table.attendees.filter(a => a.isPrimary).length} inv. +{" "}
+                        {table.attendees.filter(a => !a.isPrimary).length} acomp.
+                      </>
+                    )}
                   </p>
 
                   {table.attendees.length > 0 && (
-                    <ul className="mt-2 space-y-1">
-                      {table.attendees.map(persona => (
-                        <li
-                          key={persona.id}
-                          className="flex min-h-11 items-center gap-2 rounded-md bg-muted/50 px-2 sm:min-h-9"
-                        >
-                          <span className="min-w-0 flex-1 truncate text-sm">{persona.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => onAssign(persona.id, null)}
-                            disabled={busy}
-                            className="flex h-11 w-11 shrink-0 touch-manipulation sm:h-9 sm:w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-                            aria-label={`Levantar a ${persona.name} de la mesa`}
-                            title="Levantar de la mesa"
-                          >
-                            <UserMinus className="h-4 w-4" />
-                          </button>
-                        </li>
+                    <div className="mt-2 space-y-2">
+                      {gruposDe(table).map(grupo => (
+                        <div key={grupo.hogar + grupo.gente[0]?.id}>
+                          {/* El nombre de la invitación solo aporta si vienen varios */}
+                          {grupo.gente.length > 1 && (
+                            <p className="px-2 text-xs font-medium text-muted-foreground">
+                              {grupo.hogar} · {grupo.gente.length} personas
+                            </p>
+                          )}
+                          <ul className="space-y-1">
+                            {grupo.gente.map(persona => (
+                              <li
+                                key={persona.id}
+                                className="flex min-h-11 items-center gap-2 rounded-md bg-muted/50 px-2 sm:min-h-9"
+                              >
+                                {persona.isPrimary ? (
+                                  <User className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+                                ) : (
+                                  <UserPlus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                                )}
+                                <span className="min-w-0 flex-1 truncate text-sm">
+                                  {persona.name}
+                                  <span className="ml-1.5 text-xs text-muted-foreground">
+                                    {persona.isPrimary ? "invitado" : "acompañante"}
+                                  </span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => onAssign(persona.id, null)}
+                                  disabled={busy}
+                                  className="flex h-11 w-11 shrink-0 touch-manipulation sm:h-9 sm:w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                                  aria-label={`Levantar a ${persona.name} de la mesa`}
+                                  title="Levantar de la mesa"
+                                >
+                                  <UserMinus className="h-4 w-4" />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   )}
                 </div>
               );
