@@ -56,6 +56,11 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
   const [mode, setMode] = useState<"lista" | "plano">("lista");
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [proposal, setProposal] = useState<SeatingProposal | null>(null);
+  /** Ajustes de la próxima mesa: no todas las mesas de un salón son iguales. */
+  const [nuevaMesa, setNuevaMesa] = useState<{ capacity: number; shape: "round" | "rect" }>({
+    capacity: 8,
+    shape: "round",
+  });
   const stageRef = useRef<Konva.Stage | null>(null);
 
   /** Exporta el plano al doble de resolución, para imprimirlo sin pixelar. */
@@ -107,7 +112,7 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
    */
   const handleCreateTable = () =>
     createTable.mutate(
-      { capacity: 8, shape: "round" },
+      { capacity: nuevaMesa.capacity, shape: nuevaMesa.shape },
       {
         onSuccess: t => toast.success(`${t.name} creada`),
         onError: (e: Error) => toast.error(e.message),
@@ -175,9 +180,41 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
         <Button onClick={handleSuggest} disabled={busy || tables.length === 0} className="gap-1.5">
           <Sparkles className="h-4 w-4" /> Sugerir distribución
         </Button>
-        <Button variant="outline" onClick={handleCreateTable} disabled={busy} className="gap-1.5">
-          <Plus className="h-4 w-4" /> Nueva mesa
-        </Button>
+        {/* Capacidad y forma se eligen ANTES de crear: un salón mezcla mesas de
+            8 con una presidencial de 4 o una larga de 12. */}
+        <div className="flex items-stretch gap-2">
+          <label className="flex items-center gap-1.5 rounded-md border px-2 text-sm">
+            <span className="text-muted-foreground">Sitios</span>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={nuevaMesa.capacity}
+              onChange={e =>
+                setNuevaMesa(v => ({ ...v, capacity: Math.min(50, Math.max(1, Number(e.target.value) || 1)) }))
+              }
+              className="h-9 w-14 rounded border-0 bg-transparent text-base focus:outline-none sm:text-sm"
+              aria-label="Sitios de la mesa nueva"
+            />
+          </label>
+          <div className="flex overflow-hidden rounded-md border text-sm">
+            {([["round", "Redonda"], ["rect", "Larga"]] as const).map(([forma, etiqueta]) => (
+              <button
+                key={forma}
+                type="button"
+                onClick={() => setNuevaMesa(v => ({ ...v, shape: forma }))}
+                className={`min-h-11 touch-manipulation px-3 sm:min-h-0 ${
+                  nuevaMesa.shape === forma ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                }`}
+              >
+                {etiqueta}
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" onClick={handleCreateTable} disabled={busy} className="gap-1.5">
+            <Plus className="h-4 w-4" /> Añadir
+          </Button>
+        </div>
         {mode === "plano" && tables.length > 0 && (
           <Button variant="outline" onClick={exportarPlano} className="gap-1.5">
             <Download className="h-4 w-4" /> Exportar plano

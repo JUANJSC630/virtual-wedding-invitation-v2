@@ -13,7 +13,7 @@ interface Props {
   people: SeatingPerson[];
   onAssign: (attendeeId: string, tableId: string | null) => void;
   onAssignGroup: (groupId: string, tableId: string) => void;
-  onUpdateTable: (id: string, updates: { name?: string; capacity?: number }) => void;
+  onUpdateTable: (id: string, updates: { name?: string; capacity?: number; shape?: "round" | "rect" }) => void;
   onDeleteTable: (table: TableWithPeople) => void;
   busy?: boolean;
 }
@@ -189,7 +189,7 @@ export const SeatingList: React.FC<Props> = ({
               const excedida = huecos < 0;
               return (
                 <div key={table.id} className="rounded-lg border bg-card p-3">
-                  <div className="flex items-start gap-2">
+                  <div className="flex flex-wrap items-start gap-2">
                     <Input
                       value={valorDe(table).name}
                       onChange={e => editar(table, { name: e.target.value })}
@@ -211,6 +211,15 @@ export const SeatingList: React.FC<Props> = ({
                         className="!h-11 w-20 sm:!h-9"
                       />
                     </label>
+                    <select
+                      value={table.shape}
+                      onChange={e => onUpdateTable(table.id, { shape: e.target.value as "round" | "rect" })}
+                      className="h-11 touch-manipulation rounded-md border border-input bg-background px-2 text-base sm:h-9 sm:text-sm"
+                      aria-label="Forma de la mesa"
+                    >
+                      <option value="round">Redonda</option>
+                      <option value="rect">Larga</option>
+                    </select>
                     <Button
                       variant="ghost"
                       size="icon"

@@ -18,8 +18,15 @@ interface Props {
 const LIENZO = { width: 1400, height: 950 };
 const REJILLA = 25;
 const IMAN = 8; // distancia a la que una mesa se alinea con otra
-const RADIO = 58;
-const RECT = { w: 150, h: 78 };
+/**
+ * El tamaño dibujado depende de la CAPACIDAD: una mesa de 12 tiene que verse más
+ * grande que una de 4, o el plano no sirve para entender el salón de un vistazo.
+ * En una mesa redonda los comensales van por el perímetro, así que el radio
+ * crece con el número de sitios; en una rectangular crece el largo.
+ */
+const RECT_ALTO = 78;
+const radioDe = (capacity: number) => 30 + Math.max(2, capacity) * 3.5;
+const anchoRectDe = (capacity: number) => 60 + Math.max(2, capacity) * 11;
 
 const COLORES = {
   libre: "#466691",
@@ -29,7 +36,9 @@ const COLORES = {
 
 /** Media dimensión de la mesa, para calcular sus bordes. */
 const medio = (t: TableWithPeople) =>
-  t.shape === "rect" ? { x: RECT.w / 2, y: RECT.h / 2 } : { x: RADIO, y: RADIO };
+  t.shape === "rect"
+    ? { x: anchoRectDe(t.capacity) / 2, y: RECT_ALTO / 2 }
+    : { x: radioDe(t.capacity), y: radioDe(t.capacity) };
 
 /**
  * Plano del salón con Konva.
@@ -197,10 +206,10 @@ export const SeatingPlan: React.FC<Props> = ({ tables, onMove, selectedId, onSel
                 >
                   {table.shape === "rect" ? (
                     <Rect
-                      x={-RECT.w / 2}
-                      y={-RECT.h / 2}
-                      width={RECT.w}
-                      height={RECT.h}
+                      x={-anchoRectDe(table.capacity) / 2}
+                      y={-RECT_ALTO / 2}
+                      width={anchoRectDe(table.capacity)}
+                      height={RECT_ALTO}
                       cornerRadius={10}
                       fill={color}
                       opacity={sel ? 0.4 : 0.2}
@@ -212,7 +221,7 @@ export const SeatingPlan: React.FC<Props> = ({ tables, onMove, selectedId, onSel
                     />
                   ) : (
                     <Circle
-                      radius={RADIO}
+                      radius={radioDe(table.capacity)}
                       fill={color}
                       opacity={sel ? 0.4 : 0.2}
                       stroke={color}
