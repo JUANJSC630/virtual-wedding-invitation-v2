@@ -9,7 +9,7 @@
 
 ## 0. TL;DR — dónde quedamos hoy
 
-- **Gate del proyecto: verde y ahora de verdad.** `type-check` 0 errores (tests incluidos) · `lint` 0 errores sobre **100+ archivos** · **68 tests** · `build` OK.
+- **Gate del proyecto: verde y ahora de verdad.** `type-check` 0 errores (tests incluidos) · `lint` 0 errores sobre **100+ archivos** · **122 tests** · `build` OK.
   Hasta el 30 ago el lint solo analizaba 15 archivos —ninguno del frontend— así que su verde no significaba gran cosa. Ver §4bis.
 - **Fase A (estabilización):** ✅ completa. Ver §1.
 - **Fase B (secciones dinámicas):** ✅ núcleo completo — reordenar/mostrar/ocultar/eliminar/añadir/editar bloques desde el panel. Ver §2.
@@ -19,7 +19,8 @@
 - **Cimiento de asistentes (31 ago):** ✅ tabla `Attendee` con 178 personas y escrituras sincronizadas. Desbloquea mesas, menú por persona y check-in. Ver §4quater.
 - **Saneamiento (30 ago):** ✅ dos bugs de pérdida de datos corregidos, lint extendido al frontend, código muerto fuera, dos N+1 eliminados (uno superaba el timeout de Vercel). Ver §4bis.
 - **Herramientas de diseño de Claude Code:** instaladas globalmente (frontend-design, ui-ux-pro-max, taste-skill, Playwright MCP, shadcn MCP). Ver §5.
-- **Siguiente prioridad recomendada:** ver §6.
+- **Mesas (31 ago – 1 sep):** ✅ función completa — recomendación sin configurar nada, plano en Konva, reglas de juntar/separar, elementos del salón, catering por mesa y hoja imprimible. Ver `ARQUITECTURA_MESAS.md`.
+- **Dónde seguir:** §6. El siguiente bloque recomendado es el **check-in en la puerta**.
 
 ---
 
@@ -319,38 +320,61 @@ En `~/.claude/settings.json` y `~/.claude.json` (no específico de este repo, pe
 
 ---
 
-## 6. Qué sigue (recomendado, en orden de impacto)
+## 6. Dónde seguir
 
-La base técnica quedó sana el 30 de agosto (§4bis), así que lo que sigue puede ser
-producto sin arrastrar deuda.
+> Última revisión: 1 de septiembre de 2026. Lee esta sección primero al retomar.
 
-**Producto — lo que mueve la aguja comercial**
-1. ~~RSVP con preguntas personalizadas~~ ✅ **hecho** (§4ter). Quedan tres extensiones
-   naturales: lógica condicional, export CSV de respuestas para el catering, y
-   preguntas por acompañante (hoy se responden una vez por invitación).
-2. **B.3/B.4** — bloques heredados por-instancia, para que duplicar un bloque de foto
-   no repita la misma imagen (`ARQUITECTURA_SECCIONES_DINAMICAS.md` §5).
-3. **Fase D — Plantillas** (`Template`): selector visual de estética al crear evento,
-   ortogonal a `EventType`.
-4. Mapa embebido, mesa de regalos estructurada, galería colaborativa — checklist en
-   `CATALOGO_FEATURES_2026.md` §9.
-5. **Pulido visual** con Playwright MCP + `ui-ux-pro-max`/`taste-skill`. Ojo: el MCP no
-   estaba cargado ni el 17 ni el 30 de agosto; hace falta reiniciar la sesión.
+### Lo que está terminado y no hace falta tocar
+Fases A/B/C, panel maestro, saneamiento (§4bis), RSVP con preguntas personalizadas
+y menú por persona (§4ter), cimiento de asistentes (§4quater) y **toda la función de
+mesas** — modelo, recomendación, dos modos de interfaz, reglas, salón, catering por
+mesa y hoja imprimible. Detalle en `ARQUITECTURA_MESAS.md`.
 
-> **Hallazgo de `INVESTIGACION_SISTEMA_COMPLETO_2026.md` (30 ago):** mesas, menú por
-> persona, check-in en la puerta y "encuentra tu mesa" **no son cuatro funciones
-> independientes** — las cuatro necesitan lo mismo: que cada asistente sea una entidad de
-> primera clase, no una cadena colgando de `Guest`. Hacer ese cimiento primero convierte
-> las cuatro en trabajo fácil. Ver §1 y §11 de ese documento.
+### Lo siguiente, por orden de impacto
 
-**Técnico — lo que queda de deuda (detalle en `CLAUDE.md` §5)**
-6. ~~Split de `MasterDashboard.tsx`~~ ✅ hecho (`fcab922`): 2004 → 449 líneas, repartido
-   en `eventFormModel.ts`, `EventFormModal.tsx` y `ClientAdminModal.tsx`. El siguiente
-   split natural sería una pestaña por archivo dentro de `EventFormModal` (1153 líneas).
-7. **Tests de integración con DB real** — el aislamiento multi-tenant no tiene ninguna
-   red hoy; los 43 tests son de lógica pura.
-8. Índices en `GuestAccess` (`eventId`, `guestCode`), code-splitting del bundle
-   (692 kB), `font-serif` configurable por tema.
+**1. Check-in en la puerta.** Es lo que cierra el día del evento y casi todo está
+puesto: cada persona ya es una entidad con su mesa. Falta darle un código/QR propio
+y una pantalla de escaneo. La app ya es PWA, así que el **modo offline** —que los
+salones necesitan de verdad, por cobertura— es una ventaja real sobre la competencia
+LATAM. Librerías decididas en `INVESTIGACION_TECNICA_2026.md` §4 y §5:
+`@yudiel/react-qr-scanner`, `vite-plugin-pwa` y `dexie`. **El escáner nunca puede
+ser la única vía**: siempre búsqueda por nombre.
+
+**2. Recordatorios por estado.** "Mandar a los 23 que no han respondido", con su
+nombre y su enlace. WhatsApp abre >80% frente al ~25% del email, y con enlaces
+`wa.me` sigue siendo gratis. Es de las mejoras con mejor retorno que quedan.
+
+**3. Galería colaborativa.** QR → subir fotos, sin app ni cuenta. Es una categoría
+entera de producto (GuestCam, Kululu, Fotify) y aquí la galería es de solo lectura.
+Da una razón para volver a la invitación *después* de la boda.
+
+**4. Mesa de regalos estructurada** con transferencia. La función monetizable más
+obvia del mercado LATAM; hoy es texto libre.
+
+**5. Retirar `Companion`.** La transición a `Attendee` está a medio camino: las
+escrituras la sincronizan pero las lecturas de acompañantes siguen en la tabla vieja.
+Derivar `companions` de `Attendee`, retirar la tabla y el puente `companionId`.
+
+**6. Sub-eventos** con lista propia (bienvenida, ensayo, brunch), cada invitado viendo
+solo aquellos a los que está invitado.
+
+### Deuda técnica que conviene no olvidar
+- **Tests de integración con DB real**: los 122 son de lógica pura. El aislamiento
+  multi-tenant no tiene ninguna red.
+- `EventFormModal.tsx` con 13 pestañas en un archivo; el siguiente split natural es
+  una pestaña por archivo.
+- Índices en `GuestAccess` (`eventId`, `guestCode`).
+- Los scripts `pnpm seed:*` están rotos bajo Node 20 (loader `ts-node/esm`).
+- `font-serif` hardcodeado en ~49 sitios impide que la fuente sea configurable.
+
+### Ideas del oficio que la investigación destapó y siguen sin hacer
+- **Comidas de proveedores** (fotógrafo, DJ, catering) como categoría aparte: hoy se
+  sientan como invitados normales y descuadran los conteos del catering.
+- **Lógica condicional en el RSVP**: enseñar el menú solo a quien asiste
+  presencialmente, o las preguntas de viaje solo a quien viene de fuera.
+- **Multi-idioma** con librería compilada (Lingui ~2 KB), no i18next.
+- **Alojamiento y transporte** como bloques: hoteles con código y fecha límite,
+  traslados con horarios.
 
 ---
 
