@@ -6,6 +6,7 @@ import { SeatingPerson } from "@/lib/seating";
 import { TableWithPeople } from "@/services/seating-service";
 
 import { Button } from "@/components/ui/button";
+import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 
 interface Props {
@@ -119,20 +120,25 @@ export const SeatingList: React.FC<Props> = ({
                 {hogar.people.length > 1 && tables.length > 0 && (
                   <label className="mt-2 block">
                     <span className="text-xs text-muted-foreground">Sentar al grupo completo en</span>
-                    <select
+                    <Combobox
+                      className="mt-1"
                       value=""
+                      clearOnSelect
                       disabled={busy}
-                      onChange={e => e.target.value && onAssignGroup(hogar.groupId, e.target.value)}
-                      className="mt-1 h-11 w-full touch-manipulation rounded-md border border-input bg-background px-3 text-base sm:h-9 sm:text-sm"
-                    >
-                      <option value="">Elegir mesa…</option>
-                      {tables.map(t => (
-                        <option key={t.id} value={t.id} disabled={huecosDe(t) < hogar.people.length}>
-                          {t.name} — {huecosDe(t)} libres
-                          {huecosDe(t) < hogar.people.length ? " (no caben)" : ""}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Buscar mesa…"
+                      emptyText="Ninguna mesa coincide"
+                      aria-label={`Sentar a ${hogar.groupName} completo`}
+                      onChange={v => v && onAssignGroup(hogar.groupId, v)}
+                      options={tables.map(t => ({
+                        value: t.id,
+                        label: t.name,
+                        hint:
+                          huecosDe(t) < hogar.people.length
+                            ? `${huecosDe(t)} libres — no caben los ${hogar.people.length}`
+                            : `${huecosDe(t)} libres`,
+                        disabled: huecosDe(t) < hogar.people.length,
+                      }))}
+                    />
                   </label>
                 )}
 
@@ -140,21 +146,22 @@ export const SeatingList: React.FC<Props> = ({
                   {hogar.people.map(persona => (
                     <li key={persona.id} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
                       <span className="min-w-0 flex-1 truncate text-sm">{persona.name}</span>
-                      <select
+                      <Combobox
+                        className="w-full sm:w-56"
                         value=""
+                        clearOnSelect
                         disabled={busy || tables.length === 0}
-                        onChange={e => e.target.value && onAssign(persona.id, e.target.value)}
-                        className="h-11 w-full touch-manipulation rounded-md border border-input bg-background px-3 text-base sm:h-9 sm:w-52 sm:text-sm"
-                      >
-                        <option value="">
-                          {tables.length === 0 ? "Crea una mesa primero" : "Sentar en…"}
-                        </option>
-                        {tables.map(t => (
-                          <option key={t.id} value={t.id} disabled={huecosDe(t) <= 0}>
-                            {t.name} — {huecosDe(t)} libres{huecosDe(t) <= 0 ? " (llena)" : ""}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder={tables.length === 0 ? "Crea una mesa primero" : "Sentar en…"}
+                        emptyText="Ninguna mesa coincide"
+                        aria-label={`Sentar a ${persona.name}`}
+                        onChange={v => v && onAssign(persona.id, v)}
+                        options={tables.map(t => ({
+                          value: t.id,
+                          label: t.name,
+                          hint: huecosDe(t) <= 0 ? "completa" : `${huecosDe(t)} libres`,
+                          disabled: huecosDe(t) <= 0,
+                        }))}
+                      />
                     </li>
                   ))}
                 </ul>

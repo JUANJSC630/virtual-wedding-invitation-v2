@@ -21,6 +21,7 @@ import {
 } from "@/hooks/useSeating";
 
 import { Button } from "@/components/ui/button";
+import { Combobox } from "@/components/ui/combobox";
 
 import { SeatingList } from "./SeatingList";
 import { SeatingPlan } from "./SeatingPlan";
@@ -104,20 +105,23 @@ const ReglasDeSeparacion: React.FC<{
           )}
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
-            {[[a, setA, "Primera invitación"], [b, setB, "Segunda invitación"]].map(
-              ([valor, set, etiqueta], i) => (
-                <select
-                  key={i}
-                  value={valor as string}
-                  onChange={e => (set as (v: string) => void)(e.target.value)}
-                  className="h-11 w-full touch-manipulation rounded-md border border-input bg-background px-3 text-base sm:h-9 sm:text-sm"
-                  aria-label={etiqueta as string}
-                >
-                  <option value="">{etiqueta as string}…</option>
-                  {guests.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
+            {([[a, setA, "Primera invitación"], [b, setB, "Segunda invitación"]] as const).map(
+              ([valor, set, etiqueta]) => (
+                <Combobox
+                  key={etiqueta}
+                  value={valor}
+                  onChange={set}
+                  placeholder={`${etiqueta}…`}
+                  emptyText="Ningún invitado coincide"
+                  aria-label={etiqueta}
+                  options={guests.map(g => ({
+                    value: g.id,
+                    label: g.name,
+                    hint: `${g.code} · ${g.attendees?.length ?? 1} ${
+                      (g.attendees?.length ?? 1) === 1 ? "persona" : "personas"
+                    }`,
+                  }))}
+                />
               )
             )}
             <Button
