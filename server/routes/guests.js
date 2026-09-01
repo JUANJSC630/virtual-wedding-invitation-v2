@@ -126,6 +126,63 @@ guestRoutes.get("/code/:code", async (req, res) => {
   }
 });
 
+// GET /api/guests/table/:code?eventSlug=... — dónde se sienta el invitado
+//
+// Devuelve una entrada por PERSONA de la invitación: un hogar puede acabar
+// repartido en dos mesas. Incluye a los demás comensales porque el valor está
+// justo ahí — "tu mesa es la 7, con Ana y Luis". Es la misma información que un
+// cartel de acrílico en la entrada, pero en el móvil.
+guestRoutes.get("/table/:code", accessLimiter, async (req, res) => {
+  try {
+    const { code } = req.params;
+    const event = await resolveEvent(req.query.eventSlug);
+    if (!event) return res.status(404).json({ error: "Evento no encontrado" });
+
+    const guest = await prisma.guest.findUnique({
+      where: { eventId_code: { eventId: event.id, code: String(code).toUpperCase() } },
+      select: {
+        attendees: {
+          select: { id: true, name: true, isPrimary: true, tableId: true },
+          orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+        },
+      },
+    });
+    if (!guest) return res.status(404).json({ error: "Invitado no encontrado" });
+
+    const mesasPropias = [...new Set(guest.attendees.map(a => a.tableId).filter(Boolean))];
+    if (mesasPropias.length === 0) return res.json({ seats: [] });
+
+    const mesas = await prisma.table.findMany({
+      where: { id: { in: mesasPropias }, eventId: event.id },
+      select: {
+        id: true,
+        name: true,
+        attendees: { select: { id: true, name: true }, orderBy: { name: "asc" } },
+      },
+    });
+    const porId = new Map(mesas.map(m => [m.id, m]));
+    const propios = new Set(guest.attendees.map(a => a.id));
+
+    const seats = guest.attendees
+      .filter(a => a.tableId && porId.has(a.tableId))
+      .map(a => {
+        const mesa = porId.get(a.tableId);
+        return {
+          attendeeId: a.id,
+          attendeeName: a.name,
+          tableName: mesa.name,
+          // Los demás comensales, excluyendo a los de la propia invitación.
+          tablemates: mesa.attendees.filter(o => !propios.has(o.id)).map(o => o.name),
+        };
+      });
+
+    res.json({ seats });
+  } catch (error) {
+    console.error("Error getting guest table:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // POST /api/guests/access
 guestRoutes.post("/access", accessLimiter, async (req, res) => {
   try {

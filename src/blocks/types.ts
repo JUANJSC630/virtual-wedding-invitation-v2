@@ -19,7 +19,8 @@ export type BlockType =
   | "rsvp"         // confirmación + regalos + contacto (ex-S8)
   | "text"         // NUEVO: bloque de texto libre
   | "faq"          // NUEVO: preguntas frecuentes
-  | "divider";     // NUEVO: separador decorativo
+  | "divider"      // NUEVO: separador decorativo
+  | "myTable";     // NUEVO: dónde se sienta el invitado
 
 export interface BlockInstance {
   id: string;
