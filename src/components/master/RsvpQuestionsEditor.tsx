@@ -87,7 +87,7 @@ export const RsvpQuestionsEditor: React.FC<Props> = ({ questions, onChange }) =>
                   type="button"
                   onClick={() => move(i, -1)}
                   disabled={i === 0}
-                  className="flex h-9 w-9 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-25"
+                  className="flex h-11 w-11 touch-manipulation sm:h-9 sm:w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-25"
                   aria-label="Subir pregunta"
                 >
                   <ChevronUp className="h-4 w-4" />
@@ -97,7 +97,7 @@ export const RsvpQuestionsEditor: React.FC<Props> = ({ questions, onChange }) =>
                   type="button"
                   onClick={() => move(i, 1)}
                   disabled={i === questions.length - 1}
-                  className="flex h-9 w-9 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-25"
+                  className="flex h-11 w-11 touch-manipulation sm:h-9 sm:w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-25"
                   aria-label="Bajar pregunta"
                 >
                   <ChevronDown className="h-4 w-4" />

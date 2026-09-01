@@ -400,6 +400,7 @@ masterRoutes.delete("/events/:id", async (req, res) => {
     // apuntando a mesas ya borradas.
     await prisma.$transaction([
       prisma.guestAccess.deleteMany({ where: { eventId: id } }),
+      prisma.seatingRule.deleteMany({ where: { eventId: id } }),
       prisma.table.deleteMany({ where: { eventId: id } }),
       prisma.guest.deleteMany({ where: { eventId: id } }),
       prisma.clientAdmin.deleteMany({ where: { eventId: id } }),
@@ -686,6 +687,15 @@ const tableSchema = z.object({
   x: z.coerce.number().default(0),
   y: z.coerce.number().default(0),
   rotation: z.coerce.number().default(0),
+  locked: z.coerce.boolean().optional(),
+  notes: z.string().max(200).nullish(),
+});
+
+// Reglas de reparto entre invitaciones (la más habitual: padres divorciados).
+const ruleSchema = z.object({
+  kind: z.enum(["apart", "together"]).default("apart"),
+  groupAId: z.string().min(1),
+  groupBId: z.string().min(1),
 });
 
 // GET — mesas del evento con las personas sentadas en cada una
@@ -883,6 +893,78 @@ masterRoutes.put("/events/:id/seating", async (req, res) => {
     res.json({ applied: cambios.length, ignored: Object.keys(assignments).length - cambios.length });
   } catch (error) {
     console.error("Error applying seating:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ─── REGLAS DE REPARTO ───────────────────────────────────────────────────────
+
+masterRoutes.get("/events/:id/seating-rules", async (req, res) => {
+  try {
+    const rules = await prisma.seatingRule.findMany({
+      where: { eventId: req.params.id },
+      orderBy: { createdAt: "asc" },
+    });
+    res.json(rules);
+  } catch (error) {
+    console.error("Error listing seating rules:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.post("/events/:id/seating-rules", async (req, res) => {
+  const parsed = ruleSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" });
+  }
+  try {
+    const { id: eventId } = req.params;
+    const { kind, groupAId, groupBId } = parsed.data;
+
+    if (groupAId === groupBId) {
+      return res.status(400).json({ error: "Una invitación no puede separarse de sí misma" });
+    }
+
+    // Ambas invitaciones tienen que ser de ESTE evento.
+    const suyas = await prisma.guest.count({
+      where: { eventId, id: { in: [groupAId, groupBId] } },
+    });
+    if (suyas !== 2) {
+      return res.status(400).json({ error: "Alguna invitación no pertenece a este evento" });
+    }
+
+    // La regla es simétrica: se evita guardarla dos veces al revés.
+    const yaExiste = await prisma.seatingRule.findFirst({
+      where: {
+        eventId,
+        kind,
+        OR: [
+          { groupAId, groupBId },
+          { groupAId: groupBId, groupBId: groupAId },
+        ],
+      },
+    });
+    if (yaExiste) return res.status(200).json(yaExiste);
+
+    const rule = await prisma.seatingRule.create({
+      data: { eventId, kind, groupAId, groupBId },
+    });
+    res.status(201).json(rule);
+  } catch (error) {
+    console.error("Error creating seating rule:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.delete("/events/:id/seating-rules/:ruleId", async (req, res) => {
+  try {
+    const { id: eventId, ruleId } = req.params;
+    const owned = await prisma.seatingRule.findFirst({ where: { id: ruleId, eventId } });
+    if (!owned) return res.status(404).json({ error: "Regla no encontrada en este evento" });
+    await prisma.seatingRule.delete({ where: { id: ruleId } });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting seating rule:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

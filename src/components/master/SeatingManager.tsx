@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 
 import toast from "react-hot-toast";
 import type Konva from "konva";
-import { Download, LayoutGrid, List, Plus, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronRight, Download, LayoutGrid, List, Plus, Sparkles, Trash2 } from "lucide-react";
 
 import { Guest } from "@/types";
 
@@ -11,8 +11,11 @@ import { TableWithPeople } from "@/services/seating-service";
 
 import {
   useApplySeating,
+  useCreateSeatingRule,
   useCreateTable,
+  useDeleteSeatingRule,
   useDeleteTable,
+  useSeatingRules,
   useTables,
   useUpdateTable,
 } from "@/hooks/useSeating";
@@ -46,12 +49,103 @@ function toPeople(guests: Guest[]): SeatingPerson[] {
  * El modo lista arranca por defecto porque es el que sirve desde el móvil, que
  * es donde la mayoría de organizadores usa el panel. Ver ARQUITECTURA_MESAS.md §4.
  */
+/** Declarar qué invitaciones NO pueden compartir mesa. */
+const ReglasDeSeparacion: React.FC<{
+  guests: Guest[];
+  rules: { id: string; groupAId: string; groupBId: string; kind: string }[];
+  onCreate: (a: string, b: string) => void;
+  onDelete: (id: string) => void;
+}> = ({ guests, rules, onCreate, onDelete }) => {
+  const [abierto, setAbierto] = useState(false);
+  const [a, setA] = useState("");
+  const [b, setB] = useState("");
+  const nombre = (id: string) => guests.find(g => g.id === id)?.name ?? "(eliminado)";
+
+  return (
+    <div className="rounded-lg border bg-card">
+      <button
+        type="button"
+        onClick={() => setAbierto(o => !o)}
+        className="flex min-h-12 w-full touch-manipulation items-center gap-2 px-4 py-3 text-left"
+      >
+        {abierto ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium">Quién no puede sentarse junto</span>
+          <span className="block text-sm text-muted-foreground">
+            {rules.length === 0
+              ? "Sin reglas. Útil para padres divorciados o invitados enfrentados."
+              : `${rules.length} ${rules.length === 1 ? "regla" : "reglas"}`}
+          </span>
+        </span>
+      </button>
+
+      {abierto && (
+        <div className="space-y-3 border-t p-4">
+          {rules.length > 0 && (
+            <ul className="space-y-2">
+              {rules.map(r => (
+                <li key={r.id} className="flex min-h-11 items-center gap-2 rounded-md bg-muted/50 px-3">
+                  <span className="min-w-0 flex-1 text-sm">
+                    {nombre(r.groupAId)} <span className="text-muted-foreground">y</span>{" "}
+                    {nombre(r.groupBId)}{" "}
+                    <span className="text-muted-foreground">no comparten mesa</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(r.id)}
+                    className="flex h-11 w-11 shrink-0 touch-manipulation sm:h-9 sm:w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent"
+                    aria-label="Eliminar regla"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+            {[[a, setA, "Primera invitación"], [b, setB, "Segunda invitación"]].map(
+              ([valor, set, etiqueta], i) => (
+                <select
+                  key={i}
+                  value={valor as string}
+                  onChange={e => (set as (v: string) => void)(e.target.value)}
+                  className="h-11 w-full touch-manipulation rounded-md border border-input bg-background px-3 text-base sm:h-9 sm:text-sm"
+                  aria-label={etiqueta as string}
+                >
+                  <option value="">{etiqueta as string}…</option>
+                  {guests.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
+              )
+            )}
+            <Button
+              variant="outline"
+              disabled={!a || !b || a === b}
+              onClick={() => { onCreate(a, b); setA(""); setB(""); }}
+            >
+              Separar
+            </Button>
+          </div>
+          {a && b && a === b && (
+            <p className="text-xs text-destructive">Elige dos invitaciones distintas.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const SeatingManager: React.FC<Props> = ({ guests }) => {
   const { data: tables = [], isLoading } = useTables();
   const createTable = useCreateTable();
   const updateTable = useUpdateTable();
   const deleteTable = useDeleteTable();
   const applySeating = useApplySeating();
+  const { data: rules = [] } = useSeatingRules();
+  const createRule = useCreateSeatingRule();
+  const deleteRule = useDeleteSeatingRule();
 
   const [mode, setMode] = useState<"lista" | "plano">("lista");
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
@@ -133,7 +227,7 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
 
   /** Calcula la propuesta en el navegador: es lógica pura, no hace falta ir al servidor. */
   const handleSuggest = () => {
-    const plan = autoAssign(tables, people);
+    const plan = autoAssign(tables, people, { rules });
     setProposal(plan);
     if (plan.seated === 0 && plan.warnings.length === 0) {
       toast("No hay nadie nuevo que sentar.");
@@ -270,6 +364,21 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
           </div>
         </div>
       )}
+
+      {/* ── Reglas de separación ────────────────────────────────────
+          La etiqueta impone cosas que los datos no adivinan: unos padres
+          divorciados no comparten mesa. Ver ARQUITECTURA_MESAS.md §7. */}
+      <ReglasDeSeparacion
+        guests={guests}
+        rules={rules}
+        onCreate={(groupAId, groupBId) =>
+          createRule.mutate(
+            { kind: "apart", groupAId, groupBId },
+            { onSuccess: () => toast.success("Regla añadida"), onError: (e: Error) => toast.error(e.message) }
+          )
+        }
+        onDelete={id => deleteRule.mutate(id)}
+      />
 
       {mode === "lista" ? (
         <SeatingList

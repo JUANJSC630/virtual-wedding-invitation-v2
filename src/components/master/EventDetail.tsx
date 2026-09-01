@@ -6,6 +6,7 @@ import { EventWithStats } from "@/types";
 import { sanitizeQuestions } from "@/lib/rsvpQuestions";
 
 import { useAllGuests } from "@/hooks/useGuests";
+import { useTables } from "@/hooks/useSeating";
 
 import { GuestScopeContext } from "@/context/GuestScopeContext";
 
@@ -35,6 +36,19 @@ interface Props {
 function SeatingTab() {
   const { data: guests = [] } = useAllGuests();
   return <SeatingManager guests={guests} />;
+}
+
+/** Los invitados y las mesas comparten ámbito, así que el desglose por mesa sale gratis. */
+function GuestsTab({ event }: { event: EventWithStats }) {
+  const { data: tables = [] } = useTables();
+  return (
+    <GuestManager
+      eventSlug={event.slug}
+      eventId={event.id}
+      rsvpQuestions={sanitizeQuestions(event.config?.rsvpQuestions)}
+      tables={tables}
+    />
+  );
 }
 
 export function EventDetail({ event, onBack, onEdit, onManageAdmins }: Props) {
@@ -92,11 +106,7 @@ export function EventDetail({ event, onBack, onEdit, onManageAdmins }: Props) {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="guests" className="pt-4">
-            <GuestManager
-              eventSlug={event.slug}
-              eventId={event.id}
-              rsvpQuestions={sanitizeQuestions(event.config?.rsvpQuestions)}
-            />
+            <GuestsTab event={event} />
           </TabsContent>
           <TabsContent value="tables" className="pt-4">
             <SeatingTab />

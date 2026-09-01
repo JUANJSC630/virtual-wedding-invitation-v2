@@ -12,6 +12,14 @@ export interface TableWithPeople extends SeatingTable {
 
 export type TableInput = Partial<Omit<SeatingTable, "id">>;
 
+/** Regla de reparto entre dos invitaciones. */
+export interface SeatingRuleRow {
+  id: string;
+  kind: "apart" | "together";
+  groupAId: string;
+  groupBId: string;
+}
+
 export const getTables = async (base: string): Promise<TableWithPeople[]> => {
   const res = await fetch(`${base}/tables`, { credentials: "include" });
   if (!res.ok) throw new Error("Error al obtener las mesas");
@@ -62,4 +70,29 @@ export const applySeating = async (
   });
   if (!res.ok) throw new Error("Error al guardar la distribución");
   return await res.json();
+};
+
+export const getSeatingRules = async (base: string): Promise<SeatingRuleRow[]> => {
+  const res = await fetch(`${base}/seating-rules`, { credentials: "include" });
+  if (!res.ok) throw new Error("Error al obtener las reglas");
+  return await res.json();
+};
+
+export const createSeatingRule = async (
+  base: string,
+  rule: { kind: "apart" | "together"; groupAId: string; groupBId: string }
+): Promise<SeatingRuleRow> => {
+  const res = await fetch(`${base}/seating-rules`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(rule),
+  });
+  if (!res.ok) throw new Error((await res.json()).error ?? "Error al crear la regla");
+  return await res.json();
+};
+
+export const deleteSeatingRule = async (base: string, id: string): Promise<void> => {
+  const res = await fetch(`${base}/seating-rules/${id}`, { method: "DELETE", credentials: "include" });
+  if (!res.ok) throw new Error("Error al eliminar la regla");
 };

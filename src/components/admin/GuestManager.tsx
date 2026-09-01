@@ -32,9 +32,11 @@ interface GuestManagerProps {
   eventId?: string;
   /** Preguntas del RSVP del evento; sin ellas no se muestra el panel de respuestas. */
   rsvpQuestions?: RsvpQuestion[];
+  /** Mesas del evento; habilita el desglose de catering por mesa. */
+  tables?: { id: string; name: string }[];
 }
 
-const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQuestions = [] }) => {
+const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQuestions = [], tables = [] }) => {
   const queryClient = useQueryClient();
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
@@ -299,7 +301,7 @@ const GuestManager: React.FC<GuestManagerProps> = ({ eventSlug, eventId, rsvpQue
 
       <GuestStatsPanel liveMode={liveMode} />
 
-      <RsvpAnswersPanel guests={guests} questions={rsvpQuestions} />
+      <RsvpAnswersPanel guests={guests} questions={rsvpQuestions} tables={tables} />
 
       <GuestFilterBar
         guests={guests}

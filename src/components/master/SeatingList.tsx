@@ -13,7 +13,7 @@ interface Props {
   people: SeatingPerson[];
   onAssign: (attendeeId: string, tableId: string | null) => void;
   onAssignGroup: (groupId: string, tableId: string) => void;
-  onUpdateTable: (id: string, updates: { name?: string; capacity?: number; shape?: "round" | "rect" }) => void;
+  onUpdateTable: (id: string, updates: { name?: string; capacity?: number; shape?: "round" | "rect"; locked?: boolean }) => void;
   onDeleteTable: (table: TableWithPeople) => void;
   busy?: boolean;
 }
@@ -231,6 +231,18 @@ export const SeatingList: React.FC<Props> = ({
                     </Button>
                   </div>
 
+                  <label className="mt-2 flex min-h-11 cursor-pointer touch-manipulation items-center gap-2 text-sm sm:min-h-0">
+                    <input
+                      type="checkbox"
+                      checked={table.locked ?? false}
+                      onChange={e => onUpdateTable(table.id, { locked: e.target.checked })}
+                      className="h-5 w-5 accent-primary"
+                    />
+                    <span className={table.locked ? "font-medium" : "text-muted-foreground"}>
+                      Fijada — la sugerencia no la toca
+                    </span>
+                  </label>
+
                   <p
                     className={`mt-2 text-sm ${
                       excedida ? "text-destructive" : llena ? "text-amber-600" : "text-muted-foreground"
@@ -256,7 +268,7 @@ export const SeatingList: React.FC<Props> = ({
                             type="button"
                             onClick={() => onAssign(persona.id, null)}
                             disabled={busy}
-                            className="flex h-9 w-9 shrink-0 touch-manipulation items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                            className="flex h-11 w-11 shrink-0 touch-manipulation sm:h-9 sm:w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                             aria-label={`Levantar a ${persona.name} de la mesa`}
                             title="Levantar de la mesa"
                           >

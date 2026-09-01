@@ -3,6 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   TableInput,
   applySeating,
+  createSeatingRule,
+  deleteSeatingRule,
+  getSeatingRules,
   createTable,
   deleteTable,
   getTables,
@@ -22,6 +25,7 @@ function useSeatingMutation<TVars, TData>(fn: (base: string, vars: TVars) => Pro
     mutationFn: (vars: TVars) => fn(base, vars),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tables"] });
+      queryClient.invalidateQueries({ queryKey: ["seating-rules"] });
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
     },
   });
@@ -49,3 +53,19 @@ export const useApplySeating = () =>
   useSeatingMutation((base, assignments: Record<string, string | null>) =>
     applySeating(base, assignments)
   );
+
+export const useSeatingRules = () => {
+  const base = useGuestScope();
+  return useQuery({
+    queryKey: ["seating-rules", base],
+    queryFn: () => getSeatingRules(base),
+  });
+};
+
+export const useCreateSeatingRule = () =>
+  useSeatingMutation((base, rule: Parameters<typeof createSeatingRule>[1]) =>
+    createSeatingRule(base, rule)
+  );
+
+export const useDeleteSeatingRule = () =>
+  useSeatingMutation((base, id: string) => deleteSeatingRule(base, id));

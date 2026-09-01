@@ -22,6 +22,20 @@ export interface SeatingTable {
   x: number;
   y: number;
   rotation: number;
+  /** Fijada: la recomendación no sienta a nadie aquí ni mueve a quien ya está. */
+  locked?: boolean;
+  notes?: string | null;
+}
+
+/**
+ * Restricción entre dos invitaciones. La etiqueta impone cosas que los datos no
+ * pueden adivinar: unos padres divorciados **no** comparten mesa, y a veces se
+ * quiere lo contrario, juntar a dos familias amigas.
+ */
+export interface SeatingRule {
+  kind: "apart" | "together";
+  groupAId: string;
+  groupBId: string;
 }
 
 /** Una persona a sentar. `groupId` es su invitación (el hogar). */
@@ -34,7 +48,11 @@ export interface SeatingPerson {
   tableId?: string | null;
 }
 
-export type SeatingWarningKind = "grupo-partido" | "sin-sitio" | "sin-mesas";
+export type SeatingWarningKind =
+  | "grupo-partido"
+  | "sin-sitio"
+  | "sin-mesas"
+  | "regla-incumplida";
 
 export interface SeatingWarning {
   kind: SeatingWarningKind;
@@ -97,29 +115,80 @@ function buildHouseholds(people: SeatingPerson[]): Household[] {
 export function autoAssign(
   tables: SeatingTable[],
   people: SeatingPerson[],
-  { respectExisting = true }: { respectExisting?: boolean } = {}
+  {
+    respectExisting = true,
+    rules = [],
+  }: { respectExisting?: boolean; rules?: SeatingRule[] } = {}
 ): SeatingPlan {
   const warnings: SeatingWarning[] = [];
 
-  if (tables.length === 0) {
+  if (tables.filter(t => !t.locked).length === 0) {
     return {
       assignments: {},
-      warnings: [{ kind: "sin-mesas", message: "No hay mesas todavía. Crea al menos una." }],
+      warnings: [{
+        kind: "sin-mesas",
+        message: tables.length === 0
+          ? "No hay mesas todavía. Crea al menos una."
+          : "Todas las mesas están fijadas. Desfija alguna para poder repartir.",
+      }],
       seated: 0,
       unseated: buildHouseholds(people).reduce((n, h) => n + h.people.length, 0),
     };
   }
 
+  // Una mesa fijada queda fuera del reparto: ni se le añade gente ni se mueve a
+  // quien ya está sentado en ella, aunque se pida rehacer el plano entero.
+  const disponibles = tables.filter(t => !t.locked);
+  const enMesaFijada = new Set(
+    people.filter(p => p.tableId && tables.some(t => t.id === p.tableId && t.locked)).map(p => p.id)
+  );
+
   // Punto de partida: lo ya asignado ocupa sitio si se respeta.
-  const fixed = respectExisting
-    ? people.filter(p => p.confirmed && p.tableId && tables.some(t => t.id === p.tableId))
-    : [];
+  const fixed = people.filter(
+    p =>
+      p.confirmed &&
+      p.tableId &&
+      tables.some(t => t.id === p.tableId) &&
+      (respectExisting || enMesaFijada.has(p.id))
+  );
   const occupancy = occupancyByTable(fixed);
   for (const table of tables) occupancy[table.id] ??= 0;
 
+  /** Hogares que no pueden compartir mesa, por la regla "apart". */
+  const separados = new Map<string, Set<string>>();
+  for (const rule of rules) {
+    if (rule.kind !== "apart") continue;
+    const pares: [string, string][] = [
+      [rule.groupAId, rule.groupBId],
+      [rule.groupBId, rule.groupAId],
+    ];
+    for (const [a, b] of pares) {
+      if (!separados.has(a)) separados.set(a, new Set());
+      separados.get(a)?.add(b);
+    }
+  }
+
+  /** Qué hogares hay ya en cada mesa, para poder respetar las reglas. */
+  const hogaresEnMesa = new Map<string, Set<string>>();
+  const anotar = (tableId: string, groupId: string) => {
+    if (!hogaresEnMesa.has(tableId)) hogaresEnMesa.set(tableId, new Set());
+    hogaresEnMesa.get(tableId)?.add(groupId);
+  };
+  for (const p of fixed) if (p.tableId) anotar(p.tableId, p.groupId);
+
+  /** ¿Choca este hogar con alguien ya sentado en esa mesa? */
+  const chocaEn = (tableId: string, groupId: string) => {
+    const enemigos = separados.get(groupId);
+    if (!enemigos || enemigos.size === 0) return false;
+    const presentes = hogaresEnMesa.get(tableId);
+    if (!presentes) return false;
+    for (const otro of presentes) if (enemigos.has(otro)) return true;
+    return false;
+  };
+
   const yaSentados = new Set(fixed.map(p => p.id));
   const households = buildHouseholds(people)
-    .map(h => ({ ...h, people: h.people.filter(p => !yaSentados.has(p.id)) }))
+    .map(h => ({ ...h, people: h.people.filter(p => !yaSentados.has(p.id) && !enMesaFijada.has(p.id)) }))
     .filter(h => h.people.length > 0)
     // Best-fit *decreasing*: los grupos grandes primero, que son los difíciles.
     .sort((a, b) => b.people.length - a.people.length || a.groupName.localeCompare(b.groupName));
@@ -131,25 +200,36 @@ export function autoAssign(
   for (const household of households) {
     const size = household.people.length;
 
-    // Best fit: la mesa donde quede el hueco más ajustado tras sentarlos.
-    const cabe = tables
-      .filter(t => freeSeats(t, occupancy) >= size)
+    // Best fit: la mesa donde quede el hueco más ajustado tras sentarlos,
+    // descartando las que incumplirían una regla de separación.
+    const cabe = disponibles
+      .filter(t => freeSeats(t, occupancy) >= size && !chocaEn(t.id, household.groupId))
       .sort((a, b) => freeSeats(a, occupancy) - freeSeats(b, occupancy));
 
     if (cabe[0]) {
       const table = cabe[0];
       for (const person of household.people) assignments[person.id] = table.id;
       occupancy[table.id] = (occupancy[table.id] ?? 0) + size;
+      anotar(table.id, household.groupId);
       seated += size;
       continue;
+    }
+
+    // Si no cupo por una regla pero sí había sitio, se dice explícitamente.
+    const habriaCabido = disponibles.some(t => freeSeats(t, occupancy) >= size);
+    if (habriaCabido) {
+      warnings.push({
+        kind: "regla-incumplida",
+        message: `${household.groupName} (${size}) no cabe sin romper una regla de separación. Añade otra mesa o revisa las reglas.`,
+      });
     }
 
     // No cabe entero: se reparte por las mesas con más hueco y se avisa.
     const restantes = [...household.people];
     const usadas: string[] = [];
     while (restantes.length > 0) {
-      const conHueco = tables
-        .filter(t => freeSeats(t, occupancy) > 0)
+      const conHueco = disponibles
+        .filter(t => freeSeats(t, occupancy) > 0 && !chocaEn(t.id, household.groupId))
         .sort((a, b) => freeSeats(b, occupancy) - freeSeats(a, occupancy));
       const table = conHueco[0];
       if (!table) break;
@@ -160,6 +240,7 @@ export function autoAssign(
         occupancy[table.id] = (occupancy[table.id] ?? 0) + 1;
         seated++;
       }
+      anotar(table.id, household.groupId);
       usadas.push(table.name);
     }
 

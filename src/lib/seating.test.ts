@@ -172,3 +172,84 @@ describe("capacitySummary", () => {
     });
   });
 });
+
+describe("autoAssign — mesas fijadas", () => {
+  const fijada = (id: string, capacity: number, name = id): SeatingTable => ({
+    ...mesa(id, capacity, name), locked: true,
+  });
+
+  it("no sienta a nadie en una mesa fijada", () => {
+    const plan = autoAssign([fijada("presidencial", 8), mesa("m1", 8)], hogar("A", 2));
+    expect(plan.assignments["A-0"]).toBe("m1");
+  });
+
+  it("no mueve a quien ya está en una mesa fijada, ni rehaciendo el plano", () => {
+    const tables = [fijada("presidencial", 8, "Presidencial"), mesa("m1", 8)];
+    const novios = hogar("novios", 2, { tableId: "presidencial" });
+    const plan = autoAssign(tables, [...novios, ...hogar("B", 3)], { respectExisting: false });
+
+    expect(plan.assignments["novios-0"]).toBeUndefined();
+    expect(plan.assignments["B-0"]).toBe("m1");
+  });
+
+  it("si todas las mesas están fijadas lo dice, en vez de callar", () => {
+    const plan = autoAssign([fijada("m1", 8), fijada("m2", 8)], hogar("A", 2));
+    expect(plan.warnings[0]?.kind).toBe("sin-mesas");
+    expect(plan.warnings[0]?.message).toContain("fijadas");
+    expect(plan.assignments).toEqual({});
+  });
+});
+
+describe("autoAssign — reglas de separación (padres divorciados)", () => {
+  const aparte = (a: string, b: string) =>
+    [{ kind: "apart" as const, groupAId: a, groupBId: b }];
+
+  it("no sienta juntas a dos invitaciones marcadas como separadas", () => {
+    const tables = [mesa("m1", 10), mesa("m2", 10)];
+    const gente = [...hogar("padre", 2), ...hogar("madre", 2)];
+    const plan = autoAssign(tables, gente, { rules: aparte("padre", "madre") });
+
+    expect(plan.assignments["padre-0"]).not.toBe(plan.assignments["madre-0"]);
+    expect(plan.unseated).toBe(0);
+  });
+
+  it("sin la regla sí las juntaría (best fit las pondría en la misma)", () => {
+    const tables = [mesa("m1", 10), mesa("m2", 10)];
+    const gente = [...hogar("padre", 2), ...hogar("madre", 2)];
+    const plan = autoAssign(tables, gente);
+    expect(plan.assignments["padre-0"]).toBe(plan.assignments["madre-0"]);
+  });
+
+  it("la regla funciona en los dos sentidos, se declare como se declare", () => {
+    const tables = [mesa("m1", 10), mesa("m2", 10)];
+    const gente = [...hogar("madre", 2), ...hogar("padre", 2)];
+    const plan = autoAssign(tables, gente, { rules: aparte("padre", "madre") });
+    expect(plan.assignments["madre-0"]).not.toBe(plan.assignments["padre-0"]);
+  });
+
+  it("respeta a quien ya está sentado al aplicar la regla", () => {
+    const tables = [mesa("m1", 10), mesa("m2", 10)];
+    const gente = [...hogar("padre", 2, { tableId: "m1" }), ...hogar("madre", 2)];
+    const plan = autoAssign(tables, gente, { rules: aparte("padre", "madre") });
+    expect(plan.assignments["madre-0"]).toBe("m2");
+  });
+
+  it("avisa cuando la regla deja al grupo sin sitio habiendo hueco", () => {
+    // Solo una mesa, y el padre ya está en ella: la madre no puede entrar.
+    const tables = [mesa("m1", 10)];
+    const gente = [...hogar("padre", 2, { tableId: "m1" }), ...hogar("madre", 2)];
+    const plan = autoAssign(tables, gente, { rules: aparte("padre", "madre") });
+
+    expect(plan.assignments["madre-0"]).toBeUndefined();
+    const aviso = plan.warnings.find(w => w.kind === "regla-incumplida");
+    expect(aviso?.message).toContain("Familia madre");
+    expect(aviso?.message).toContain("regla de separación");
+  });
+
+  it("una regla que no afecta a nadie no cambia el reparto", () => {
+    const tables = [mesa("m1", 10)];
+    const gente = hogar("A", 3);
+    const conRegla = autoAssign(tables, gente, { rules: aparte("x", "y") });
+    expect(conRegla.assignments).toEqual(autoAssign(tables, gente).assignments);
+  });
+});

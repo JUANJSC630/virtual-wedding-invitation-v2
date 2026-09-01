@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 
 interface Props {
   guests: Guest[];
+  /** Mesas del evento, para poder desglosar por mesa. Ausente en el panel cliente. */
+  tables?: { id: string; name: string }[];
   /**
    * Preguntas del evento. Se pasan explícitamente porque los paneles de
    * administración no están envueltos en EventContext — ese contexto solo
@@ -26,7 +28,7 @@ interface Props {
  * organizador le pasa al catering. Para las abiertas, la lista de respuestas
  * con el nombre de quien la escribió.
  */
-export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
+export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions, tables = [] }) => {
   const [open, setOpen] = useState(true);
 
   if (questions.length === 0) return null;
@@ -37,8 +39,8 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
    */
   const personas = guests.flatMap(g =>
     g.attendees?.length
-      ? g.attendees.map(a => ({ name: a.name, answers: a.rsvpAnswers }))
-      : [{ name: g.name, answers: g.rsvpAnswers }]
+      ? g.attendees.map(a => ({ name: a.name, answers: a.rsvpAnswers, tableId: a.tableId ?? null }))
+      : [{ name: g.name, answers: g.rsvpAnswers, tableId: null }]
   );
   const answered = personas.filter(p => p.answers && Object.keys(p.answers).length > 0);
   const allAnswers = answered.map(p => p.answers as RsvpAnswers);
@@ -60,6 +62,55 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
     downloadCsv(`respuestas-rsvp-${new Date().toISOString().slice(0, 10)}.csv`, rows);
   };
 
+  /**
+   * Desglose MESA POR MESA. Es lo que la cocina necesita de verdad: se sirve por
+   * mesas, no por totales del salón. Un camarero llega a la Mesa 7 y tiene que
+   * saber que salen 3 carnes, 2 pescados y 1 vegetariano.
+   */
+  const exportPorMesa = () => {
+    const eleccion = questions.filter(q => q.type !== "text");
+    const abiertas = questions.filter(q => q.type === "text");
+
+    const rows: unknown[][] = [[
+      "Mesa", "Comensales",
+      ...eleccion.flatMap(q => q.options.map(o => `${q.label}: ${o}`)),
+      ...abiertas.map(q => q.label),
+    ]];
+
+    const grupos = [
+      ...tables.map(t => ({ nombre: t.name, gente: personas.filter(p => p.tableId === t.id) })),
+      { nombre: "Sin mesa asignada", gente: personas.filter(p => !p.tableId) },
+    ].filter(g => g.gente.length > 0);
+
+    for (const grupo of grupos) {
+      const respuestas = grupo.gente
+        .map(p => p.answers)
+        .filter(Boolean) as RsvpAnswers[];
+
+      rows.push([
+        grupo.nombre,
+        grupo.gente.length,
+        ...eleccion.flatMap(q => {
+          const counts = tallyAnswers(q, respuestas);
+          return q.options.map(o => counts[o] ?? 0);
+        }),
+        // Las abiertas se listan con el nombre de quien las escribió: el catering
+        // necesita saber que la alergia es de Ana, no que "hay una alergia".
+        ...abiertas.map(q =>
+          grupo.gente
+            .map(p => {
+              const v = p.answers?.[q.id];
+              return typeof v === "string" && v ? `${p.name}: ${v}` : null;
+            })
+            .filter(Boolean)
+            .join(" · ")
+        ),
+      ]);
+    }
+
+    downloadCsv(`catering-por-mesa-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  };
+
   return (
     <div className="rounded-lg border bg-card">
       <button
@@ -78,16 +129,30 @@ export const RsvpAnswersPanel: React.FC<Props> = ({ guests, questions }) => {
 
       {open && (
         <div className="space-y-4 border-t p-4">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={exportSummary}
-            disabled={answered.length === 0}
-            className="!w-full sm:!w-auto"
-          >
-            <Download className="mr-2 h-4 w-4" /> Descargar resumen para el catering
-          </Button>
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={exportSummary}
+              disabled={answered.length === 0}
+              className="!w-full sm:!w-auto"
+            >
+              <Download className="mr-2 h-4 w-4" /> Resumen general
+            </Button>
+            {tables.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={exportPorMesa}
+                disabled={answered.length === 0}
+                className="!w-full sm:!w-auto"
+              >
+                <Download className="mr-2 h-4 w-4" /> Desglose por mesa
+              </Button>
+            )}
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {questions.map(q => {
             if (q.type === "text") {

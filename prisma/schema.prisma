@@ -54,6 +54,7 @@ model Event {
   guests        Guest[]
   guestAccesses GuestAccess[]
   tables        Table[]
+  seatingRules  SeatingRule[]
 
   @@map("events")
 }
@@ -158,6 +159,11 @@ model Table {
   x         Float    @default(0)              // posición en el plano
   y         Float    @default(0)
   rotation  Float    @default(0)              // solo relevante en rectangulares
+  // La recomendación no toca una mesa fijada: es como se protege la
+  // presidencial, la de los novios o cualquier reparto ya decidido a mano.
+  locked    Boolean  @default(false)
+  // "Cerca de la pista", "lejos de los altavoces", "acceso silla de ruedas"…
+  notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -165,6 +171,23 @@ model Table {
 
   @@index([eventId])
   @@map("tables")
+}
+
+// ─── REGLAS DE REPARTO ────────────────────────────────────────────────────────
+// Restricciones que la etiqueta impone y los datos no pueden adivinar. La más
+// habitual: unos padres divorciados NO pueden compartir mesa. Se expresan entre
+// INVITACIONES (hogares), que es la unidad con la que trabaja el reparto.
+model SeatingRule {
+  id       String @id @default(cuid())
+  eventId  String
+  event    Event  @relation(fields: [eventId], references: [id])
+  kind     String @default("apart")   // apart | together
+  groupAId String                     // Guest.id
+  groupBId String                     // Guest.id
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+  @@map("seating_rules")
 }
 
 // ─── TRACKING DE ACCESOS ──────────────────────────────────────────────────────
