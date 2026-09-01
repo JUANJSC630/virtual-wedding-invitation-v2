@@ -55,6 +55,7 @@ model Event {
   guestAccesses GuestAccess[]
   tables        Table[]
   seatingRules  SeatingRule[]
+  venueElements VenueElement[]
 
   @@map("events")
 }
@@ -171,6 +172,28 @@ model Table {
 
   @@index([eventId])
   @@map("tables")
+}
+
+// ─── ELEMENTOS DEL SALÓN ──────────────────────────────────────────────────────
+// Pista de baile, escenario, barra, entrada… Sin ellos las mesas se colocan en
+// el vacío, y las guías de montaje dependen de dónde están: los mayores lejos
+// de los altavoces, sillas de ruedas cerca de los bordes, pasillos despejados.
+model VenueElement {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  kind      String                            // pista | escenario | barra | entrada | buffet | otro
+  label     String?                           // texto propio si se quiere
+  x         Float    @default(0)
+  y         Float    @default(0)
+  width     Float    @default(300)
+  height    Float    @default(200)
+  rotation  Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+  @@map("venue_elements")
 }
 
 // ─── REGLAS DE REPARTO ────────────────────────────────────────────────────────

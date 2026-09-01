@@ -96,3 +96,54 @@ export const deleteSeatingRule = async (base: string, id: string): Promise<void>
   const res = await fetch(`${base}/seating-rules/${id}`, { method: "DELETE", credentials: "include" });
   if (!res.ok) throw new Error("Error al eliminar la regla");
 };
+
+/** Elemento del salón: pista, escenario, barra, entrada… */
+export type VenueKind = "pista" | "escenario" | "barra" | "entrada" | "buffet" | "otro";
+
+export interface VenueElementRow {
+  id: string;
+  kind: VenueKind;
+  label: string | null;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+}
+
+export type VenueInput = Partial<Omit<VenueElementRow, "id">>;
+
+export const getVenue = async (base: string): Promise<VenueElementRow[]> => {
+  const res = await fetch(`${base}/venue`, { credentials: "include" });
+  if (!res.ok) throw new Error("Error al obtener el salón");
+  return await res.json();
+};
+
+export const createVenueElement = async (base: string, el: VenueInput): Promise<VenueElementRow> => {
+  const res = await fetch(`${base}/venue`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(el),
+  });
+  if (!res.ok) throw new Error((await res.json()).error ?? "Error al crear el elemento");
+  return await res.json();
+};
+
+export const updateVenueElement = async (
+  base: string, id: string, updates: VenueInput
+): Promise<VenueElementRow> => {
+  const res = await fetch(`${base}/venue/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) throw new Error("Error al actualizar el elemento");
+  return await res.json();
+};
+
+export const deleteVenueElement = async (base: string, id: string): Promise<void> => {
+  const res = await fetch(`${base}/venue/${id}`, { method: "DELETE", credentials: "include" });
+  if (!res.ok) throw new Error("Error al eliminar el elemento");
+};

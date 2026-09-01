@@ -401,6 +401,7 @@ masterRoutes.delete("/events/:id", async (req, res) => {
     await prisma.$transaction([
       prisma.guestAccess.deleteMany({ where: { eventId: id } }),
       prisma.seatingRule.deleteMany({ where: { eventId: id } }),
+      prisma.venueElement.deleteMany({ where: { eventId: id } }),
       prisma.table.deleteMany({ where: { eventId: id } }),
       prisma.guest.deleteMany({ where: { eventId: id } }),
       prisma.clientAdmin.deleteMany({ where: { eventId: id } }),
@@ -691,6 +692,17 @@ const tableSchema = z.object({
   notes: z.string().max(200).nullish(),
 });
 
+// Elementos del salón: pista, escenario, barra, entrada…
+const venueSchema = z.object({
+  kind: z.enum(["pista", "escenario", "barra", "entrada", "buffet", "otro"]).default("otro"),
+  label: z.string().max(60).nullish(),
+  x: z.coerce.number().default(0),
+  y: z.coerce.number().default(0),
+  width: z.coerce.number().min(40).max(1400).default(300),
+  height: z.coerce.number().min(40).max(950).default(200),
+  rotation: z.coerce.number().default(0),
+});
+
 // Reglas de reparto entre invitaciones (la más habitual: padres divorciados).
 const ruleSchema = z.object({
   kind: z.enum(["apart", "together"]).default("apart"),
@@ -893,6 +905,84 @@ masterRoutes.put("/events/:id/seating", async (req, res) => {
     res.json({ applied: cambios.length, ignored: Object.keys(assignments).length - cambios.length });
   } catch (error) {
     console.error("Error applying seating:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ─── ELEMENTOS DEL SALÓN ─────────────────────────────────────────────────────
+
+masterRoutes.get("/events/:id/venue", async (req, res) => {
+  try {
+    const elements = await prisma.venueElement.findMany({
+      where: { eventId: req.params.id },
+      orderBy: { createdAt: "asc" },
+    });
+    res.json(elements);
+  } catch (error) {
+    console.error("Error listing venue elements:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.post("/events/:id/venue", async (req, res) => {
+  const parsed = venueSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" });
+  }
+  try {
+    const eventId = req.params.id;
+
+    // Misma lección que con las mesas: sin posición propia nacerían todos
+    // encima. Se serializa por evento y se busca una banda libre.
+    const element = await prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${eventId}))::text`;
+
+      const existentes = await tx.venueElement.findMany({
+        where: { eventId },
+        select: { y: true, height: true },
+      });
+      // Se apilan en franjas horizontales, que es como se lee un salón.
+      const usado = existentes.reduce((max, e) => Math.max(max, e.y + e.height), 0);
+      const y = existentes.length === 0 ? 60 : Math.min(760, usado + 40);
+
+      return tx.venueElement.create({
+        data: { ...parsed.data, eventId, x: parsed.data.x || 80, y: parsed.data.y || y },
+      });
+    });
+
+    res.status(201).json(element);
+  } catch (error) {
+    console.error("Error creating venue element:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.patch("/events/:id/venue/:elementId", async (req, res) => {
+  const parsed = venueSchema.partial().safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos" });
+  }
+  try {
+    const { id: eventId, elementId } = req.params;
+    const owned = await prisma.venueElement.findFirst({ where: { id: elementId, eventId } });
+    if (!owned) return res.status(404).json({ error: "Elemento no encontrado en este evento" });
+    const element = await prisma.venueElement.update({ where: { id: elementId }, data: parsed.data });
+    res.json(element);
+  } catch (error) {
+    console.error("Error updating venue element:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+masterRoutes.delete("/events/:id/venue/:elementId", async (req, res) => {
+  try {
+    const { id: eventId, elementId } = req.params;
+    const owned = await prisma.venueElement.findFirst({ where: { id: elementId, eventId } });
+    if (!owned) return res.status(404).json({ error: "Elemento no encontrado en este evento" });
+    await prisma.venueElement.delete({ where: { id: elementId } });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting venue element:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

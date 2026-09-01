@@ -15,9 +15,13 @@ import {
   useCreateTable,
   useDeleteSeatingRule,
   useDeleteTable,
+  useCreateVenueElement,
+  useDeleteVenueElement,
   useSeatingRules,
   useTables,
   useUpdateTable,
+  useUpdateVenueElement,
+  useVenue,
 } from "@/hooks/useSeating";
 
 import { Button } from "@/components/ui/button";
@@ -150,6 +154,10 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
   const { data: rules = [] } = useSeatingRules();
   const createRule = useCreateSeatingRule();
   const deleteRule = useDeleteSeatingRule();
+  const { data: venue = [] } = useVenue();
+  const createVenue = useCreateVenueElement();
+  const updateVenue = useUpdateVenueElement();
+  const deleteVenue = useDeleteVenueElement();
 
   const [mode, setMode] = useState<"lista" | "plano">("lista");
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
@@ -395,13 +403,62 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
           busy={busy}
         />
       ) : (
-        <SeatingPlan
-          tables={tablesConPosicion}
-          selectedId={selectedTable}
-          onSelect={setSelectedTable}
-          stageRef={stageRef}
-          onMove={(id, x, y) => updateTable.mutate({ id, updates: { x, y } })}
-        />
+        <>
+          {/* Elementos del salón: se añaden desde aquí y se arrastran en el plano */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground">Añadir al salón:</span>
+            {([
+              ["pista", "Pista de baile", 360, 260],
+              ["escenario", "Escenario / DJ", 300, 140],
+              ["barra", "Barra", 260, 100],
+              ["entrada", "Entrada", 160, 90],
+              ["buffet", "Buffet", 300, 110],
+            ] as const).map(([kind, etiqueta, width, height]) => (
+              <Button
+                key={kind}
+                variant="outline"
+                size="sm"
+                disabled={createVenue.isPending}
+                onClick={() =>
+                  createVenue.mutate(
+                    { kind, width, height },
+                    { onSuccess: () => toast.success(`${etiqueta} añadida`) }
+                  )
+                }
+              >
+                <Plus className="h-3 w-3 mr-1" /> {etiqueta}
+              </Button>
+            ))}
+          </div>
+
+          {venue.length > 0 && (
+            <ul className="flex flex-wrap gap-2">
+              {venue.map(el => (
+                <li key={el.id} className="flex min-h-11 items-center gap-1 rounded-md border px-2 text-sm sm:min-h-9">
+                  <span>{el.label || el.kind}</span>
+                  <button
+                    type="button"
+                    onClick={() => deleteVenue.mutate(el.id)}
+                    className="flex h-9 w-9 touch-manipulation items-center justify-center rounded text-muted-foreground hover:bg-accent"
+                    aria-label={`Quitar ${el.label || el.kind}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <SeatingPlan
+            tables={tablesConPosicion}
+            venue={venue}
+            selectedId={selectedTable}
+            onSelect={setSelectedTable}
+            stageRef={stageRef}
+            onMove={(id, x, y) => updateTable.mutate({ id, updates: { x, y } })}
+            onMoveVenue={(id, x, y) => updateVenue.mutate({ id, updates: { x, y } })}
+          />
+        </>
       )}
     </div>
   );

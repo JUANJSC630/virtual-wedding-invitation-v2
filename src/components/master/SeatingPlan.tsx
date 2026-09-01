@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type Konva from "konva";
 import { Circle, Group, Layer, Line, Rect, Stage, Text } from "react-konva";
 
-import { TableWithPeople } from "@/services/seating-service";
+import { TableWithPeople, VenueElementRow } from "@/services/seating-service";
 
 interface Props {
   tables: TableWithPeople[];
@@ -13,7 +13,24 @@ interface Props {
   onSelect: (id: string | null) => void;
   /** Expone el escenario para poder exportarlo a imagen. */
   stageRef?: React.MutableRefObject<Konva.Stage | null>;
+  /** Pista, escenario, barra… Se dibujan DEBAJO de las mesas. */
+  venue?: VenueElementRow[];
+  onMoveVenue?: (id: string, x: number, y: number) => void;
 }
+
+/**
+ * Cada elemento del salón tiene su color y su nombre por defecto. Se distinguen
+ * a simple vista porque su posición condiciona dónde conviene sentar a quién:
+ * los mayores lejos de los altavoces, las sillas de ruedas cerca de los bordes.
+ */
+const VENUE = {
+  pista:     { label: "Pista de baile", color: "#8b5cf6" },
+  escenario: { label: "Escenario / DJ",  color: "#0ea5e9" },
+  barra:     { label: "Barra",           color: "#f59e0b" },
+  entrada:   { label: "Entrada",         color: "#10b981" },
+  buffet:    { label: "Buffet",          color: "#ec4899" },
+  otro:      { label: "Zona",            color: "#64748b" },
+} as const;
 
 const LIENZO = { width: 1400, height: 950 };
 const REJILLA = 25;
@@ -49,7 +66,9 @@ const medio = (t: TableWithPeople) =>
  * cubre el modo lista, que hace lo mismo con controles nativos.
  * Ver ARQUITECTURA_MESAS.md §4.
  */
-export const SeatingPlan: React.FC<Props> = ({ tables, onMove, selectedId, onSelect, stageRef }) => {
+export const SeatingPlan: React.FC<Props> = ({
+  tables, onMove, selectedId, onSelect, stageRef, venue = [], onMoveVenue,
+}) => {
   const contenedor = useRef<HTMLDivElement>(null);
   const localStage = useRef<Konva.Stage | null>(null);
   const [ancho, setAncho] = useState(900);
@@ -166,6 +185,55 @@ export const SeatingPlan: React.FC<Props> = ({ tables, onMove, selectedId, onSel
             {guias.h.map(y => (
               <Line key={`gh${y}`} points={[0, y, LIENZO.width, y]} stroke="#bfa15a" strokeWidth={1.5} dash={[6, 6]} />
             ))}
+          </Layer>
+
+          {/* El salón va DEBAJO: es el fondo sobre el que se colocan las mesas. */}
+          <Layer>
+            {venue.map(el => {
+              const meta = VENUE[el.kind] ?? VENUE.otro;
+              return (
+                <Group
+                  key={el.id}
+                  x={el.x}
+                  y={el.y}
+                  draggable={Boolean(onMoveVenue)}
+                  onDragMove={e => {
+                    // Imán a la rejilla y, como en las mesas, sin salirse del
+                    // lienzo: un elemento fuera de vista no se puede recuperar.
+                    const x = Math.round(e.target.x() / REJILLA) * REJILLA;
+                    const y = Math.round(e.target.y() / REJILLA) * REJILLA;
+                    e.target.position({
+                      x: Math.max(0, Math.min(LIENZO.width - el.width, x)),
+                      y: Math.max(0, Math.min(LIENZO.height - el.height, y)),
+                    });
+                  }}
+                  onDragEnd={e => onMoveVenue?.(el.id, Math.round(e.target.x()), Math.round(e.target.y()))}
+                >
+                  <Rect
+                    width={el.width}
+                    height={el.height}
+                    cornerRadius={8}
+                    fill={meta.color}
+                    opacity={0.12}
+                    stroke={meta.color}
+                    strokeWidth={2}
+                    dash={[10, 6]}
+                    perfectDrawEnabled={false}
+                  />
+                  <Text
+                    text={el.label || meta.label}
+                    fontSize={16}
+                    fontStyle="600"
+                    fill={meta.color}
+                    width={el.width}
+                    height={el.height}
+                    align="center"
+                    verticalAlign="middle"
+                    listening={false}
+                  />
+                </Group>
+              );
+            })}
           </Layer>
 
           <Layer>

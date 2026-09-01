@@ -4,8 +4,12 @@ import {
   TableInput,
   applySeating,
   createSeatingRule,
+  createVenueElement,
   deleteSeatingRule,
+  deleteVenueElement,
   getSeatingRules,
+  getVenue,
+  updateVenueElement,
   createTable,
   deleteTable,
   getTables,
@@ -26,6 +30,7 @@ function useSeatingMutation<TVars, TData>(fn: (base: string, vars: TVars) => Pro
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tables"] });
       queryClient.invalidateQueries({ queryKey: ["seating-rules"] });
+      queryClient.invalidateQueries({ queryKey: ["venue"] });
       queryClient.invalidateQueries({ queryKey: ["guests", "all"] });
     },
   });
@@ -69,3 +74,21 @@ export const useCreateSeatingRule = () =>
 
 export const useDeleteSeatingRule = () =>
   useSeatingMutation((base, id: string) => deleteSeatingRule(base, id));
+
+export const useVenue = () => {
+  const base = useGuestScope();
+  return useQuery({ queryKey: ["venue", base], queryFn: () => getVenue(base) });
+};
+
+export const useCreateVenueElement = () =>
+  useSeatingMutation((base, el: Parameters<typeof createVenueElement>[1]) =>
+    createVenueElement(base, el)
+  );
+
+export const useUpdateVenueElement = () =>
+  useSeatingMutation((base, { id, updates }: { id: string; updates: Parameters<typeof updateVenueElement>[2] }) =>
+    updateVenueElement(base, id, updates)
+  );
+
+export const useDeleteVenueElement = () =>
+  useSeatingMutation((base, id: string) => deleteVenueElement(base, id));
