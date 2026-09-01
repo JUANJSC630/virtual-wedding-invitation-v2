@@ -5,6 +5,7 @@ import {
   SeatingTable,
   autoAssign,
   capacitySummary,
+  findViolations,
   freeSeats,
   occupancyByTable,
 } from "./seating";
@@ -251,5 +252,82 @@ describe("autoAssign — reglas de separación (padres divorciados)", () => {
     const gente = hogar("A", 3);
     const conRegla = autoAssign(tables, gente, { rules: aparte("x", "y") });
     expect(conRegla.assignments).toEqual(autoAssign(tables, gente).assignments);
+  });
+});
+
+describe("preferencias de juntar (together)", () => {
+  const juntar = (a: string, b: string) =>
+    [{ kind: "together" as const, groupAId: a, groupBId: b }];
+
+  it("sienta en la misma mesa a dos invitaciones marcadas como juntas", () => {
+    // Sin la regla, best fit las separaría: cada una cabe justa en su mesa.
+    const tables = [mesa("m1", 2), mesa("m2", 4)];
+    const gente = [...hogar("A", 2), ...hogar("B", 2)];
+    const plan = autoAssign(tables, gente, { rules: juntar("A", "B") });
+    expect(plan.assignments["A-0"]).toBe(plan.assignments["B-0"]);
+  });
+
+  it("encadena: si A va con B y B con C, los tres acaban juntos", () => {
+    const tables = [mesa("m1", 3), mesa("m2", 9)];
+    const gente = [...hogar("A", 2), ...hogar("B", 2), ...hogar("C", 2)];
+    const plan = autoAssign(tables, gente, {
+      rules: [
+        { kind: "together", groupAId: "A", groupBId: "B" },
+        { kind: "together", groupAId: "B", groupBId: "C" },
+      ],
+    });
+    const mesas = new Set(["A-0", "B-0", "C-0"].map(id => plan.assignments[id]));
+    expect(mesas.size).toBe(1);
+  });
+
+  it("una separación gana sobre el bloque juntado: AB no puede ir con C", () => {
+    const tables = [mesa("m1", 10), mesa("m2", 10)];
+    const gente = [...hogar("A", 2), ...hogar("B", 2), ...hogar("C", 2)];
+    const plan = autoAssign(tables, gente, {
+      rules: [
+        { kind: "together", groupAId: "A", groupBId: "B" },
+        { kind: "apart", groupAId: "B", groupBId: "C" },
+      ],
+    });
+    expect(plan.assignments["A-0"]).toBe(plan.assignments["B-0"]);
+    expect(plan.assignments["C-0"]).not.toBe(plan.assignments["A-0"]);
+  });
+});
+
+describe("findViolations — lo que el reparto ACTUAL incumple", () => {
+  const t = [mesa("m1", 10, "Mesa 1"), mesa("m2", 10, "Mesa 2")];
+
+  it("detecta dos separadas compartiendo mesa y nombra la mesa", () => {
+    const gente = [...hogar("A", 2, { tableId: "m1" }), ...hogar("B", 2, { tableId: "m1" })];
+    const v = findViolations(t, gente, [{ kind: "apart", groupAId: "A", groupBId: "B" }]);
+    expect(v).toHaveLength(1);
+    expect(v[0]?.tableName).toBe("Mesa 1");
+    expect(v[0]?.message).toContain("Mesa 1");
+    expect(v[0]?.message).toContain("separadas");
+  });
+
+  it("no señala nada si están en mesas distintas", () => {
+    const gente = [...hogar("A", 2, { tableId: "m1" }), ...hogar("B", 2, { tableId: "m2" })];
+    expect(findViolations(t, gente, [{ kind: "apart", groupAId: "A", groupBId: "B" }])).toEqual([]);
+  });
+
+  it("no señala nada mientras alguno siga sin sentar", () => {
+    const gente = [...hogar("A", 2, { tableId: "m1" }), ...hogar("B", 2)];
+    expect(findViolations(t, gente, [{ kind: "apart", groupAId: "A", groupBId: "B" }])).toEqual([]);
+  });
+
+  it("detecta una preferencia de juntar que no se cumple", () => {
+    const gente = [...hogar("A", 2, { tableId: "m1" }), ...hogar("B", 2, { tableId: "m2" })];
+    const v = findViolations(t, gente, [{ kind: "together", groupAId: "A", groupBId: "B" }]);
+    expect(v[0]?.kind).toBe("together");
+    expect(v[0]?.message).toContain("deberían compartir mesa");
+  });
+
+  it("ignora a quien no ha confirmado", () => {
+    const gente = [
+      ...hogar("A", 2, { tableId: "m1", confirmed: false }),
+      ...hogar("B", 2, { tableId: "m1" }),
+    ];
+    expect(findViolations(t, gente, [{ kind: "apart", groupAId: "A", groupBId: "B" }])).toEqual([]);
   });
 });

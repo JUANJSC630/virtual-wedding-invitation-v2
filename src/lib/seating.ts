@@ -88,6 +88,35 @@ interface Household {
   groupId: string;
   groupName: string;
   people: SeatingPerson[];
+  /** Invitaciones que componen el bloque; más de una si hay preferencia de juntar. */
+  groupIds?: string[];
+}
+
+/**
+ * Une invitaciones que deben compartir mesa ("together") en un solo bloque.
+ *
+ * Se resuelve con conjuntos disjuntos porque las preferencias encadenan: si A va
+ * con B y B con C, los tres acaban en la misma mesa aunque nadie declarara A-C.
+ */
+function agruparPorPreferencia(rules: SeatingRule[]): Map<string, string> {
+  const padre = new Map<string, string>();
+  const raiz = (x: string): string => {
+    const p = padre.get(x);
+    if (!p || p === x) return x;
+    const r = raiz(p);
+    padre.set(x, r);
+    return r;
+  };
+  for (const rule of rules) {
+    if (rule.kind !== "together") continue;
+    for (const g of [rule.groupAId, rule.groupBId]) if (!padre.has(g)) padre.set(g, g);
+    const ra = raiz(rule.groupAId);
+    const rb = raiz(rule.groupBId);
+    if (ra !== rb) padre.set(rb, ra);
+  }
+  const resultado = new Map<string, string>();
+  for (const g of padre.keys()) resultado.set(g, raiz(g));
+  return resultado;
 }
 
 /** Agrupa a los confirmados por invitación, conservando el orden de llegada. */
@@ -178,18 +207,40 @@ export function autoAssign(
   };
   for (const p of fixed) if (p.tableId) anotar(p.tableId, p.groupId);
 
-  /** ¿Choca este hogar con alguien ya sentado en esa mesa? */
-  const chocaEn = (tableId: string, groupId: string) => {
-    const enemigos = separados.get(groupId);
-    if (!enemigos || enemigos.size === 0) return false;
+  /**
+   * ¿Choca este bloque con alguien ya sentado en esa mesa? Se comprueban TODAS
+   * las invitaciones que lo componen: si A va junto con B, y B está separada de
+   * C, el bloque AB tampoco puede compartir mesa con C.
+   */
+  const chocaEn = (tableId: string, groupIds: string[]) => {
     const presentes = hogaresEnMesa.get(tableId);
     if (!presentes) return false;
-    for (const otro of presentes) if (enemigos.has(otro)) return true;
+    for (const propio of groupIds) {
+      const enemigos = separados.get(propio);
+      if (!enemigos) continue;
+      for (const otro of presentes) if (enemigos.has(otro)) return true;
+    }
     return false;
   };
 
   const yaSentados = new Set(fixed.map(p => p.id));
-  const households = buildHouseholds(people)
+  // Las preferencias de juntar fusionan invitaciones en un solo bloque, que
+  // luego se reparte como si fuera una familia grande.
+  const raizDe = agruparPorPreferencia(rules);
+  const bloques = new Map<string, Household>();
+  for (const h of buildHouseholds(people)) {
+    const clave = raizDe.get(h.groupId) ?? h.groupId;
+    const existente = bloques.get(clave);
+    if (existente) {
+      existente.people.push(...h.people);
+      existente.groupIds?.push(h.groupId);
+      existente.groupName = `${existente.groupName} + ${h.groupName}`;
+    } else {
+      bloques.set(clave, { ...h, groupId: clave, groupIds: [h.groupId] });
+    }
+  }
+
+  const households = [...bloques.values()]
     .map(h => ({ ...h, people: h.people.filter(p => !yaSentados.has(p.id) && !enMesaFijada.has(p.id)) }))
     .filter(h => h.people.length > 0)
     // Best-fit *decreasing*: los grupos grandes primero, que son los difíciles.
@@ -205,14 +256,14 @@ export function autoAssign(
     // Best fit: la mesa donde quede el hueco más ajustado tras sentarlos,
     // descartando las que incumplirían una regla de separación.
     const cabe = disponibles
-      .filter(t => freeSeats(t, occupancy) >= size && !chocaEn(t.id, household.groupId))
+      .filter(t => freeSeats(t, occupancy) >= size && !chocaEn(t.id, household.groupIds ?? [household.groupId]))
       .sort((a, b) => freeSeats(a, occupancy) - freeSeats(b, occupancy));
 
     if (cabe[0]) {
       const table = cabe[0];
       for (const person of household.people) assignments[person.id] = table.id;
       occupancy[table.id] = (occupancy[table.id] ?? 0) + size;
-      anotar(table.id, household.groupId);
+      for (const g of household.groupIds ?? [household.groupId]) anotar(table.id, g);
       seated += size;
       continue;
     }
@@ -231,7 +282,7 @@ export function autoAssign(
     const usadas: string[] = [];
     while (restantes.length > 0) {
       const conHueco = disponibles
-        .filter(t => freeSeats(t, occupancy) > 0 && !chocaEn(t.id, household.groupId))
+        .filter(t => freeSeats(t, occupancy) > 0 && !chocaEn(t.id, household.groupIds ?? [household.groupId]))
         .sort((a, b) => freeSeats(b, occupancy) - freeSeats(a, occupancy));
       const table = conHueco[0];
       if (!table) break;
@@ -243,6 +294,7 @@ export function autoAssign(
         seated++;
       }
       anotar(table.id, household.groupId);
+      for (const g of household.groupIds ?? [household.groupId]) anotar(table.id, g);
       usadas.push(table.name);
     }
 
@@ -271,4 +323,76 @@ export function capacitySummary(tables: SeatingTable[], people: SeatingPerson[])
   const confirmed = people.filter(p => p.confirmed).length;
   const assigned = people.filter(p => p.confirmed && p.tableId).length;
   return { capacity, confirmed, assigned, pending: confirmed - assigned, spare: capacity - confirmed };
+}
+
+
+/** Una regla que el reparto ACTUAL no cumple. */
+export interface RuleViolation {
+  kind: "apart" | "together";
+  groupAName: string;
+  groupBName: string;
+  tableName: string | null;
+  message: string;
+}
+
+/**
+ * Reglas que el reparto actual incumple.
+ *
+ * Existe porque `autoAssign` solo *previene*: nunca mueve a quien ya está
+ * sentado, así que una regla creada después de repartir no cambia nada por sí
+ * sola. Sin esta comprobación el organizador crea la regla, no ve ningún efecto
+ * y no entiende por qué. Aquí se le dice, y puede rehacer el reparto.
+ */
+export function findViolations(
+  tables: SeatingTable[],
+  people: SeatingPerson[],
+  rules: SeatingRule[]
+): RuleViolation[] {
+  const nombreMesa = new Map(tables.map(t => [t.id, t.name]));
+  const nombreGrupo = new Map<string, string>();
+  /** Mesas ocupadas por cada invitación. */
+  const mesasDe = new Map<string, Set<string>>();
+
+  for (const p of people) {
+    nombreGrupo.set(p.groupId, p.groupName);
+    if (!p.confirmed || !p.tableId) continue;
+    if (!mesasDe.has(p.groupId)) mesasDe.set(p.groupId, new Set());
+    mesasDe.get(p.groupId)?.add(p.tableId);
+  }
+
+  const violaciones: RuleViolation[] = [];
+
+  for (const rule of rules) {
+    const a = mesasDe.get(rule.groupAId);
+    const b = mesasDe.get(rule.groupBId);
+    // Si alguno aún no está sentado, no hay nada que incumplir todavía.
+    if (!a || !b || a.size === 0 || b.size === 0) continue;
+
+    const nombreA = nombreGrupo.get(rule.groupAId) ?? "una invitación";
+    const nombreB = nombreGrupo.get(rule.groupBId) ?? "otra invitación";
+    const compartidas = [...a].filter(m => b.has(m));
+
+    if (rule.kind === "apart" && compartidas.length > 0) {
+      const mesa = nombreMesa.get(compartidas[0] ?? "") ?? null;
+      violaciones.push({
+        kind: "apart",
+        groupAName: nombreA,
+        groupBName: nombreB,
+        tableName: mesa,
+        message: `${nombreA} y ${nombreB} comparten ${mesa ?? "mesa"}, pero están marcadas como separadas.`,
+      });
+    }
+
+    if (rule.kind === "together" && compartidas.length === 0) {
+      violaciones.push({
+        kind: "together",
+        groupAName: nombreA,
+        groupBName: nombreB,
+        tableName: null,
+        message: `${nombreA} y ${nombreB} deberían compartir mesa y están separadas.`,
+      });
+    }
+  }
+
+  return violaciones;
 }

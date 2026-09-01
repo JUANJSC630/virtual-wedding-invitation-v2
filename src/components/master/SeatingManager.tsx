@@ -2,11 +2,28 @@ import { useRef, useState } from "react";
 
 import toast from "react-hot-toast";
 import type Konva from "konva";
-import { ChevronDown, ChevronRight, Download, LayoutGrid, List, Plus, Sparkles, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  LayoutGrid,
+  List,
+  Plus,
+  RefreshCw,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 
 import { Guest } from "@/types";
 
-import { SeatingPerson, SeatingPlan as SeatingProposal, autoAssign, capacitySummary } from "@/lib/seating";
+import {
+  SeatingPerson,
+  SeatingPlan as SeatingProposal,
+  autoAssign,
+  capacitySummary,
+  findViolations,
+} from "@/lib/seating";
 import { TableWithPeople } from "@/services/seating-service";
 
 import {
@@ -58,13 +75,14 @@ function toPeople(guests: Guest[]): SeatingPerson[] {
 /** Declarar qué invitaciones NO pueden compartir mesa. */
 const ReglasDeSeparacion: React.FC<{
   guests: Guest[];
-  rules: { id: string; groupAId: string; groupBId: string; kind: string }[];
-  onCreate: (a: string, b: string) => void;
+  rules: { id: string; groupAId: string; groupBId: string; kind: "apart" | "together" }[];
+  onCreate: (a: string, b: string, kind: "apart" | "together") => void;
   onDelete: (id: string) => void;
 }> = ({ guests, rules, onCreate, onDelete }) => {
   const [abierto, setAbierto] = useState(false);
   const [a, setA] = useState("");
   const [b, setB] = useState("");
+  const [kind, setKind] = useState<"apart" | "together">("apart");
   const nombre = (id: string) => guests.find(g => g.id === id)?.name ?? "(eliminado)";
 
   return (
@@ -76,10 +94,10 @@ const ReglasDeSeparacion: React.FC<{
       >
         {abierto ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         <span className="min-w-0 flex-1">
-          <span className="block font-medium">Quién no puede sentarse junto</span>
+          <span className="block font-medium">Quién va junto y quién no</span>
           <span className="block text-sm text-muted-foreground">
             {rules.length === 0
-              ? "Sin reglas. Útil para padres divorciados o invitados enfrentados."
+              ? "Sin reglas. Para padres divorciados, o para juntar a quienes se conocen."
               : `${rules.length} ${rules.length === 1 ? "regla" : "reglas"}`}
           </span>
         </span>
@@ -94,7 +112,9 @@ const ReglasDeSeparacion: React.FC<{
                   <span className="min-w-0 flex-1 text-sm">
                     {nombre(r.groupAId)} <span className="text-muted-foreground">y</span>{" "}
                     {nombre(r.groupBId)}{" "}
-                    <span className="text-muted-foreground">no comparten mesa</span>
+                    <span className={r.kind === "together" ? "text-primary" : "text-muted-foreground"}>
+                      {r.kind === "together" ? "van en la misma mesa" : "no comparten mesa"}
+                    </span>
                   </span>
                   <button
                     type="button"
@@ -129,13 +149,29 @@ const ReglasDeSeparacion: React.FC<{
                 />
               )
             )}
-            <Button
-              variant="outline"
-              disabled={!a || !b || a === b}
-              onClick={() => { onCreate(a, b); setA(""); setB(""); }}
-            >
-              Separar
-            </Button>
+            <div className="flex gap-2">
+              <div className="flex flex-1 overflow-hidden rounded-md border text-sm">
+                {([["apart", "Separar"], ["together", "Juntar"]] as const).map(([k, etiqueta]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setKind(k)}
+                    className={`min-h-11 flex-1 touch-manipulation px-3 sm:min-h-9 ${
+                      kind === k ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                    }`}
+                  >
+                    {etiqueta}
+                  </button>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                disabled={!a || !b || a === b}
+                onClick={() => { onCreate(a, b, kind); setA(""); setB(""); }}
+              >
+                Añadir
+              </Button>
+            </div>
           </div>
           {a && b && a === b && (
             <p className="text-xs text-destructive">Elige dos invitaciones distintas.</p>
@@ -192,6 +228,13 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
 
   const people = toPeople(guests);
   const resumen = capacitySummary(tables, people);
+  /**
+   * Reglas que el reparto ACTUAL incumple. Es distinto de los avisos de la
+   * propuesta: una regla creada después de sentar a la gente no mueve a nadie
+   * por sí sola, así que hay que decirlo o el organizador no entiende por qué
+   * "no pasa nada" al crearla.
+   */
+  const incumplidas = findViolations(tables, people, rules);
   const busy =
     applySeating.isPending || createTable.isPending || deleteTable.isPending;
 
@@ -248,6 +291,25 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
     }
   };
 
+  /**
+   * Rehace el reparto ignorando lo ya asignado (salvo las mesas fijadas). Es la
+   * única forma de que una regla creada a posteriori surta efecto.
+   */
+  const handleRehacer = () => {
+    if (!confirm("Se recalculará el reparto de todos los confirmados, respetando las mesas fijadas y las reglas. ¿Continuar?")) return;
+    const plan = autoAssign(tables, people, { rules, respectExisting: false });
+    // Se levanta a todo el mundo primero: si no, quien no entre en el plan
+    // nuevo se quedaría donde estaba y la regla seguiría incumplida.
+    const limpieza: Record<string, string | null> = Object.fromEntries(
+      people
+        .filter(p => p.tableId && !tables.some(t => t.id === p.tableId && t.locked))
+        .map(p => [p.id, null])
+    );
+    setProposal(plan);
+    guardar({ ...limpieza, ...plan.assignments }, `Reparto rehecho: ${plan.seated} personas sentadas`);
+    setProposal(null);
+  };
+
   const aplicarPropuesta = () => {
     if (!proposal) return;
     guardar(proposal.assignments, `${proposal.seated} personas sentadas`);
@@ -281,6 +343,34 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
           </div>
         ))}
       </div>
+
+      {/* ── Reglas incumplidas por el reparto actual ─────────────────── */}
+      {incumplidas.length > 0 && (
+        <div className="space-y-3 rounded-lg border border-destructive/40 bg-destructive/5 p-3">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+            <div className="min-w-0">
+              <p className="font-medium text-destructive">
+                {incumplidas.length === 1
+                  ? "Una regla no se está cumpliendo"
+                  : `${incumplidas.length} reglas no se están cumpliendo`}
+              </p>
+              <ul className="mt-1 space-y-1 text-sm">
+                {incumplidas.map((v, i) => (
+                  <li key={i}>• {v.message}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Las reglas se aplican al sugerir un reparto; no mueven a quien ya está sentado.
+                Puedes cambiarlo a mano o rehacer el reparto.
+              </p>
+            </div>
+          </div>
+          <Button variant="outline" onClick={handleRehacer} disabled={busy} className="gap-1.5">
+            <RefreshCw className="h-4 w-4" /> Rehacer reparto respetando las reglas
+          </Button>
+        </div>
+      )}
 
       {/* ── Acciones ────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -384,9 +474,9 @@ export const SeatingManager: React.FC<Props> = ({ guests }) => {
       <ReglasDeSeparacion
         guests={guests}
         rules={rules}
-        onCreate={(groupAId, groupBId) =>
+        onCreate={(groupAId, groupBId, kind) =>
           createRule.mutate(
-            { kind: "apart", groupAId, groupBId },
+            { kind, groupAId, groupBId },
             { onSuccess: () => toast.success("Regla añadida"), onError: (e: Error) => toast.error(e.message) }
           )
         }
