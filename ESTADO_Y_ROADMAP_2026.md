@@ -279,8 +279,15 @@ Diseño y lecciones en `ARQUITECTURA_MESAS.md`. Completo de punta a punta:
   largas: 94 invitados en un `<select>` nativo era inmanejable. Tolerante a
   acentos: "jose" encuentra "José".
 
-Pendiente: presets de tamaño real (60″=8, 72″=10), rotación de mesas largas,
-export del plano a PDF imprimible.
+- **Tamaños de alquiler reales** al crear (60″=8, 72″=10, larga con cabeceras…),
+  rotación de las mesas largas, y **hoja imprimible** con el plano más el listado
+  mesa por mesa, vía el diálogo del navegador (sin empaquetar jsPDF).
+- **Diálogo de confirmación propio** (`src/components/ui/confirm-dialog.tsx`) que
+  sustituye a los 10 `confirm()` nativos: título que pregunta, descripción que
+  explica la consecuencia, variante destructiva sin autoenfoque.
+
+**La función de mesas está completa.** Ver `ARQUITECTURA_MESAS.md` para el diseño,
+cómo funcionan las reglas (§6) y las siete lecciones de errores repetidos.
 
 ### Detalles que conviene no olvidar
 - `Attendee.companionId` lleva `@@index` y **no** `@unique`: añadir una

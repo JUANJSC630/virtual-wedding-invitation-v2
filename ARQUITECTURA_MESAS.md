@@ -167,8 +167,12 @@ honesto admite que el problema es infactible.
 8. ✅ **Elementos del salón**: pista, escenario, barra, entrada, buffet.
 9. ✅ **Invitado vs acompañante** visible, agrupado por invitación.
 10. ✅ **Catering mesa por mesa** en CSV, que es como sirve la cocina.
-11. Pendiente: presets de tamaño real (60″=8, 72″=10), rotación de mesas largas,
-    export a PDF imprimible.
+11. ✅ **Tamaños de alquiler reales** con su capacidad, rotación de mesas largas,
+    y **hoja imprimible** (plano + listado por mesa) vía el diálogo del navegador.
+
+**La función está completa.** Extensiones posibles, ninguna imprescindible:
+asientos concretos dentro de la mesa (`Attendee.seatIndex` ya existe), medidas
+del salón a escala real, y colaboración en vivo entre organizador y planner.
 
 ### Corrección: el plano acabó en Konva, no en SVG
 §4 recomendaba SVG por ser "12 mesas simples". Al subir el listón a calidad de
@@ -198,3 +202,8 @@ Descartados con datos: tldraw cuesta 6.000 USD/año; seats.io y seatmap.pro
    elementos del salón no, y acababan en coordenadas negativas irrecuperables.
 6. **Una regla que no hace nada visible.** Prevenir no basta: si el estado actual
    ya la incumple, hay que decirlo. Ver §6.
+7. **Probar una acción destructiva sobre datos reales.** Un test de navegador
+   pulsó "Rehacer reparto" en el evento en producción y reasignó a sus 174
+   personas. El botón solo aparecía allí porque el estado que lo dispara estaba
+   en los datos del usuario; lo correcto era reproducirlo en un evento `zz-*`.
+   La regla de no tocar eventos reales vale también para las pruebas de interfaz.
