@@ -118,10 +118,32 @@ Se hace al final, cuando el plano ya se pueda componer.
 
 ---
 
-## 6. Orden de construcción
+## 6. Estado
 
-1. **Modelo + algoritmo** (`src/lib/seating.ts`, lógica pura con tests) + endpoints.
-2. **Modo lista** — asignar personas a mesas. Es lo que se usa desde el móvil.
-3. **Modo plano** — colocar mesas arrastrando, en SVG.
-4. **Bloque "tu mesa"** en la invitación.
-5. Más adelante: reglas explícitas de "separar", export a PDF imprimible.
+1. ✅ **Modelo + algoritmo** (`src/lib/seating.ts`, 23 tests) + endpoints.
+2. ✅ **Modo lista** — asignar personas a mesas, con `<select>` nativos.
+3. ✅ **Modo plano** — **en Konva, no en SVG**. Ver la corrección abajo.
+4. ✅ **Bloque "tu mesa"** en la invitación, con endpoint público propio.
+5. Pendiente: rotación de las mesas largas, export a PDF, reglas de "separar".
+
+### Corrección: el plano acabó en Konva, no en SVG
+§4 recomendaba SVG por ser "12 mesas simples". Al subir el listón a calidad de
+edición esa decisión dejó de sostenerse: Konva trae arrastre, zoom con rueda y
+pellizco, imán con guías y exportación en alta resolución sin reimplementar nada.
+La accesibilidad que se pierde al dibujar en canvas la cubre el **modo lista**, y
+ahí es donde el diseño de dos modos se paga solo.
+
+Descartados con datos: tldraw cuesta 6.000 USD/año; seats.io y seatmap.pro
+(desde 400 EUR/año) apuntan a recintos de +10.000 asientos con ticketing.
+
+### Tres errores que costó encontrar, por si se repiten
+1. **Mutar el servidor en cada gesto.** El arrastre llamaba a la API en cada
+   `pointermove` y por eso no se movía nada: la posición solo cambiaba al
+   responder la red. Lo mismo pasaba al renombrar, con un PATCH por tecla. Regla:
+   estado local durante el gesto, una escritura al soltar o al salir del campo.
+2. **Derivar identidad de un contador.** El nombre y la posición salían de
+   `tables.length`, y eso produjo dos "Mesa 2" superpuestas. Mover el cálculo al
+   servidor no bastó: la carrera estaba en la base. Se resolvió con
+   `pg_advisory_xact_lock` por evento.
+3. **Dibujar todo del mismo tamaño.** Una mesa de 12 se veía igual que una de 4.
+   El tamaño dibujado tiene que salir de la capacidad o el plano no sirve.

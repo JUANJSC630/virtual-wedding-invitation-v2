@@ -256,11 +256,19 @@ vez de distinguir titular de acompañante en cada consulta y cada pantalla.
 2. Retirar `Companion` y el campo puente `Attendee.companionId`.
 3. Dar a cada persona su propio código/QR → check-in en la puerta.
 
-### Mesas — en curso (31 ago)
-Diseño en `ARQUITECTURA_MESAS.md`. Hecho: modelo (`Table` + `Attendee.tableId`),
-algoritmo de recomendación con 23 tests y endpoints. **Falta la interfaz**: modo
-lista (el que se usa desde el móvil), modo plano en SVG, y el bloque "tu mesa" en
-la invitación del invitado.
+### Mesas ✅ (31 ago)
+Diseño y lecciones en `ARQUITECTURA_MESAS.md`. Completo de punta a punta:
+- Modelo `Table` + `Attendee.tableId`; el plano es vista derivada, así que una
+  cancelación libera el sitio sola.
+- Recomendación que **no pide configurar nada**: agrupa por invitación, que es la
+  restricción más fuerte de una boda y ya estaba en los datos. 23 tests.
+- Panel con dos modos: lista (móvil) y plano en **Konva** con arrastre, zoom,
+  imán con guías y export a PNG. Capacidades y formas distintas por mesa, con el
+  tamaño dibujado proporcional a la capacidad.
+- Bloque **"Tu mesa"** en la invitación: el invitado ve su mesa y con quién se
+  sienta desde el móvil.
+
+Pendiente: rotación de mesas largas, export a PDF, reglas explícitas de "separar".
 
 ### Detalles que conviene no olvidar
 - `Attendee.companionId` lleva `@@index` y **no** `@unique`: añadir una
