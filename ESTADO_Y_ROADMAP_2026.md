@@ -256,7 +256,7 @@ vez de distinguir titular de acompañante en cada consulta y cada pantalla.
 2. Retirar `Companion` y el campo puente `Attendee.companionId`.
 3. Dar a cada persona su propio código/QR → check-in en la puerta.
 
-### Mesas ✅ (31 ago)
+### Mesas ✅ (31 ago – 1 sep)
 Diseño y lecciones en `ARQUITECTURA_MESAS.md`. Completo de punta a punta:
 - Modelo `Table` + `Attendee.tableId`; el plano es vista derivada, así que una
   cancelación libera el sitio sola.
@@ -268,7 +268,19 @@ Diseño y lecciones en `ARQUITECTURA_MESAS.md`. Completo de punta a punta:
 - Bloque **"Tu mesa"** en la invitación: el invitado ve su mesa y con quién se
   sienta desde el móvil.
 
-Pendiente: rotación de mesas largas, export a PDF, reglas explícitas de "separar".
+- **Reglas de juntar y separar** entre invitaciones, con aviso cuando el reparto
+  actual las incumple y botón para rehacerlo. Cómo funcionan: `ARQUITECTURA_MESAS.md` §6.
+- **Mesas fijadas** (presidencial) que la sugerencia no toca.
+- **Elementos del salón**: pista, escenario, barra, entrada, buffet — su posición
+  condiciona dónde conviene sentar a quién.
+- **Invitado vs acompañante** visible en todo el reparto, agrupado por invitación.
+- **Catering mesa por mesa** en CSV, que es como sirve la cocina.
+- **Combobox con búsqueda** (`src/components/ui/combobox.tsx`) para las listas
+  largas: 94 invitados en un `<select>` nativo era inmanejable. Tolerante a
+  acentos: "jose" encuentra "José".
+
+Pendiente: presets de tamaño real (60″=8, 72″=10), rotación de mesas largas,
+export del plano a PDF imprimible.
 
 ### Detalles que conviene no olvidar
 - `Attendee.companionId` lleva `@@index` y **no** `@unique`: añadir una

@@ -118,13 +118,57 @@ Se hace al final, cuando el plano ya se pueda componer.
 
 ---
 
-## 6. Estado
+## 6. Cómo funcionan las reglas
 
-1. ✅ **Modelo + algoritmo** (`src/lib/seating.ts`, 23 tests) + endpoints.
-2. ✅ **Modo lista** — asignar personas a mesas, con `<select>` nativos.
+Es la parte que más se malinterpreta, así que conviene tenerlo claro.
+
+### Qué son
+Restricciones **entre invitaciones** (hogares), no entre personas sueltas. Dos tipos:
+
+| Tipo | Significa | Caso típico |
+|---|---|---|
+| **Separar** | Esas dos invitaciones nunca comparten mesa | Padres divorciados, invitados enfrentados |
+| **Juntar** | Esas dos invitaciones van en la misma mesa | Amigos que se conocen, primos |
+
+Son **simétricas**: declararlas al revés no crea una regla nueva.
+
+### Cuándo actúan — el punto que confunde
+> **Las reglas se aplican al SUGERIR un reparto. Nunca mueven a quien ya está sentado.**
+
+Si creas una regla después de haber repartido, no pasa nada por sí solo. Y "Sugerir
+distribución" respeta lo ya asignado, así que tampoco lo arregla. Por eso el panel avisa
+arriba cuando el reparto actual incumple una regla, nombrando la mesa concreta, y ofrece
+**"Rehacer reparto respetando las reglas"**, que levanta a todos los no fijados y recalcula.
+
+### Cómo se resuelven las de juntar
+Se fusionan las invitaciones en un bloque que luego se reparte como una familia grande.
+Se usan conjuntos disjuntos porque **encadenan**: si A va con B y B con C, los tres acaban
+juntos aunque nadie declarara A-C.
+
+**Una separación gana sobre un bloque juntado.** Si AB va junto y B está separada de C, el
+bloque AB tampoco comparte mesa con C.
+
+### Cuándo no se pueden cumplir
+Si una regla deja a un grupo sin sitio habiendo hueco, la propuesta **lo dice nombrándolo**
+en vez de romperla en silencio. Es lo que exige la literatura de asignación: un sistema
+honesto admite que el problema es infactible.
+
+---
+
+## 7. Estado
+
+1. ✅ **Modelo + algoritmo** (`src/lib/seating.ts`, **34 tests**) + endpoints.
+2. ✅ **Modo lista** — asignar personas a mesas, con Combobox de búsqueda.
 3. ✅ **Modo plano** — **en Konva, no en SVG**. Ver la corrección abajo.
 4. ✅ **Bloque "tu mesa"** en la invitación, con endpoint público propio.
-5. Pendiente: rotación de las mesas largas, export a PDF, reglas de "separar".
+5. ✅ **Capacidades y formas distintas**, con el tamaño dibujado proporcional.
+6. ✅ **Mesas fijadas** (presidencial) que la sugerencia no toca.
+7. ✅ **Reglas de juntar y separar** + aviso de las ya incumplidas (§6).
+8. ✅ **Elementos del salón**: pista, escenario, barra, entrada, buffet.
+9. ✅ **Invitado vs acompañante** visible, agrupado por invitación.
+10. ✅ **Catering mesa por mesa** en CSV, que es como sirve la cocina.
+11. Pendiente: presets de tamaño real (60″=8, 72″=10), rotación de mesas largas,
+    export a PDF imprimible.
 
 ### Corrección: el plano acabó en Konva, no en SVG
 §4 recomendaba SVG por ser "12 mesas simples". Al subir el listón a calidad de
@@ -147,3 +191,10 @@ Descartados con datos: tldraw cuesta 6.000 USD/año; seats.io y seatmap.pro
    `pg_advisory_xact_lock` por evento.
 3. **Dibujar todo del mismo tamaño.** Una mesa de 12 se veía igual que una de 4.
    El tamaño dibujado tiene que salir de la capacidad o el plano no sirve.
+4. **Nacer todos en la misma posición.** Les pasó a las mesas y luego, idéntico, a
+   los elementos del salón. La posición inicial la calcula el servidor dentro de
+   una transacción con cerrojo por evento.
+5. **Poder arrastrar algo fuera del lienzo.** Las mesas tenían límites; los
+   elementos del salón no, y acababan en coordenadas negativas irrecuperables.
+6. **Una regla que no hace nada visible.** Prevenir no basta: si el estado actual
+   ya la incumple, hay que decirlo. Ver §6.

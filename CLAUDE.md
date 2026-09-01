@@ -134,6 +134,17 @@ Usa `confirmationFields(confirmed)` de `server/lib/confirmation.js`. Escribir
 `confirmed: undefined` pero sí aplica `confirmedAt: null`, así que renombrar a un
 invitado confirmado le borraba la fecha y corrompía la analítica.
 
+### Estado local durante un gesto, una escritura al soltar
+Mutar el servidor en cada `pointermove` o en cada tecla hace que el arrastre no
+se mueva y que renombrar lance 18 peticiones. Pasó dos veces en el mapa de mesas.
+Regla: el gesto se refleja en estado local y se guarda **una vez**, al soltar o al
+salir del campo.
+
+### Una regla que solo previene tiene que avisar de lo que ya está roto
+`autoAssign` nunca mueve a quien está sentado, así que una regla creada después
+de repartir no hacía nada visible. `findViolations()` comprueba el estado actual
+y el panel lo muestra. Vale para cualquier restricción que se añada más adelante.
+
 ### La lógica del RSVP vive en dos sitios a la vez
 `src/lib/rsvpQuestions.ts` es la definición canónica (y la que tiene los tests);
 `server/lib/rsvp-questions.js` la replica porque el backend corre en Node plano y
@@ -178,7 +189,7 @@ lote (`findMany` con `in`, `createMany`, `groupBy`), nunca en un bucle `await`.
 | `EventFormModal.tsx` — ~1160 líneas | 13 pestañas en un componente. Siguiente split natural: un archivo por pestaña (la de RSVP ya se extrajo así). |
 | `fetch` directo en 9 componentes | Rompe la capa de servicios. Lo nuevo va en `src/services/`. |
 | `font-serif` hardcodeado (49 usos) | Bloquea que la fuente sea configurable por tema. |
-| Tests de integración | Los 68 tests son de lógica pura (`src/lib/`). Cero cobertura de aislamiento multi-tenant y roles contra una DB real. |
+| Tests de integración | Los 122 tests son de lógica pura (`src/lib/`). Cero cobertura de aislamiento multi-tenant y roles contra una DB real. |
 | Sin índices en `GuestAccess` | `eventId` y `guestCode` sin índice; los `groupBy` de analítica escanean la tabla. |
 | Bundle de 692 kB | El build avisa. Falta code-splitting de los paneles. |
 | `groomName`/`brideName` siguen siendo NOT NULL | Legacy de boda: un bautizo tiene que rellenarlas igual. Migrar cuando se toque el schema. |
@@ -195,7 +206,7 @@ de `MasterDashboard.tsx` (2004 → 449 líneas).
 Antes de dar por cerrado cualquier cambio:
 
 1. `./node_modules/.bin/tsc --noEmit` → 0 errores.
-2. `./node_modules/.bin/vitest run` → 68 en verde. **Lógica pura nueva ⇒ test nuevo** en `src/lib/*.test.ts`.
+2. `./node_modules/.bin/vitest run` → 122 en verde. **Lógica pura nueva ⇒ test nuevo** en `src/lib/*.test.ts`.
    Si un componente encapsula lógica pura difícil de verificar en ejecución, sácala a `src/lib/` y tésteala.
 3. `./node_modules/.bin/eslint .` → 0 errores y 0 advertencias, sobre 99 archivos.
 4. `./node_modules/.bin/vite build` → build OK.
